@@ -1,0 +1,5 @@
+pydantic
+starlette
+redis
+ujson
+uvicorn
