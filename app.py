@@ -4,8 +4,9 @@ import redis
 import requests
 import zeep
 
-from datetime import datetime
+from datetime import date
 from decimal import Decimal
+from typing import Optional
 from xml.etree import ElementTree
 
 from pydantic import BaseModel, ValidationError, validator
@@ -13,15 +14,49 @@ from pydantic.dataclasses import dataclass
 from starlette.applications import Starlette
 from starlette.responses import UJSONResponse
 
+SYMBOLS = [
+    "USD",
+    "JPY",
+    "BGN",
+    "CZK",
+    "DKK",
+    "BGP",
+    "HUF",
+    "PLN",
+    "RON",
+    "SEK",
+    "CHF",
+    "ISK",
+    "NOK",
+    "HRK",
+    "RUB",
+    "TRY",
+    "AUD",
+    "BRL",
+    "CAD",
+    "CNY",
+    "HKD",
+    "IDR",
+    "ILS",
+    "INR",
+    "KRW",
+    "MXN",
+    "MYR",
+    "NZD",
+    "PHP",
+    "SGD",
+    "THB",
+    "ZAR",
+]
 HISTORIC_RATES_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml"
 VIES_URL = "http://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl"
 
 app = Starlette(debug=True)
 
 
-@app.on_event('startup')
+@app.on_event("startup")
 def load_rates():
-    db = redis.Redis(host='localhost', port=6379, db=0)
+    db = redis.Redis(host="localhost", port=6379, db=0)
 
     r = requests.get(HISTORIC_RATES_URL)
     envelope = ElementTree.fromstring(r.content)
@@ -31,11 +66,13 @@ def load_rates():
         "eurofxref": "http://www.ecb.int/vocabulary/2002-08-01/eurofxref",
     }
     data = envelope.findall("./eurofxref:Cube/eurofxref:Cube[@time]", namespaces)
-    for d in data:
-        time = datetime.strptime(d.attrib["time"], "%Y-%m-%d").date()
-        rates = db.hgetall(f'{time}-rates')
-        if not rates:
-            db.hmset(f'{time}-rates', {c.attrib["currency"]: c.attrib["rate"] for c in list(d)})
+    for i, d in enumerate(data):
+        time = pendulum.parse(d.attrib["time"], strict=False).to_date_string()
+        db.hmset(f"{time}-rates", {c.attrib["currency"]: c.attrib["rate"] for c in list(d)})
+
+        # If first loop set as latest date
+        if i == 0:
+            db.set("latest-rates", f"{time}")
 
 
 class VATValidationModel(BaseModel):
@@ -45,6 +82,17 @@ class VATValidationModel(BaseModel):
     def format_validation(cls, v):
         # TODO: implement Regex validators
         return v
+
+
+class RatesQueryValidationModel(BaseModel):
+    base: str = "EUR"
+    date: Optional[date]
+    symbols: Optional[list]
+
+    @validator("base")
+    def symbol_validation(cls, b):
+        # TODO: implement Regex validators
+        return b
 
 
 @app.route("/")
@@ -58,13 +106,27 @@ async def vat_validation(request):
         return UJSONResponse(e.errors())
 
 
-@app.route("/rates")
+@app.route("/api/rates")
 async def rates(request):
-    db = redis.Redis(host='localhost', port=6379, db=0)
+    db = redis.Redis(host="localhost", port=6379, db=0, charset="utf-8", decode_responses=True)
 
     try:
-        time = pendulum.now().subtract(days=4)
-        rates = db.hgetall(f'{time.to_date_string()}-rates')
-        return UJSONResponse(rates)
+        query = RatesQueryValidationModel(**request.query_params)
+
+        # Find the date
+        date = query.date
+        if not date:
+            date = db.get("latest-rates")
+
+        # Get the rates data
+        rates = db.hgetall(f"{date}-rates")
+
+        # Base re-calculation
+        if query.base and query.base != "EUR":
+            base_rate = Decimal(rates[query.base])
+            rates = {currency: Decimal(rate) / base_rate for currency, rate in rates.items()}
+            rates.update({"EUR": Decimal(1) / base_rate})
+
+        return UJSONResponse({"date": date, "rates": rates})
     except ValidationError as e:
         return UJSONResponse(e.errors())

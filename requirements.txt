@@ -1,5 +1,8 @@
+pendulum
 pydantic
 starlette
 redis
+requests
 ujson
 uvicorn
+zeep
