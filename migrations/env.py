@@ -10,7 +10,7 @@ import app
 config = context.config
 
 # Database URL configuration
-config.set_main_option("sqlalchemy.url", str(app.DATABASE_URL))
+config.set_main_option("sqlalchemy.url", str(app.config("DATABASE_URL")))
 target_metadata = app.metadata
 
 # Interpret the config file for Python logging.

@@ -15,7 +15,6 @@ from pydantic.dataclasses import dataclass
 from starlette.applications import Starlette
 from starlette.config import Config
 from starlette.responses import UJSONResponse
-from sqlalchemy.dialects import postgresql
 
 config = Config(".env")
 app = Starlette(debug=True)
@@ -28,7 +27,7 @@ rates = sqlalchemy.Table(
     "rates",
     metadata,
     sqlalchemy.Column("date", sqlalchemy.Date, primary_key=True),
-    sqlalchemy.Column("rates", postgresql.JSONB),
+    sqlalchemy.Column("rates", sqlalchemy.JSON),
 )
 
 database = databases.Database(config("DATABASE_URL"))
