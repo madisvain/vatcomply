@@ -1,6 +1,7 @@
+import databases
 import pendulum
+import sqlalchemy
 import uvicorn
-import redis
 import requests
 import zeep
 
@@ -12,53 +13,33 @@ from xml.etree import ElementTree
 from pydantic import BaseModel, ValidationError, validator
 from pydantic.dataclasses import dataclass
 from starlette.applications import Starlette
+from starlette.config import Config
 from starlette.responses import UJSONResponse
+from sqlalchemy.dialects import postgresql
 
-SYMBOLS = [
-    "USD",
-    "JPY",
-    "BGN",
-    "CZK",
-    "DKK",
-    "BGP",
-    "HUF",
-    "PLN",
-    "RON",
-    "SEK",
-    "CHF",
-    "ISK",
-    "NOK",
-    "HRK",
-    "RUB",
-    "TRY",
-    "AUD",
-    "BRL",
-    "CAD",
-    "CNY",
-    "HKD",
-    "IDR",
-    "ILS",
-    "INR",
-    "KRW",
-    "MXN",
-    "MYR",
-    "NZD",
-    "PHP",
-    "SGD",
-    "THB",
-    "ZAR",
-]
-HISTORIC_RATES_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml"
-VIES_URL = "http://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl"
-
+config = Config(".env")
 app = Starlette(debug=True)
 
 
-@app.on_event("startup")
-def load_rates():
-    db = redis.Redis(host="localhost", port=6379, db=0)
+# Database
+metadata = sqlalchemy.MetaData()
 
-    r = requests.get(HISTORIC_RATES_URL)
+rates = sqlalchemy.Table(
+    "rates",
+    metadata,
+    sqlalchemy.Column("date", sqlalchemy.Date, primary_key=True),
+    sqlalchemy.Column("rates", postgresql.JSONB),
+)
+
+database = databases.Database(config("DATABASE_URL"))
+
+
+@app.on_event("startup")
+async def load_rates():
+    await database.connect()
+
+    # Load rates
+    r = requests.get(config("HISTORIC_RATES_URL"))
     envelope = ElementTree.fromstring(r.content)
 
     namespaces = {
@@ -68,11 +49,12 @@ def load_rates():
     data = envelope.findall("./eurofxref:Cube/eurofxref:Cube[@time]", namespaces)
     for i, d in enumerate(data):
         time = pendulum.parse(d.attrib["time"], strict=False).to_date_string()
-        db.hmset(f"{time}-rates", {c.attrib["currency"]: c.attrib["rate"] for c in list(d)})
+        # db.hmset(f"{time}-rates", {c.attrib["currency"]: c.attrib["rate"] for c in list(d)})
 
-        # If first loop set as latest date
-        if i == 0:
-            db.set("latest-rates", f"{time}")
+
+@app.on_event("shutdown")
+async def shutdown():
+    await database.disconnect()
 
 
 class VATValidationModel(BaseModel):
@@ -90,26 +72,38 @@ class RatesQueryValidationModel(BaseModel):
     symbols: Optional[list]
 
     @validator("base")
-    def symbol_validation(cls, b):
-        # TODO: implement Regex validators
-        return b
+    def base_validation(cls, base):
+        if base not in config("SYMBOLS"):
+            raise ValueError(f"Base currency {base} is not supported.")
+        return base
+
+    @validator("symbols", pre=True, whole=True)
+    def symbols_validation(cls, symbols):
+        symbols = symbols.split(",")
+        diff = list(set(symbols) - set(config("SYMBOLS")))
+        if diff:
+            raise ValueError(f"Symbols {', '.join(diff)} are not supported.")
+        return symbols
 
 
-@app.route("/")
-async def vat_validation(request):
+@app.route("/api/vat")
+async def vat(request):
     try:
         VATValidationModel(**request.query_params)
-        client = zeep.Client(wsdl=VIES_URL)
+        client = zeep.Client(wsdl=config("VIES_URL"))
         response = zeep.helpers.serialize_object(client.service.checkVat(countryCode="BE", vatNumber="0878065378"))
         return UJSONResponse({k: response[k] for k in ("name", "address", "valid")})
     except ValidationError as e:
         return UJSONResponse(e.errors())
 
 
+@app.route("/api/countries")
+async def countries(request):
+    return UJSONResponse({})
+
+
 @app.route("/api/rates")
 async def rates(request):
-    db = redis.Redis(host="localhost", port=6379, db=0, charset="utf-8", decode_responses=True)
-
     try:
         query = RatesQueryValidationModel(**request.query_params)
 
@@ -127,6 +121,12 @@ async def rates(request):
             rates = {currency: Decimal(rate) / base_rate for currency, rate in rates.items()}
             rates.update({"EUR": Decimal(1) / base_rate})
 
-        return UJSONResponse({"date": date, "rates": rates})
+        # Symbols
+        if query.symbols:
+            for rate in list(rates):
+                if rate not in query.symbols:
+                    del rates[rate]
+
+        return UJSONResponse({"date": date, "base": query.base, "rates": rates})
     except ValidationError as e:
         return UJSONResponse(e.errors())
