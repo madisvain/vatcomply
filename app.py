@@ -48,7 +48,9 @@ async def load_rates():
     data = envelope.findall("./eurofxref:Cube/eurofxref:Cube[@time]", namespaces)
     for i, d in enumerate(data):
         time = pendulum.parse(d.attrib["time"], strict=False).to_date_string()
-        # db.hmset(f"{time}-rates", {c.attrib["currency"]: c.attrib["rate"] for c in list(d)})
+        await database.execute(
+            query=rates.insert(), values={date: time, rates: {c.attrib["currency"]: c.attrib["rate"] for c in list(d)}}
+        )
 
 
 @app.on_event("shutdown")
