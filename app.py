@@ -5,7 +5,7 @@ import uvicorn
 import requests
 import zeep
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
 from xml.etree import ElementTree
@@ -23,7 +23,7 @@ app = Starlette(debug=True)
 # Database
 metadata = sqlalchemy.MetaData()
 
-rates = sqlalchemy.Table(
+Rates = sqlalchemy.Table(
     "rates",
     metadata,
     sqlalchemy.Column("date", sqlalchemy.Date, primary_key=True),
@@ -47,10 +47,12 @@ async def load_rates():
     }
     data = envelope.findall("./eurofxref:Cube/eurofxref:Cube[@time]", namespaces)
     for i, d in enumerate(data):
-        time = pendulum.parse(d.attrib["time"], strict=False).to_date_string()
-        await database.execute(
-            query=rates.insert(), values={date: time, rates: {c.attrib["currency"]: c.attrib["rate"] for c in list(d)}}
-        )
+        time = pendulum.parse(d.attrib["time"], strict=False)
+        if not await database.fetch_one(query=Rates.select().where(Rates.c.date == time)):
+            await database.execute(
+                query=Rates.insert(),
+                values={"date": time, "rates": {str(c.attrib["currency"]): float(c.attrib["rate"]) for c in list(d)}},
+            )
 
 
 @app.on_event("shutdown")
@@ -109,12 +111,16 @@ async def rates(request):
         query = RatesQueryValidationModel(**request.query_params)
 
         # Find the date
-        date = query.date
-        if not date:
-            date = db.get("latest-rates")
+        date = (
+            pendulum.instance(datetime.fromordinal(query.date.toordinal())).date()
+            if query.date
+            else pendulum.now().date()
+        )
 
         # Get the rates data
-        rates = db.hgetall(f"{date}-rates")
+        rates = await database.fetch_val(
+            query=Rates.select().where(date <= date).order_by(Rates.c.date.desc()).limit(1), column=Rates.c.rates
+        )
 
         # Base re-calculation
         if query.base and query.base != "EUR":
@@ -128,6 +134,6 @@ async def rates(request):
                 if rate not in query.symbols:
                     del rates[rate]
 
-        return UJSONResponse({"date": date, "base": query.base, "rates": rates})
+        return UJSONResponse({"date": date.to_date_string(), "base": query.base, "rates": rates})
     except ValidationError as e:
         return UJSONResponse(e.errors())
