@@ -119,7 +119,8 @@ async def rates(request):
 
         # Get the rates data
         rates = await database.fetch_val(
-            query=Rates.select().where(date <= date).order_by(Rates.c.date.desc()).limit(1), column=Rates.c.rates
+            query=Rates.select().where(Rates.c.date <= date).order_by(Rates.c.date.desc()).limit(1),
+            column=Rates.c.rates,
         )
 
         # Base re-calculation
