@@ -5,22 +5,22 @@ import uvicorn
 import requests
 import zeep
 
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 from xml.etree import ElementTree
 
-from pydantic import BaseModel, ValidationError, validator
-from pydantic.dataclasses import dataclass
+from pydantic import ValidationError
 from starlette.applications import Starlette
 from starlette.config import Config
 from starlette.responses import UJSONResponse
+
+from models import VATValidationModel, RatesQueryValidationModel
 
 config = Config(".env")
 app = Starlette(debug=True)
 
 
-# Database
+""" Database """
 metadata = sqlalchemy.MetaData()
 
 Rates = sqlalchemy.Table(
@@ -31,6 +31,9 @@ Rates = sqlalchemy.Table(
 )
 
 database = databases.Database(config("DATABASE_URL"))
+
+
+""" Startup & Shutdown """
 
 
 @app.on_event("startup")
@@ -60,33 +63,7 @@ async def shutdown():
     await database.disconnect()
 
 
-class VATValidationModel(BaseModel):
-    vat_number: str
-
-    @validator("vat_number")
-    def format_validation(cls, v):
-        # TODO: implement Regex validators
-        return v
-
-
-class RatesQueryValidationModel(BaseModel):
-    base: str = "EUR"
-    date: Optional[date]
-    symbols: Optional[list]
-
-    @validator("base")
-    def base_validation(cls, base):
-        if base not in config("SYMBOLS"):
-            raise ValueError(f"Base currency {base} is not supported.")
-        return base
-
-    @validator("symbols", pre=True, whole=True)
-    def symbols_validation(cls, symbols):
-        symbols = symbols.split(",")
-        diff = list(set(symbols) - set(config("SYMBOLS")))
-        if diff:
-            raise ValueError(f"Symbols {', '.join(diff)} are not supported.")
-        return symbols
+""" API """
 
 
 @app.route("/api/vat")
@@ -118,14 +95,14 @@ async def rates(request):
         )
 
         # Get the rates data
-        rates = await database.fetch_val(
-            query=Rates.select().where(Rates.c.date <= date).order_by(Rates.c.date.desc()).limit(1),
-            column=Rates.c.rates,
+        record = await database.fetch_one(
+            query=Rates.select().where(Rates.c.date <= date).order_by(Rates.c.date.desc()).limit(1)
         )
 
         # Base re-calculation
+        rates = record.rates
         if query.base and query.base != "EUR":
-            base_rate = Decimal(rates[query.base])
+            base_rate = Decimal(record.rates[query.base])
             rates = {currency: Decimal(rate) / base_rate for currency, rate in rates.items()}
             rates.update({"EUR": Decimal(1) / base_rate})
 
@@ -135,6 +112,6 @@ async def rates(request):
                 if rate not in query.symbols:
                     del rates[rate]
 
-        return UJSONResponse({"date": date.to_date_string(), "base": query.base, "rates": rates})
+        return UJSONResponse({"date": record.date.isoformat(), "base": query.base, "rates": rates})
     except ValidationError as e:
         return UJSONResponse(e.errors())
