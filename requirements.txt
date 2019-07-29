@@ -2,6 +2,7 @@ alembic
 databases[sqlite]
 pendulum
 pydantic
+pytest
 starlette
 redis
 requests

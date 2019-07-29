@@ -87,12 +87,10 @@ async def rates(request):
     try:
         query = RatesQueryValidationModel(**request.query_params)
 
+        if query.date:
+            print(query.date.isoformat())
         # Find the date
-        date = (
-            pendulum.instance(datetime.fromordinal(query.date.toordinal())).date()
-            if query.date
-            else pendulum.now().date()
-        )
+        date = query.date if query.date else pendulum.now().date()
 
         # Get the rates data
         record = await database.fetch_one(
