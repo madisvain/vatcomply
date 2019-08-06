@@ -3,10 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel, ValidationError, validator
 from pydantic.dataclasses import dataclass
-from starlette.config import Config
-from starlette.datastructures import CommaSeparatedStrings
 
-config = Config(".env")
+from settings import SYMBOLS
 
 
 class RatesQueryValidationModel(BaseModel):
@@ -16,14 +14,14 @@ class RatesQueryValidationModel(BaseModel):
 
     @validator("base")
     def base_validation(cls, base):
-        if base not in config("SYMBOLS", CommaSeparatedStrings):
+        if base not in SYMBOLS:
             raise ValueError(f"Base currency {base} is not supported.")
         return base
 
     @validator("symbols", pre=True, whole=True)
     def symbols_validation(cls, symbols):
         symbols = symbols.split(",")
-        diff = list(set(symbols) - set(config("SYMBOLS", CommaSeparatedStrings)))
+        diff = list(set(symbols) - set(SYMBOLS))
         if diff:
             raise ValueError(f"Symbols {', '.join(diff)} are not supported.")
         return symbols

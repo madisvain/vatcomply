@@ -11,13 +11,13 @@ from xml.etree import ElementTree
 
 from pydantic import ValidationError
 from starlette.applications import Starlette
-from starlette.config import Config
 from starlette.responses import UJSONResponse
 
 from models import VATValidationModel, RatesQueryValidationModel
+from settings import DATABASE_URL, DEBUG, RATES_URL, VIES_URL
 
-config = Config(".env")
-app = Starlette(debug=True)
+
+app = Starlette(debug=DEBUG)
 
 
 """ Database """
@@ -30,7 +30,7 @@ Rates = sqlalchemy.Table(
     sqlalchemy.Column("rates", sqlalchemy.JSON),
 )
 
-database = databases.Database(config("DATABASE_URL"))
+database = databases.Database(DATABASE_URL)
 
 
 """ Startup & Shutdown """
@@ -41,7 +41,7 @@ async def load_rates():
     await database.connect()
 
     # Load rates
-    r = requests.get(config("HISTORIC_RATES_URL"))
+    r = requests.get(RATES_URL)
     envelope = ElementTree.fromstring(r.content)
 
     namespaces = {
@@ -70,7 +70,7 @@ async def shutdown():
 async def vat(request):
     try:
         VATValidationModel(**request.query_params)
-        client = zeep.Client(wsdl=config("VIES_URL"))
+        client = zeep.Client(wsdl=VIES_URL)
         response = zeep.helpers.serialize_object(client.service.checkVat(countryCode="BE", vatNumber="0878065378"))
         return UJSONResponse({k: response[k] for k in ("name", "address", "valid")})
     except ValidationError as e:
