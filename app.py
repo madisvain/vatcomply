@@ -87,8 +87,6 @@ async def rates(request):
     try:
         query = RatesQueryValidationModel(**request.query_params)
 
-        if query.date:
-            print(query.date.isoformat())
         # Find the date
         date = query.date if query.date else pendulum.now().date()
 
@@ -112,4 +110,4 @@ async def rates(request):
 
         return UJSONResponse({"date": record.date.isoformat(), "base": query.base, "rates": rates})
     except ValidationError as e:
-        return UJSONResponse(e.errors())
+        return UJSONResponse(e.errors(), status_code=400)
