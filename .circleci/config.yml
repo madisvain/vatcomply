@@ -36,6 +36,7 @@ jobs:
           name: run tests
           command: |
             . env/bin/activate
+            PYTHONPATH=.:$PYTHONPATH alembic upgrade head
             pytest -s --disable-warnings
 
       - store_artifacts:
