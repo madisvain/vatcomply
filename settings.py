@@ -53,4 +53,5 @@ SYMBOLS = config(
 
 # Testing
 if TESTING:
-    DATABASE_URL = DATABASE_URL.replace(database="test_" + DATABASE_URL.database)
+    pass
+    # DATABASE_URL = DATABASE_URL.replace(path="/test_db.sqlite3")

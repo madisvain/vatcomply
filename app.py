@@ -5,6 +5,7 @@ import uvicorn
 import requests
 import zeep
 
+from babel.numbers import get_currency_name, get_currency_symbol
 from datetime import datetime
 from decimal import Decimal
 from xml.etree import ElementTree
@@ -14,7 +15,7 @@ from starlette.applications import Starlette
 from starlette.responses import UJSONResponse
 
 from models import VATValidationModel, RatesQueryValidationModel
-from settings import DATABASE_URL, DEBUG, RATES_URL, VIES_URL
+from settings import DATABASE_URL, DEBUG, SYMBOLS, TESTING, RATES_URL, VIES_URL
 
 
 app = Starlette(debug=DEBUG)
@@ -40,22 +41,26 @@ database = databases.Database(DATABASE_URL)
 async def load_rates():
     await database.connect()
 
-    # Load rates
-    r = requests.get(RATES_URL)
-    envelope = ElementTree.fromstring(r.content)
+    if not TESTING or not await database.fetch_one(query=Rates.select()):
+        # Load rates
+        r = requests.get(RATES_URL)
+        envelope = ElementTree.fromstring(r.content)
 
-    namespaces = {
-        "gesmes": "http://www.gesmes.org/xml/2002-08-01",
-        "eurofxref": "http://www.ecb.int/vocabulary/2002-08-01/eurofxref",
-    }
-    data = envelope.findall("./eurofxref:Cube/eurofxref:Cube[@time]", namespaces)
-    for i, d in enumerate(data):
-        time = pendulum.parse(d.attrib["time"], strict=False)
-        if not await database.fetch_one(query=Rates.select().where(Rates.c.date == time)):
-            await database.execute(
-                query=Rates.insert(),
-                values={"date": time, "rates": {str(c.attrib["currency"]): float(c.attrib["rate"]) for c in list(d)}},
-            )
+        namespaces = {
+            "gesmes": "http://www.gesmes.org/xml/2002-08-01",
+            "eurofxref": "http://www.ecb.int/vocabulary/2002-08-01/eurofxref",
+        }
+        data = envelope.findall("./eurofxref:Cube/eurofxref:Cube[@time]", namespaces)
+        for i, d in enumerate(data):
+            time = pendulum.parse(d.attrib["time"], strict=False)
+            if not await database.fetch_one(query=Rates.select().where(Rates.c.date == time)):
+                await database.execute(
+                    query=Rates.insert(),
+                    values={
+                        "date": time,
+                        "rates": {str(c.attrib["currency"]): float(c.attrib["rate"]) for c in list(d)},
+                    },
+                )
 
 
 @app.on_event("shutdown")
@@ -69,9 +74,13 @@ async def shutdown():
 @app.route("/api/vat")
 async def vat(request):
     try:
-        VATValidationModel(**request.query_params)
-        client = zeep.Client(wsdl=VIES_URL)
-        response = zeep.helpers.serialize_object(client.service.checkVat(countryCode="BE", vatNumber="0878065378"))
+        query = VATValidationModel(**request.query_params)
+        print(query.vat_number[:2])
+        print(query.vat_number[1:])
+        client = zeep.Client(wsdl=str(VIES_URL))
+        response = zeep.helpers.serialize_object(
+            client.service.checkVat(countryCode=query.vat_number[:2], vatNumber=query.vat_number[2:])
+        )
         return UJSONResponse({k: response[k] for k in ("name", "address", "valid")})
     except ValidationError as e:
         return UJSONResponse(e.errors())
@@ -111,3 +120,14 @@ async def rates(request):
         return UJSONResponse({"date": record.date.isoformat(), "base": query.base, "rates": rates})
     except ValidationError as e:
         return UJSONResponse(e.errors(), status_code=400)
+
+
+@app.route("/api/currencies")
+async def currencies(request):
+    currencies = {}
+    for symbol in list(SYMBOLS):
+        currencies[symbol] = {
+            "name": get_currency_name(symbol, locale="en"),
+            "symbol": get_currency_symbol(symbol, locale="en"),
+        }
+    return UJSONResponse(currencies)

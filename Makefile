@@ -8,4 +8,4 @@ migrate:
 	PYTHONPATH=.:$PYTHONPATH alembic upgrade head
 
 test:
-	pytest -s --disable-warnings
+	export TESTING=True; pytest -s --disable-warnings

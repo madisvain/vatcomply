@@ -14,14 +14,14 @@ class RatesQueryValidationModel(BaseModel):
 
     @validator("base")
     def base_validation(cls, base):
-        if base not in SYMBOLS:
+        if base not in list(SYMBOLS):
             raise ValueError(f"Base currency {base} is not supported.")
         return base
 
     @validator("symbols", pre=True, whole=True)
     def symbols_validation(cls, symbols):
         symbols = symbols.split(",")
-        diff = list(set(symbols) - set(SYMBOLS))
+        diff = list(set(symbols) - set(list(SYMBOLS)))
         if diff:
             raise ValueError(f"Symbols {', '.join(diff)} are not supported.")
         return symbols
