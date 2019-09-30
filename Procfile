@@ -1,1 +1,1 @@
-web: gunicorn app:app --worker-class uvicorn.workers.UvicornWorker --workers ${GUNICORN_WORKERS}
+web: gunicorn app:app --worker-class uvicorn.workers.UvicornWorker --workers ${WEB_CONCURRENCY}
