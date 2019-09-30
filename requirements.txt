@@ -1,6 +1,7 @@
 alembic
 babel
 databases[sqlite]
+gunicorn
 pendulum
 pydantic
 pytest

@@ -1,0 +1,23 @@
+{
+    "name": "VATcomply",
+    "description": "A painless VAT compliance & Exchange rates API",
+    "website": "https://www.vatcomply.com",
+    "repository": "https://github.com/madisvain/vatcomply",
+    "keywords": [
+        "python",
+        "starlette",
+        "api",
+        "exchange rates",
+        "vat compliance"
+    ],
+    "env": {
+        "WEB_CONCURRENCY": {
+            "description": "The number of gunicorn workers to run.",
+            "value": "4"
+        },
+        "SENTRY_DSN": {
+            "description": "To enable Sentry integration provide your Sentry DSN.",
+            "required": false
+        }
+    }
+}
