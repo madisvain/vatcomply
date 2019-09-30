@@ -39,7 +39,6 @@ database = databases.Database(DATABASE_URL)
 
 @app.on_event("startup")
 async def load_rates():
-    print(DATABASE_URL)
     await database.connect()
 
     if not TESTING or not await database.fetch_one(query=Rates.select()):
