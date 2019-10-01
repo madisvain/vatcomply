@@ -12,6 +12,7 @@ from decimal import Decimal
 from pydantic import ValidationError
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.applications import Starlette
+from starlette.background import BackgroundTask
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import UJSONResponse
@@ -54,29 +55,29 @@ database = databases.Database(DATABASE_URL)
 
 
 @app.on_event("startup")
-async def load_rates():
+async def startup():
     await database.connect()
 
     if not TESTING or not await database.fetch_one(query=Rates.select()):
-        # Load rates
-        r = requests.get(RATES_URL)
-        envelope = ElementTree.fromstring(r.content)
+        BackgroundTask(load_rates)
 
-        namespaces = {
-            "gesmes": "http://www.gesmes.org/xml/2002-08-01",
-            "eurofxref": "http://www.ecb.int/vocabulary/2002-08-01/eurofxref",
-        }
-        data = envelope.findall("./eurofxref:Cube/eurofxref:Cube[@time]", namespaces)
-        for i, d in enumerate(data):
-            time = pendulum.parse(d.attrib["time"], strict=False)
-            if not await database.fetch_one(query=Rates.select().where(Rates.c.date == time)):
-                await database.execute(
-                    query=Rates.insert(),
-                    values={
-                        "date": time,
-                        "rates": {str(c.attrib["currency"]): float(c.attrib["rate"]) for c in list(d)},
-                    },
-                )
+
+async def load_rates():
+    r = requests.get(RATES_URL)
+    envelope = ElementTree.fromstring(r.content)
+
+    namespaces = {
+        "gesmes": "http://www.gesmes.org/xml/2002-08-01",
+        "eurofxref": "http://www.ecb.int/vocabulary/2002-08-01/eurofxref",
+    }
+    data = envelope.findall("./eurofxref:Cube/eurofxref:Cube[@time]", namespaces)
+    for i, d in enumerate(data):
+        time = pendulum.parse(d.attrib["time"], strict=False)
+        if not await database.fetch_one(query=Rates.select().where(Rates.c.date == time)):
+            await database.execute(
+                query=Rates.insert(),
+                values={"date": time, "rates": {str(c.attrib["currency"]): float(c.attrib["rate"]) for c in list(d)}},
+            )
 
 
 @app.on_event("shutdown")
