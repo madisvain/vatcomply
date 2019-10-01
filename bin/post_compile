@@ -1,1 +1,2 @@
 PYTHONPATH=.:$PYTHONPATH alembic upgrade head
+PYTHONPATH=.:$PYTHONPATH python periodic.py

@@ -1,9 +1,6 @@
-import databases
 import pendulum
 import sentry_sdk
-import sqlalchemy
 import uvicorn
-import requests
 import zeep
 
 from babel.numbers import get_currency_name, get_currency_symbol
@@ -16,10 +13,11 @@ from starlette.background import BackgroundTask
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import UJSONResponse
-from xml.etree import ElementTree
 
+from db import database, Rates
 from models import VATValidationModel, RatesQueryValidationModel
-from settings import ALLOWED_HOSTS, DATABASE_URL, DEBUG, FORCE_HTTPS, SENTRY_DSN, SYMBOLS, TESTING, RATES_URL, VIES_URL
+from settings import ALLOWED_HOSTS, DATABASE_URL, DEBUG, FORCE_HTTPS, SENTRY_DSN, SYMBOLS, TESTING, VIES_URL
+from utils import load_rates
 
 
 app = Starlette(debug=DEBUG)
@@ -38,46 +36,12 @@ if SENTRY_DSN:
     app.add_middleware(SentryAsgiMiddleware)
 
 
-""" Database """
-metadata = sqlalchemy.MetaData()
-
-Rates = sqlalchemy.Table(
-    "rates",
-    metadata,
-    sqlalchemy.Column("date", sqlalchemy.Date, primary_key=True),
-    sqlalchemy.Column("rates", sqlalchemy.JSON),
-)
-
-database = databases.Database(DATABASE_URL)
-
-
 """ Startup & Shutdown """
 
 
 @app.on_event("startup")
 async def startup():
     await database.connect()
-
-    if not TESTING or not await database.fetch_one(query=Rates.select()):
-        BackgroundTask(load_rates)
-
-
-async def load_rates():
-    r = requests.get(RATES_URL)
-    envelope = ElementTree.fromstring(r.content)
-
-    namespaces = {
-        "gesmes": "http://www.gesmes.org/xml/2002-08-01",
-        "eurofxref": "http://www.ecb.int/vocabulary/2002-08-01/eurofxref",
-    }
-    data = envelope.findall("./eurofxref:Cube/eurofxref:Cube[@time]", namespaces)
-    for i, d in enumerate(data):
-        time = pendulum.parse(d.attrib["time"], strict=False)
-        if not await database.fetch_one(query=Rates.select().where(Rates.c.date == time)):
-            await database.execute(
-                query=Rates.insert(),
-                values={"date": time, "rates": {str(c.attrib["currency"]): float(c.attrib["rate"]) for c in list(d)}},
-            )
 
 
 @app.on_event("shutdown")
