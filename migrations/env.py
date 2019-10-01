@@ -3,7 +3,7 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
-import app
+import db
 from settings import DATABASE_URL
 
 # this is the Alembic Config object, which provides
@@ -12,7 +12,7 @@ config = context.config
 
 # Database URL configuration
 config.set_main_option("sqlalchemy.url", str(DATABASE_URL))
-target_metadata = app.metadata
+target_metadata = db.metadata
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
