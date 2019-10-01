@@ -16,8 +16,7 @@ from starlette.responses import UJSONResponse
 
 from db import database, Rates
 from models import VATValidationModel, RatesQueryValidationModel
-from settings import ALLOWED_HOSTS, DATABASE_URL, DEBUG, FORCE_HTTPS, SENTRY_DSN, SYMBOLS, TESTING, VIES_URL
-from utils import load_rates
+from settings import ALLOWED_HOSTS, DEBUG, FORCE_HTTPS, SENTRY_DSN, SYMBOLS, TESTING, VIES_URL
 
 
 app = Starlette(debug=DEBUG)
