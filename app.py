@@ -12,14 +12,24 @@ from decimal import Decimal
 from pydantic import ValidationError
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.applications import Starlette
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import UJSONResponse
 from xml.etree import ElementTree
 
 from models import VATValidationModel, RatesQueryValidationModel
-from settings import DATABASE_URL, DEBUG, SENTRY_DSN, SYMBOLS, TESTING, RATES_URL, VIES_URL
+from settings import ALLOWED_HOSTS, DATABASE_URL, DEBUG, FORCE_HTTPS, SENTRY_DSN, SYMBOLS, TESTING, RATES_URL, VIES_URL
 
 
 app = Starlette(debug=DEBUG)
+
+""" Allowed hosts """
+if ALLOWED_HOSTS:
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
+
+""" Force HTTPS """
+if FORCE_HTTPS:
+    app.add_middleware(HTTPSRedirectMiddleware)
 
 """ Sentry """
 if SENTRY_DSN:
@@ -82,11 +92,15 @@ async def vat(request):
     try:
         query = VATValidationModel(**request.query_params)
         print(query.vat_number[:2])
-        print(query.vat_number[1:])
+        print(query.vat_number[2:])
         client = zeep.Client(wsdl=str(VIES_URL))
-        response = zeep.helpers.serialize_object(
-            client.service.checkVat(countryCode=query.vat_number[:2], vatNumber=query.vat_number[2:])
-        )
+        try:
+            response = zeep.helpers.serialize_object(
+                client.service.checkVat(countryCode=query.vat_number[:2], vatNumber=query.vat_number[2:])
+            )
+        except zeep.exceptions.Fault as e:
+            return UJSONResponse({"error": e.message})
+
         return UJSONResponse({k: response[k] for k in ("name", "address", "valid")})
     except ValidationError as e:
         return UJSONResponse(e.errors())

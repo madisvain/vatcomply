@@ -8,6 +8,9 @@ TESTING = config("TESTING", cast=bool, default=False)
 
 DATABASE_URL = config("DATABASE_URL", cast=URL, default="sqlite:///db.sqlite3")
 
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=CommaSeparatedStrings, default=[])
+FORCE_HTTPS = config("FORCE_HTTPS", cast=bool, default=False)
+
 RATES_URL = config("RATES_URL", cast=URL, default="https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml")
 VIES_URL = config("VIES_URL", cast=URL, default="http://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl")
 
