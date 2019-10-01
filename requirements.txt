@@ -5,6 +5,7 @@ gunicorn
 pendulum
 pydantic
 pytest
+sentry-sdk
 starlette
 redis
 requests

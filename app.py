@@ -1,5 +1,6 @@
 import databases
 import pendulum
+import sentry_sdk
 import sqlalchemy
 import uvicorn
 import requests
@@ -8,17 +9,22 @@ import zeep
 from babel.numbers import get_currency_name, get_currency_symbol
 from datetime import datetime
 from decimal import Decimal
-from xml.etree import ElementTree
-
 from pydantic import ValidationError
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.applications import Starlette
 from starlette.responses import UJSONResponse
+from xml.etree import ElementTree
 
 from models import VATValidationModel, RatesQueryValidationModel
-from settings import DATABASE_URL, DEBUG, SYMBOLS, TESTING, RATES_URL, VIES_URL
+from settings import DATABASE_URL, DEBUG, SENTRY_DSN, SYMBOLS, TESTING, RATES_URL, VIES_URL
 
 
 app = Starlette(debug=DEBUG)
+
+""" Sentry """
+if SENTRY_DSN:
+    sentry_sdk.init(dsn=SENTRY_DSN)
+    app.add_middleware(SentryAsgiMiddleware)
 
 
 """ Database """

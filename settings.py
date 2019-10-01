@@ -51,6 +51,8 @@ SYMBOLS = config(
     ],
 )
 
+SENTRY_DSN = config("SENTRY_DSN", cast=str, default="")
+
 # Testing
 if TESTING:
     pass
