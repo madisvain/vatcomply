@@ -25,7 +25,6 @@ app = Starlette(debug=DEBUG)
 
 """ Allowed hosts """
 if ALLOWED_HOSTS:
-    print(ALLOWED_HOSTS)
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(ALLOWED_HOSTS))
 
 """ Force HTTPS """
