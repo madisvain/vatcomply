@@ -37,7 +37,6 @@ jobs:
           command: |
             . env/bin/activate
             PYTHONPATH=.:$PYTHONPATH alembic upgrade head
-            PYTHONPATH=.:$PYTHONPATH python periodic.py
             pytest -s --disable-warnings
 
       - store_artifacts:
