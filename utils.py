@@ -1,17 +1,14 @@
-import asyncio
 import pendulum
 import requests
 
 from xml.etree import ElementTree
 
 from db import database, Rates
-from settings import RATES_URL
+from settings import RATES_URL, RATES_LAST_90_DAYS_URL
 
 
-async def load_rates():
-    await database.connect()
-
-    r = requests.get(RATES_URL)
+async def load_rates(last_90_days=True):
+    r = requests.get(RATES_LAST_90_DAYS_URL if last_90_days else RATES_URL)
     envelope = ElementTree.fromstring(r.content)
 
     namespaces = {
@@ -26,14 +23,3 @@ async def load_rates():
                 query=Rates.insert(),
                 values={"date": time, "rates": {str(c.attrib["currency"]): float(c.attrib["rate"]) for c in list(d)}},
             )
-
-    await database.disconnect()
-
-
-loop = asyncio.get_event_loop()
-task = loop.create_task(load_rates())
-
-try:
-    loop.run_until_complete(task)
-except asyncio.CancelledError:
-    pass

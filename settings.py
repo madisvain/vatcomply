@@ -12,6 +12,9 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=CommaSeparatedStrings, default=[])
 FORCE_HTTPS = config("FORCE_HTTPS", cast=bool, default=False)
 
 RATES_URL = config("RATES_URL", cast=URL, default="https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml")
+RATES_LAST_90_DAYS_URL = config(
+    "RATES_LAST_90_DAYS_URL", cast=URL, default="https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml"
+)
 VIES_URL = config("VIES_URL", cast=URL, default="http://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl")
 
 SYMBOLS = config(

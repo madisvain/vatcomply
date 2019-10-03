@@ -1,8 +1,10 @@
+import fcntl
 import pendulum
 import sentry_sdk
 import uvicorn
 import zeep
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from babel.numbers import get_currency_name, get_currency_symbol
 from datetime import datetime
 from decimal import Decimal
@@ -17,6 +19,7 @@ from starlette.responses import UJSONResponse
 from db import database, Rates
 from models import VATValidationModel, RatesQueryValidationModel
 from settings import ALLOWED_HOSTS, DEBUG, FORCE_HTTPS, SENTRY_DSN, SYMBOLS, TESTING, VIES_URL
+from utils import load_rates
 
 
 app = Starlette(debug=DEBUG)
@@ -41,6 +44,22 @@ if SENTRY_DSN:
 @app.on_event("startup")
 async def startup():
     await database.connect()
+
+    # Schedule exchangerate updates
+    try:
+        _ = open("scheduler.lock", "w")
+        fcntl.lockf(_.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+        scheduler = AsyncIOScheduler()
+        scheduler.start()
+
+        # Updates lates 90 days data
+        scheduler.add_job(load_rates, "interval", hours=1, minutes=10)
+
+        # Fill up database with rates
+        scheduler.add_job(load_rates, kwargs={"last_90_days": False})
+    except BlockingIOError:
+        pass
 
 
 @app.on_event("shutdown")
