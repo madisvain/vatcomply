@@ -1,10 +1,15 @@
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel, ValidationError, validator
+from pydantic import BaseModel, ValidationError, validator, EmailStr, SecretStr
 from pydantic.dataclasses import dataclass
 
 from settings import SYMBOLS
+
+
+class AuthValidationModel(BaseModel):
+    email: EmailStr
+    password: SecretStr
 
 
 class RatesQueryValidationModel(BaseModel):
@@ -25,6 +30,11 @@ class RatesQueryValidationModel(BaseModel):
         if diff:
             raise ValueError(f"Symbols {', '.join(diff)} are not supported.")
         return symbols
+
+
+class RegistrationValidationModel(BaseModel):
+    email: EmailStr
+    password: SecretStr
 
 
 class VATValidationModel(BaseModel):

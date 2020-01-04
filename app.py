@@ -11,13 +11,16 @@ from decimal import Decimal
 from pydantic import ValidationError
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.applications import Starlette
+from starlette.authentication import requires
 from starlette.background import BackgroundTask
+from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import UJSONResponse
 
-from db import database, Rates
-from models import VATValidationModel, RatesQueryValidationModel
+from auth import TokenAuthenticationBackend
+from db import database, Rates, Users
+from models import AuthValidationModel, RatesQueryValidationModel, RegistrationValidationModel, VATValidationModel
 from settings import ALLOWED_HOSTS, DEBUG, FORCE_HTTPS, SENTRY_DSN, SYMBOLS, TESTING, VIES_URL
 from utils import load_rates
 
@@ -36,6 +39,9 @@ if FORCE_HTTPS:
 if SENTRY_DSN:
     sentry_sdk.init(dsn=SENTRY_DSN)
     app.add_middleware(SentryAsgiMiddleware)
+
+""" Authentication """
+app.add_middleware(AuthenticationMiddleware, backend=TokenAuthenticationBackend())
 
 
 """ Startup & Shutdown """
@@ -70,7 +76,32 @@ async def shutdown():
 """ API """
 
 
+@app.route("/api/auth", methods=["POST"])
+async def login(request):
+    try:
+        data = await request.json()
+        auth = AuthValidationModel(**data)
+        return UJSONResponse(auth.dict())
+    except ValidationError as e:
+        return UJSONResponse(e.errors())
+
+
+@app.route("/api/register", methods=["POST"])
+async def register(request):
+    try:
+        data = await request.json()
+        registration = RegistrationValidationModel(**data)
+        await database.execute(
+            query=Users.insert(),
+            values={"email": registration.email, "password": registration.password.get_secret_value()},
+        )
+        return UJSONResponse(registration.dict(), status_code=201)
+    except ValidationError as e:
+        return UJSONResponse(e.errors())
+
+
 @app.route("/api/vat")
+@requires("authenticated")
 async def vat(request):
     try:
         query = VATValidationModel(**request.query_params)
@@ -90,11 +121,13 @@ async def vat(request):
 
 
 @app.route("/api/countries")
+@requires("authenticated")
 async def countries(request):
     return UJSONResponse({})
 
 
 @app.route("/api/rates")
+@requires("authenticated")
 async def rates(request):
     try:
         query = RatesQueryValidationModel(**request.query_params)
@@ -126,6 +159,7 @@ async def rates(request):
 
 
 @app.route("/api/currencies")
+@requires("authenticated")
 async def currencies(request):
     currencies = {}
     for symbol in list(SYMBOLS):
@@ -134,3 +168,7 @@ async def currencies(request):
             "symbol": get_currency_symbol(symbol, locale="en"),
         }
     return UJSONResponse(currencies)
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)

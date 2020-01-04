@@ -5,9 +5,8 @@ Revises:
 Create Date: 2019-07-11 11:07:50.885209
 
 """
-import sqlalchemy
-
 from alembic import op
+import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
@@ -18,12 +17,8 @@ depends_on = None
 
 
 def upgrade():
-    op.create_table(
-        "rates",
-        sqlalchemy.Column("date", sqlalchemy.Date, primary_key=True),
-        sqlalchemy.Column("rates", sqlalchemy.JSON),
-    )
+    op.create_table("rates", sa.Column("date", sa.Date, primary_key=True), sa.Column("rates", sa.JSON))
 
 
 def downgrade():
-    op.drop_table("account")
+    op.drop_table("rates")

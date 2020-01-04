@@ -3,8 +3,9 @@ apscheduler
 babel
 databases[sqlite]
 gunicorn
+passlib
 pendulum
-pydantic
+pydantic[email]
 pytest
 sentry-sdk
 starlette

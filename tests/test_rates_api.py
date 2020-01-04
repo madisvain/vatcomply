@@ -6,7 +6,7 @@ from app import app
 class TestRatesAPI(object):
     def test_latest_api(self):
         with TestClient(app) as client:
-            response = client.get("/api/rates")
+            response = client.get("/api/rates", headers={"Authorization": "Token test-token"})
             assert response.status_code == 200
             assert isinstance(response.json(), dict)
             assert "date" in response.json()
@@ -17,7 +17,7 @@ class TestRatesAPI(object):
 
     def test_date_api(self):
         with TestClient(app) as client:
-            response = client.get("/api/rates?date=2018-10-12")
+            response = client.get("/api/rates?date=2018-10-12", headers={"Authorization": "Token test-token"})
             assert response.status_code == 200
             assert isinstance(response.json(), dict)
             assert "date" in response.json()
@@ -29,13 +29,13 @@ class TestRatesAPI(object):
 
     def test_invalid_date_api(self):
         with TestClient(app) as client:
-            response = client.get("/api/rates?date=abc")
+            response = client.get("/api/rates?date=abc", headers={"Authorization": "Token test-token"})
             assert response.status_code == 400
             assert isinstance(response.json(), list)
 
     def test_date_weekend_api(self):
         with TestClient(app) as client:
-            response = client.get("/api/rates?date=2018-10-13")
+            response = client.get("/api/rates?date=2018-10-13", headers={"Authorization": "Token test-token"})
             assert response.status_code == 200
             assert isinstance(response.json(), dict)
             assert "date" in response.json()
@@ -47,7 +47,7 @@ class TestRatesAPI(object):
 
     def test_base_api(self):
         with TestClient(app) as client:
-            response = client.get("/api/rates?base=USD")
+            response = client.get("/api/rates?base=USD", headers={"Authorization": "Token test-token"})
             assert response.status_code == 200
             assert isinstance(response.json(), dict)
             assert "date" in response.json()
@@ -59,7 +59,7 @@ class TestRatesAPI(object):
 
     def test_symbols_api(self):
         with TestClient(app) as client:
-            response = client.get("/api/rates?symbols=USD,JPY,GBP")
+            response = client.get("/api/rates?symbols=USD,JPY,GBP", headers={"Authorization": "Token test-token"})
             assert response.status_code == 200
             assert isinstance(response.json(), dict)
             assert "date" in response.json()
@@ -70,6 +70,6 @@ class TestRatesAPI(object):
 
     def test_invalid_symbols_api(self):
         with TestClient(app) as client:
-            response = client.get("/api/rates?symbols=12345")
+            response = client.get("/api/rates?symbols=12345", headers={"Authorization": "Token test-token"})
             assert response.status_code == 400
             assert isinstance(response.json(), list)
