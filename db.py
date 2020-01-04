@@ -19,7 +19,7 @@ Users = sqlalchemy.Table(
     sqlalchemy.Column("pk", sqlalchemy.Integer, primary_key=True),
     sqlalchemy.Column("email", sqlalchemy.String, nullable=False, index=True),
     sqlalchemy.Column("password", sqlalchemy.String, nullable=False),
-    sqlalchemy.Column("created_at", sqlalchemy.DateTime, default=pendulum.now(), nullable=False),
+    sqlalchemy.Column("created_at", sqlalchemy.DateTime, default=sqlalchemy.func.now(), nullable=False),
     sqlalchemy.Column("last_login", sqlalchemy.DateTime),
 )
 
