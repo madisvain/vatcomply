@@ -3,7 +3,7 @@ from starlette.testclient import TestClient
 from app import app
 
 
-class TestCurrenciesAPI(object):
+class TestRegistrationAPI(object):
     def test_auth(self):
         with TestClient(app) as client:
             response = client.get("/api/register")
@@ -12,4 +12,9 @@ class TestCurrenciesAPI(object):
     def test_register(self):
         with TestClient(app) as client:
             response = client.post("/api/register", json={"email": "test@test.com", "password": "password"})
+            assert response.status_code == 201
+
+    def test_register_without_password(self):
+        with TestClient(app) as client:
+            response = client.post("/api/register", json={"email": "test@test.com", "password": ""})
             assert response.status_code == 201

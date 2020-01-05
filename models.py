@@ -7,7 +7,7 @@ from pydantic.dataclasses import dataclass
 from settings import SYMBOLS
 
 
-class AuthValidationModel(BaseModel):
+class LoginValidationModel(BaseModel):
     email: EmailStr
     password: SecretStr
 

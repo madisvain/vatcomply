@@ -8,6 +8,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from babel.numbers import get_currency_name, get_currency_symbol
 from datetime import datetime
 from decimal import Decimal
+from passlib.hash import pbkdf2_sha256
 from pydantic import ValidationError
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.applications import Starlette
@@ -20,7 +21,7 @@ from starlette.responses import UJSONResponse
 
 from auth import TokenAuthenticationBackend
 from db import database, Rates, Users
-from models import AuthValidationModel, RatesQueryValidationModel, RegistrationValidationModel, VATValidationModel
+from models import LoginValidationModel, RatesQueryValidationModel, RegistrationValidationModel, VATValidationModel
 from settings import ALLOWED_HOSTS, DEBUG, FORCE_HTTPS, SENTRY_DSN, SYMBOLS, TESTING, VIES_URL
 from utils import load_rates
 
@@ -76,12 +77,13 @@ async def shutdown():
 """ API """
 
 
-@app.route("/api/auth", methods=["POST"])
+@app.route("/api/login", methods=["POST"])
 async def login(request):
     try:
         data = await request.json()
-        auth = AuthValidationModel(**data)
-        return UJSONResponse(auth.dict())
+        login = LoginValidationModel(**data)
+
+        return UJSONResponse(login.dict())
     except ValidationError as e:
         return UJSONResponse(e.errors())
 
@@ -93,7 +95,10 @@ async def register(request):
         registration = RegistrationValidationModel(**data)
         await database.execute(
             query=Users.insert(),
-            values={"email": registration.email, "password": registration.password.get_secret_value()},
+            values={
+                "email": registration.email,
+                "password": pbkdf2_sha256.hash(registration.password.get_secret_value()),
+            },
         )
         return UJSONResponse(registration.dict(), status_code=201)
     except ValidationError as e:
