@@ -85,7 +85,7 @@ async def login(request):
 
         return UJSONResponse(login.dict())
     except ValidationError as e:
-        return UJSONResponse(e.errors())
+        return UJSONResponse(e.errors(), status_code=400)
 
 
 @app.route("/api/register", methods=["POST"])
@@ -100,9 +100,11 @@ async def register(request):
                 "password": pbkdf2_sha256.hash(registration.password.get_secret_value()),
             },
         )
-        return UJSONResponse(registration.dict(), status_code=201)
+        response = registration.dict()
+        del response["password"]
+        return UJSONResponse(response, status_code=201)
     except ValidationError as e:
-        return UJSONResponse(e.errors())
+        return UJSONResponse(e.errors(), status_code=400)
 
 
 @app.route("/api/vat")
@@ -122,7 +124,7 @@ async def vat(request):
 
         return UJSONResponse({k: response[k] for k in ("name", "address", "valid")})
     except ValidationError as e:
-        return UJSONResponse(e.errors())
+        return UJSONResponse(e.errors(), status_code=400)
 
 
 @app.route("/api/countries")
