@@ -1,3 +1,4 @@
+from databases import DatabaseURL
 from starlette.config import Config
 from starlette.datastructures import CommaSeparatedStrings, URL
 
@@ -6,7 +7,8 @@ config = Config(".env")
 DEBUG = config("DEBUG", cast=bool, default=False)
 TESTING = config("TESTING", cast=bool, default=False)
 
-DATABASE_URL = config("DATABASE_URL", cast=URL, default="sqlite:///db.sqlite3")
+DATABASE_URL = config("DATABASE_URL", cast=DatabaseURL, default="sqlite:///db.sqlite3")
+TEST_DATABASE_URL = DATABASE_URL.replace(database="test_" + DATABASE_URL.database)
 
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=CommaSeparatedStrings, default=[])
 FORCE_HTTPS = config("FORCE_HTTPS", cast=bool, default=False)

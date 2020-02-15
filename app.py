@@ -60,11 +60,12 @@ async def startup():
         scheduler = AsyncIOScheduler()
         scheduler.start()
 
-        # Updates lates 90 days data
-        scheduler.add_job(load_rates, "interval", hours=1, minutes=10)
+        if not TESTING:
+            # Updates lates 90 days data
+            scheduler.add_job(load_rates, "interval", hours=1, minutes=10)
 
-        # Fill up database with rates
-        scheduler.add_job(load_rates, kwargs={"last_90_days": False})
+            # Fill up database with rates
+            scheduler.add_job(load_rates, kwargs={"last_90_days": False})
     except BlockingIOError:
         pass
 

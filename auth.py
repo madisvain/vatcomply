@@ -22,9 +22,5 @@ class TokenAuthenticationBackend(AuthenticationBackend):
         elif len(auth) > 2:
             raise AuthenticationError("Invalid token header. Token string should not contain spaces.")
 
-        if TESTING and auth[1] == "test-token":
-            # TODO: Tests should create their own user with a Token
-            return AuthCredentials(["authenticated"]), SimpleUser("username")
-        else:
-            # TODO: Implement validation
-            return AuthCredentials(["authenticated"]), SimpleUser("username")
+        # TODO: Implement validation
+        return AuthCredentials(["authenticated"]), SimpleUser("username")

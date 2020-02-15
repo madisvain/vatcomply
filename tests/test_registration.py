@@ -19,7 +19,7 @@ class TestRegistrationAPI(object):
             response = client.post("/api/register", json={"email": "test@test.com", "password": ""})
             assert response.status_code == 400
 
-    def test_register_without_password(self):
+    def test_register_without_email(self):
         with TestClient(app) as client:
-            response = client.post("/api/register", json={"email": "test@test.com", "password": ""})
+            response = client.post("/api/register", json={"email": "", "password": "password"})
             assert response.status_code == 400

@@ -1,6 +1,7 @@
 .DS_Store
 .vscode/*
 scheduler.lock
+test_db.sqlite3
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

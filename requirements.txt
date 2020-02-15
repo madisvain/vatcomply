@@ -9,6 +9,7 @@ pydantic[email]
 pytest
 sentry-sdk
 starlette
+sqlalchemy-utils
 redis
 requests
 ujson

@@ -2,7 +2,7 @@ import databases
 import pendulum
 import sqlalchemy
 
-from settings import DATABASE_URL
+from settings import DATABASE_URL, TEST_DATABASE_URL, TESTING
 
 metadata = sqlalchemy.MetaData()
 
@@ -23,4 +23,7 @@ Users = sqlalchemy.Table(
     sqlalchemy.Column("last_login", sqlalchemy.DateTime),
 )
 
-database = databases.Database(DATABASE_URL)
+if TESTING:
+    database = databases.Database(TEST_DATABASE_URL, force_rollback=True)
+else:
+    database = databases.Database(DATABASE_URL)
