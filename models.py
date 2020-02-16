@@ -48,13 +48,6 @@ class RegistrationValidationModel(BaseModel):
     email: EmailStr
     password: SecretStr
 
-    @validator("email")
-    def unique_email(cls, v):
-        user = database.fetch_one(query=Users.select().where(Users.c.email == v))
-        if user:
-            raise ValueError("A user with this email already exists.")
-        return v
-
     @validator("password")
     def password_length(cls, v):
         if len(v.get_secret_value()) < 6:

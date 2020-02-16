@@ -10,6 +10,7 @@ from datetime import datetime
 from decimal import Decimal
 from passlib.hash import pbkdf2_sha256
 from pydantic import ValidationError
+from pydantic.error_wrappers import ErrorWrapper
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.applications import Starlette
 from starlette.authentication import requires
@@ -21,6 +22,7 @@ from starlette.responses import UJSONResponse
 
 from auth import TokenAuthenticationBackend
 from db import database, Rates, Users
+from errors import AlreadyExistsError
 from models import LoginValidationModel, RatesQueryValidationModel, RegistrationValidationModel, VATValidationModel
 from settings import ALLOWED_HOSTS, DEBUG, FORCE_HTTPS, SENTRY_DSN, SYMBOLS, TESTING, VIES_URL
 from utils import load_rates
@@ -94,6 +96,15 @@ async def register(request):
     try:
         data = await request.json()
         registration = RegistrationValidationModel(**data)
+
+        # Check if the email is unique
+        user = await database.fetch_one(query=Users.select().where(Users.c.email == registration.email))
+        if user:
+            raise ValidationError(
+                [ErrorWrapper(AlreadyExistsError(email=registration.email), loc="email")],
+                model=RegistrationValidationModel,
+            )
+
         await database.execute(
             query=Users.insert(),
             values={
@@ -113,8 +124,6 @@ async def register(request):
 async def vat(request):
     try:
         query = VATValidationModel(**request.query_params)
-        print(query.vat_number[:2])
-        print(query.vat_number[2:])
         client = zeep.Client(wsdl=str(VIES_URL))
         try:
             response = zeep.helpers.serialize_object(
