@@ -16,6 +16,7 @@ from starlette.applications import Starlette
 from starlette.authentication import requires
 from starlette.background import BackgroundTask
 from starlette.middleware.authentication import AuthenticationMiddleware
+from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import UJSONResponse
@@ -24,7 +25,7 @@ from auth import TokenAuthenticationBackend
 from db import database, Rates, Users
 from errors import AlreadyExistsError
 from models import LoginValidationModel, RatesQueryValidationModel, RegistrationValidationModel, VATValidationModel
-from settings import ALLOWED_HOSTS, DEBUG, FORCE_HTTPS, SENTRY_DSN, SYMBOLS, TESTING, VIES_URL
+from settings import ALLOWED_HOSTS, CORS, DEBUG, FORCE_HTTPS, SENTRY_DSN, SYMBOLS, TESTING, VIES_URL
 from utils import load_rates
 
 
@@ -42,6 +43,10 @@ if FORCE_HTTPS:
 if SENTRY_DSN:
     sentry_sdk.init(dsn=SENTRY_DSN)
     app.add_middleware(SentryAsgiMiddleware)
+
+""" CORS """
+if CORS:
+    app.add_middleware(CORSMiddleware, allow_origins=["*"])
 
 """ Authentication """
 app.add_middleware(AuthenticationMiddleware, backend=TokenAuthenticationBackend())
@@ -80,7 +85,7 @@ async def shutdown():
 """ API """
 
 
-@app.route("/api/login", methods=["POST"])
+@app.route("/login", methods=["POST"])
 async def login(request):
     try:
         data = await request.json()
@@ -91,7 +96,7 @@ async def login(request):
         return UJSONResponse(e.errors(), status_code=400)
 
 
-@app.route("/api/register", methods=["POST"])
+@app.route("/register", methods=["POST"])
 async def register(request):
     try:
         data = await request.json()
@@ -119,8 +124,8 @@ async def register(request):
         return UJSONResponse(e.errors(), status_code=400)
 
 
-@app.route("/api/vat")
-@requires("authenticated")
+@app.route("/vat")
+# @requires("authenticated")
 async def vat(request):
     try:
         query = VATValidationModel(**request.query_params)
@@ -137,13 +142,13 @@ async def vat(request):
         return UJSONResponse(e.errors(), status_code=400)
 
 
-@app.route("/api/countries")
+@app.route("/countries")
 @requires("authenticated")
 async def countries(request):
     return UJSONResponse({})
 
 
-@app.route("/api/rates")
+@app.route("/rates")
 @requires("authenticated")
 async def rates(request):
     try:
@@ -175,7 +180,7 @@ async def rates(request):
         return UJSONResponse(e.errors(), status_code=400)
 
 
-@app.route("/api/currencies")
+@app.route("/currencies")
 @requires("authenticated")
 async def currencies(request):
     currencies = {}

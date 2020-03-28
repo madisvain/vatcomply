@@ -1,0 +1,49 @@
+@import url("https://fonts.googleapis.com/css?family=Space+Mono&display=swap");
+
+$enable-rounded: false;
+
+@import "~bootstrap/scss/bootstrap";
+
+@import "burger";
+
+body {
+  font-family: "Space Mono", monospace;
+  overflow-x: hidden;
+}
+
+#logo {
+  color: #000;
+  margin-top: 40px;
+  margin-left: 40px;
+  line-height: 26px;
+  /*@include media-breakpoint-up(sm) {
+    color: #fff;
+  }*/
+}
+
+#diagonal {
+  width: 100%;
+  height: 200%;
+  top: auto;
+  bottom: 0;
+  left: -90%;
+  position: absolute;
+  background: #000;
+  transform: matrix(1, 0, -1.75, 1, -550, 550);
+  z-index: -1;
+}
+
+#hero {
+  margin-top: 280px;
+
+  form {
+    margin-top: 40px;
+  }
+}
+
+#results {
+  margin-top: 120px;
+  .card {
+    border: 4px solid #000;
+  }
+}
