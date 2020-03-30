@@ -26,7 +26,7 @@ from db import database, Rates, Users
 from errors import AlreadyExistsError
 from models import LoginValidationModel, RatesQueryValidationModel, RegistrationValidationModel, VATValidationModel
 from settings import ALLOWED_HOSTS, CORS, DEBUG, FORCE_HTTPS, SENTRY_DSN, SYMBOLS, TESTING, VIES_URL
-from utils import load_rates
+from utils import load_rates, to_snake_case
 
 
 app = Starlette(debug=DEBUG)
@@ -137,9 +137,17 @@ async def vat(request):
         except zeep.exceptions.Fault as e:
             return UJSONResponse({"error": e.message})
 
-        return UJSONResponse({k: response[k] for k in ("name", "address", "valid")})
+        return UJSONResponse(
+            {to_snake_case(k): response[k] for k in ("valid", "vatNumber", "name", "address", "countryCode")}
+        )
     except ValidationError as e:
         return UJSONResponse(e.errors(), status_code=400)
+
+
+@app.route("/geolocate", methods=["GET", "HEAD"])
+async def vat(request):
+    country_code = request.headers.get("CF-IPCountry")
+    return UJSONResponse({"country_code": country_code.upper() if country_code else None})
 
 
 @app.route("/countries")

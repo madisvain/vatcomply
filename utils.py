@@ -1,4 +1,5 @@
 import pendulum
+import re
 import requests
 
 from xml.etree import ElementTree
@@ -23,3 +24,7 @@ async def load_rates(last_90_days=True):
                 query=Rates.insert(),
                 values={"date": time, "rates": {str(c.attrib["currency"]): float(c.attrib["rate"]) for c in list(d)}},
             )
+
+
+def to_snake_case(s):
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", s).lower()

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Formik } from "formik";
-import { map, isEmpty, upperFirst } from "lodash";
+import { map, isBoolean, isEmpty, upperFirst } from "lodash";
 
 import axios from "axios";
 
@@ -24,7 +24,9 @@ const Home = () => {
       <div id="hero" className="container">
         <div className="row">
           <div className="col">
-            <h2 className="text-center">VAT Number Validation & EU VAT Rates API</h2>
+            <h2 className="text-center">
+              VAT Number Validation &<br /> VAT Rates API
+            </h2>
           </div>
         </div>
         <div className="row">
@@ -62,13 +64,13 @@ const Home = () => {
       {!isEmpty(result) ? (
         <div id="results">
           <div className="row justify-content-center">
-            <div className="col-xs-12 col-sm-8 col-md-6 col-lg-4">
+            <div className="col-xs-12 col-sm-10 col-md-8 col-lg-6">
               <div className="card">
                 <div className="card-body">
                   {map(result, (value, key) => (
                     <dl className="row" key={key}>
-                      <dt className="col-sm-3 text-right">{upperFirst(key)}</dt>
-                      <dd className="col-sm-9">{value}</dd>
+                      <dt className="col-sm-3 text-right">{upperFirst(key).replace("_", " ")}</dt>
+                      <dd className="col-sm-9">{isBoolean(value) ? (value ? "Yes" : "No") : value}</dd>
                     </dl>
                   ))}
                 </div>
