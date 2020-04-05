@@ -35,7 +35,7 @@ export default ({ children }) => {
             </li>
             <li>
               <Link href="/documentation">
-                <a className="link">API</a>
+                <a className="link">API docs</a>
               </Link>
             </li>
             {/*<li>

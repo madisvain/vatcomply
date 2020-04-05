@@ -35,7 +35,7 @@ const Home = () => {
       <div id="hero" className="container">
         <div className="row">
           <div className="col">
-            <h2 className="text-center">VAT Number Validation</h2>
+            <h2 className="text-center">VAT Number Validation API</h2>
           </div>
         </div>
         <div className="row">
@@ -93,7 +93,18 @@ const Home = () => {
         <div className="row">
           <div className="col">
             <h2 className="text-center">Currency rates API</h2>
-            {!isEmpty(rates) ? <table></table> : null}
+            {!isEmpty(rates) ? (
+              <table className="table table-borderless mt-4">
+                <tbody>
+                  {map(rates.rates, (value, key) => (
+                    <tr key={key}>
+                      <td className="text-right">{key}</td>
+                      <td>{value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : null}
           </div>
         </div>
       </div>
@@ -101,9 +112,13 @@ const Home = () => {
       <div id="geolocation" className="container">
         <div className="row">
           <div className="col">
-            <h2 className="text-center">Geolocation</h2>
+            <h2 className="text-center">Geolocation API</h2>
             {!isEmpty(geolocation) ? (
-              <p className="text-center mt-4">From your IP address {} it was determined that you are from</p>
+              <p className="text-center mt-4">
+                From your IP address {geolocation.ip}
+                <br />
+                it was determined that you are from {geolocation.country_code}
+              </p>
             ) : null}
           </div>
         </div>

@@ -65,6 +65,13 @@ body {
 
 #currency-rates {
   margin-top: 100px;
+  table {
+    tbody {
+      td {
+        width: 50%;
+      }
+    }
+  }
 }
 
 #geolocation {

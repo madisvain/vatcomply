@@ -6,7 +6,8 @@ GET https://api.vatcomply.com/geolocate HTTP/1.1
 
 const exampleResponse = `
 {
-    "country_code": "DE"
+    "country_code": "DE",
+    "ip": "85.214.132.117"
 }
 `.trim();
 
