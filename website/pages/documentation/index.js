@@ -7,7 +7,7 @@ import VAT from "./vat";
 import Rates from "./rates";
 import Geolocation from "./geolocation";
 import Countries from "./countries";
-import Currencies from "./Currencies";
+import Currencies from "./currencies";
 
 const Documentation = () => {
   return (
