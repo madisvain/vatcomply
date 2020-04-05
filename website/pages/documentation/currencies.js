@@ -141,7 +141,7 @@ const exampleResponse = `
 }
 `.trim();
 
-const Geolocation = () => {
+const Currencies = () => {
   return (
     <div id="currencies" style={{ marginTop: 100 }}>
       <h2 className="mb-4">Currencies</h2>
@@ -169,4 +169,4 @@ const Geolocation = () => {
   );
 };
 
-export default Geolocation;
+export default Currencies;
