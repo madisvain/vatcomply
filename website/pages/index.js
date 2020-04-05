@@ -89,6 +89,21 @@ const Home = () => {
         </div>
       ) : null}
 
+      <div id="geolocation" className="container">
+        <div className="row">
+          <div className="col">
+            <h2 className="text-center">Geolocation API</h2>
+            {!isEmpty(geolocation) ? (
+              <p className="text-center mt-4">
+                From your IP address {geolocation.ip}
+                <br />
+                it was determined that you are from {geolocation.country_code}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
       <div id="currency-rates" className="container">
         <div className="row">
           <div className="col">
@@ -104,21 +119,6 @@ const Home = () => {
                   ))}
                 </tbody>
               </table>
-            ) : null}
-          </div>
-        </div>
-      </div>
-
-      <div id="geolocation" className="container">
-        <div className="row">
-          <div className="col">
-            <h2 className="text-center">Geolocation API</h2>
-            {!isEmpty(geolocation) ? (
-              <p className="text-center mt-4">
-                From your IP address {geolocation.ip}
-                <br />
-                it was determined that you are from {geolocation.country_code}
-              </p>
             ) : null}
           </div>
         </div>
