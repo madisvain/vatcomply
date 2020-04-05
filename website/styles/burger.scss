@@ -6,12 +6,13 @@ svg {
 .plate {
   height: 100px;
   width: 100px;
+  z-index: 100;
   .line {
     fill: none;
-    stroke: black;
+    stroke: $body-color;
     stroke-width: 3.5px;
     transform-origin: 50%;
-    transition: stroke-dasharray 500ms 200ms, stroke-dashoffset 500ms 200ms, transform 500ms 200ms;
+    transition: stroke 0.5s linear, stroke-dasharray 500ms 200ms, stroke-dashoffset 500ms 200ms, transform 500ms 200ms;
   }
   .line2 {
     stroke-dasharray: 40 200;
@@ -32,7 +33,8 @@ svg {
   /* Active */
   &.active {
     .line {
-      transition: stroke-dasharray 500ms, stroke-dashoffset 500ms, transform 500ms;
+      stroke: $red;
+      transition: stroke 0.5s linear, stroke-dasharray 500ms, stroke-dashoffset 500ms, transform 500ms;
     }
     .line1 {
       transform: scale(0, 1);

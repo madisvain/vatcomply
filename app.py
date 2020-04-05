@@ -26,7 +26,7 @@ from db import database, Rates, Users
 from errors import AlreadyExistsError
 from models import LoginValidationModel, RatesQueryValidationModel, RegistrationValidationModel, VATValidationModel
 from settings import ALLOWED_HOSTS, CORS, DEBUG, FORCE_HTTPS, SENTRY_DSN, SYMBOLS, TESTING, VIES_URL
-from utils import load_rates, to_snake_case
+from utils import load_rates
 
 
 app = Starlette(debug=DEBUG)
@@ -138,26 +138,33 @@ async def vat(request):
             return UJSONResponse({"error": e.message})
 
         return UJSONResponse(
-            {to_snake_case(k): response[k] for k in ("valid", "vatNumber", "name", "address", "countryCode")}
+            {
+                "valid": response["valid"],
+                "vat_number": response["vatNumber"],
+                "name": response["name"],
+                "address": response["address"].strip(),
+                "country_code": response["countryCode"],
+            }
         )
     except ValidationError as e:
         return UJSONResponse(e.errors(), status_code=400)
 
 
 @app.route("/geolocate", methods=["GET", "HEAD"])
-async def vat(request):
+async def geolocate(request):
     country_code = request.headers.get("CF-IPCountry")
-    return UJSONResponse({"country_code": country_code.upper() if country_code else None})
+    ip = request.headers.get("CF-Connecting-IP")
+    return UJSONResponse({"country_code": country_code.upper() if country_code else None, "ip": ip})
 
 
 @app.route("/countries")
-@requires("authenticated")
+# @requires("authenticated")
 async def countries(request):
     return UJSONResponse({})
 
 
 @app.route("/rates")
-@requires("authenticated")
+# @requires("authenticated")
 async def rates(request):
     try:
         query = RatesQueryValidationModel(**request.query_params)
@@ -171,7 +178,8 @@ async def rates(request):
         )
 
         # Base re-calculation
-        rates = record.rates
+        rates = {"EUR": 1}
+        rates.update(record.rates)
         if query.base and query.base != "EUR":
             base_rate = Decimal(record.rates[query.base])
             rates = {currency: Decimal(rate) / base_rate for currency, rate in rates.items()}
@@ -189,7 +197,7 @@ async def rates(request):
 
 
 @app.route("/currencies")
-@requires("authenticated")
+# @requires("authenticated")
 async def currencies(request):
     currencies = {}
     for symbol in list(SYMBOLS):

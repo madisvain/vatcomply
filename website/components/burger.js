@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 
-const Burger = props => {
-  const [menuOpen, setMenuOpen] = useState(false);
-
+const Burger = ({ menuOpen, setMenuOpen }) => {
   return (
     <div className={`plate ${menuOpen ? "active" : ""}`} onClick={() => setMenuOpen(!menuOpen)}>
       <svg className="burger" version="1.1" height="100" width="100" viewBox="0 0 100 100">

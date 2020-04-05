@@ -3,30 +3,39 @@ import { Formik } from "formik";
 import { map, isBoolean, isEmpty, upperFirst } from "lodash";
 
 import axios from "axios";
+import Link from "next/link";
 
-import Burger from "../components/burger";
+import Layout from "../components/layout";
 
 const Home = () => {
-  const [result, setResult] = useState({});
+  const [vat, setVAT] = useState({});
+  const [geolocation, setGeolocation] = useState({});
+  const [rates, setRates] = useState({});
+
+  /* Geolocation */
+  useEffect(() => {
+    const fetchGeolocation = async () => {
+      const result = await axios(`https://api.vatcomply.com/geolocate`);
+      setGeolocation(result.data);
+    };
+    fetchGeolocation();
+  }, []);
+
+  /* Rates */
+  useEffect(() => {
+    const fetchRates = async () => {
+      const result = await axios(`https://api.vatcomply.com/rates`);
+      setRates(result.data);
+    };
+    fetchRates();
+  }, []);
 
   return (
-    <div>
-      <nav className="navbar navbar-light">
-        <h1 id="logo">
-          VAT
-          <br />
-          <small>comply</small>
-        </h1>
-        <ul className="nav">
-          <Burger />
-        </ul>
-      </nav>
+    <Layout>
       <div id="hero" className="container">
         <div className="row">
           <div className="col">
-            <h2 className="text-center">
-              VAT Number Validation &<br /> VAT Rates API
-            </h2>
+            <h2 className="text-center">VAT Number Validation</h2>
           </div>
         </div>
         <div className="row">
@@ -34,11 +43,11 @@ const Home = () => {
             <Formik
               initialValues={{ vat_number: "" }}
               onSubmit={async (values, actions) => {
-                const result = await axios(`http://localhost:8000/vat?vat_number=${values.vat_number}`);
-                setResult(result.data);
+                const result = await axios(`https://api.vatcomply.com/vat?vat_number=${values.vat_number}`);
+                setVAT(result.data);
               }}
             >
-              {props => (
+              {(props) => (
                 <form className="form-inline justify-content-center" onSubmit={props.handleSubmit}>
                   <div className="form-group mx-sm-3 mb-2">
                     <input
@@ -61,13 +70,13 @@ const Home = () => {
         </div>
       </div>
 
-      {!isEmpty(result) ? (
+      {!isEmpty(vat) ? (
         <div id="results">
           <div className="row justify-content-center">
             <div className="col-xs-12 col-sm-10 col-md-8 col-lg-6">
-              <div className="card">
+              <div className="card boxed">
                 <div className="card-body">
-                  {map(result, (value, key) => (
+                  {map(vat, (value, key) => (
                     <dl className="row" key={key}>
                       <dt className="col-sm-3 text-right">{upperFirst(key).replace("_", " ")}</dt>
                       <dd className="col-sm-9">{isBoolean(value) ? (value ? "Yes" : "No") : value}</dd>
@@ -80,8 +89,26 @@ const Home = () => {
         </div>
       ) : null}
 
-      {/*<div id="diagonal" className="d-none d-sm-block"></div>*/}
-    </div>
+      <div id="currency-rates" className="container">
+        <div className="row">
+          <div className="col">
+            <h2 className="text-center">Currency rates API</h2>
+            {!isEmpty(rates) ? <table></table> : null}
+          </div>
+        </div>
+      </div>
+
+      <div id="geolocation" className="container">
+        <div className="row">
+          <div className="col">
+            <h2 className="text-center">Geolocation</h2>
+            {!isEmpty(geolocation) ? (
+              <p className="text-center mt-4">From your IP address {} it was determined that you are from</p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </Layout>
   );
 };
 

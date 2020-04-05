@@ -8,7 +8,9 @@
   "dependencies": {
     "axios": "^0.19.2",
     "bootstrap": "^4.4.1",
+    "flag-icon-css": "^3.4.6",
     "formik": "^2.1.4",
+    "highlight.js": "^9.18.1",
     "lodash": "^4.17.15",
     "next": "^9.3.2",
     "react": "^16.13.1",
