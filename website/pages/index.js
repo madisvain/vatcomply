@@ -3,7 +3,7 @@ import { Formik } from "formik";
 import { map, isBoolean, isEmpty, upperFirst } from "lodash";
 
 import axios from "axios";
-import Link from "next/link";
+import Head from "next/head";
 
 import Layout from "../components/layout";
 
@@ -32,6 +32,12 @@ const Home = () => {
 
   return (
     <Layout>
+      <Head>
+        <title>VAT number validation, geolocation and exchange rates API. VAT compliance.</title>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+      </Head>
+
       <div id="hero" className="container">
         <div className="row">
           <div className="col">

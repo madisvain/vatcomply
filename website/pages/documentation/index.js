@@ -12,6 +12,11 @@ import Currencies from "./currencies";
 const Documentation = () => {
   return (
     <Layout>
+      <Head>
+        <title>VAT number validation, geolocation and exchange rates API. VAT compliance.</title>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+      </Head>
       <div className="container-fluid">
         <div className="row justify-content-between">
           <div id="sidebar" className="col-sm-3">
