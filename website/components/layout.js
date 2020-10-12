@@ -21,7 +21,7 @@ const Layout = ({ children }) => {
         <ul className="nav">
           <li>
             <a href="https://upcount.app/">
-              <img src="/upcount.svg" />
+              <img src="/upcount.svg" width="72" height="19" />
               <br />
               Invoicing made easy
             </a>
