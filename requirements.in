@@ -1,0 +1,17 @@
+alembic
+apscheduler
+babel
+databases[sqlite]
+gunicorn
+passlib
+pendulum
+pydantic[email]
+pytest
+sentry-sdk
+starlette
+sqlalchemy-utils
+redis
+requests
+ujson
+uvicorn
+zeep
