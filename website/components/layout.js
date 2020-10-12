@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import Burger from "../components/burger";
 
-export default ({ children }) => {
+const Layout = ({ children }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -49,3 +49,5 @@ export default ({ children }) => {
     </div>
   );
 };
+
+export default Layout;

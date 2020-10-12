@@ -107,7 +107,7 @@ const Home = () => {
       <div id="currency-rates" className="container">
         <div className="row">
           <div className="col">
-            <h2 className="text-center">Currency rates API</h2>
+            <h2 className="text-center">Exchange rates API</h2>
             {!isEmpty(rates) ? (
               <table className="table table-borderless mt-4">
                 <tbody>
