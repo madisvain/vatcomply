@@ -19,6 +19,13 @@ const Layout = ({ children }) => {
           </a>
         </Link>
         <ul className="nav">
+          <li>
+            <a href="https://upcount.app/">
+              <img src="/upcount.svg" />
+              <br />
+              Invoicing made easy
+            </a>
+          </li>
           <Burger menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
         </ul>
       </nav>
