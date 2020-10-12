@@ -13,7 +13,7 @@ class TestRatesAPI(object):
             assert "base" in response.json()
             assert response.json()["base"] == "EUR"
             assert "rates" in response.json()
-            assert len(response.json()["rates"]) == 32
+            assert len(response.json()["rates"]) == 33
 
     def test_date_api(self):
         with TestClient(app) as client:
@@ -25,7 +25,7 @@ class TestRatesAPI(object):
             assert "base" in response.json()
             assert response.json()["base"] == "EUR"
             assert "rates" in response.json()
-            assert len(response.json()["rates"]) == 32
+            assert len(response.json()["rates"]) == 33
 
     def test_invalid_date_api(self):
         with TestClient(app) as client:
@@ -43,7 +43,7 @@ class TestRatesAPI(object):
             assert "base" in response.json()
             assert response.json()["base"] == "EUR"
             assert "rates" in response.json()
-            assert len(response.json()["rates"]) == 32
+            assert len(response.json()["rates"]) == 33
 
     def test_base_api(self):
         with TestClient(app) as client:
