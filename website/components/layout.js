@@ -28,12 +28,8 @@ const Layout = ({ children }) => {
           </li>
           <li>
             <Link href="/documentation">
-              <a>
-                <h5 className="text-center">
-                  API
-                  <br />
-                  Documentation
-                </h5>
+              <a className="text-center" style={{ display: "block", fontSize: 18, borderBottom: "2px solid #00022e" }}>
+                API
               </a>
             </Link>
           </li>
