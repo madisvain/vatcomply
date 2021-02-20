@@ -1,6 +1,7 @@
 import fcntl
 import pendulum
 import sentry_sdk
+import ujson
 import uvicorn
 import zeep
 
@@ -20,6 +21,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import JSONResponse
+from typing import Any
 
 from auth import TokenAuthenticationBackend
 from db import database, Rates, Users
@@ -27,6 +29,11 @@ from errors import AlreadyExistsError
 from models import LoginValidationModel, RatesQueryValidationModel, RegistrationValidationModel, VATValidationModel
 from settings import ALLOWED_HOSTS, CORS, DEBUG, FORCE_HTTPS, SENTRY_DSN, SYMBOLS, TESTING, VIES_URL
 from utils import load_rates
+
+
+class UJSONResponse(JSONResponse):
+    def render(self, content: Any) -> bytes:
+        return ujson.dumps(content)
 
 
 app = Starlette(debug=DEBUG)
@@ -91,9 +98,9 @@ async def login(request):
         data = await request.json()
         login = LoginValidationModel(**data)
 
-        return JSONResponse(login.dict())
+        return UJSONResponse(login.dict())
     except ValidationError as e:
-        return JSONResponse(e.errors(), status_code=400)
+        return UJSONResponse(e.errors(), status_code=400)
 
 
 @app.route("/register", methods=["POST"])
@@ -119,9 +126,9 @@ async def register(request):
         )
         response = registration.dict()
         del response["password"]
-        return JSONResponse(response, status_code=201)
+        return UJSONResponse(response, status_code=201)
     except ValidationError as e:
-        return JSONResponse(e.errors(), status_code=400)
+        return UJSONResponse(e.errors(), status_code=400)
 
 
 @app.route("/vat")
@@ -135,9 +142,9 @@ async def vat(request):
                 client.service.checkVat(countryCode=query.vat_number[:2], vatNumber=query.vat_number[2:])
             )
         except zeep.exceptions.Fault as e:
-            return JSONResponse({"error": e.message})
+            return UJSONResponse({"error": e.message})
 
-        return JSONResponse(
+        return UJSONResponse(
             {
                 "valid": response["valid"],
                 "vat_number": response["vatNumber"],
@@ -147,20 +154,20 @@ async def vat(request):
             }
         )
     except ValidationError as e:
-        return JSONResponse(e.errors(), status_code=400)
+        return UJSONResponse(e.errors(), status_code=400)
 
 
 @app.route("/geolocate", methods=["GET", "HEAD"])
 async def geolocate(request):
     country_code = request.headers.get("CF-IPCountry")
     ip = request.headers.get("CF-Connecting-IP")
-    return JSONResponse({"country_code": country_code.upper() if country_code else None, "ip": ip})
+    return UJSONResponse({"country_code": country_code.upper() if country_code else None, "ip": ip})
 
 
 @app.route("/countries")
 # @requires("authenticated")
 async def countries(request):
-    return JSONResponse({})
+    return UJSONResponse({})
 
 
 @app.route("/rates")
@@ -191,9 +198,9 @@ async def rates(request):
                 if rate not in query.symbols:
                     del rates[rate]
 
-        return JSONResponse({"date": record.date.isoformat(), "base": query.base, "rates": rates})
+        return UJSONResponse({"date": record.date.isoformat(), "base": query.base, "rates": rates})
     except ValidationError as e:
-        return JSONResponse(e.errors(), status_code=400)
+        return UJSONResponse(e.errors(), status_code=400)
 
 
 @app.route("/currencies")
@@ -205,7 +212,7 @@ async def currencies(request):
             "name": get_currency_name(symbol, locale="en"),
             "symbol": get_currency_symbol(symbol, locale="en"),
         }
-    return JSONResponse(currencies)
+    return UJSONResponse(currencies)
 
 
 if __name__ == "__main__":
