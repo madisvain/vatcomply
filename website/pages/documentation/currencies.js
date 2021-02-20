@@ -1,4 +1,4 @@
-import Highlight from "../../components/highlight";
+import Highlighter from "../../components/highlighter";
 
 const exampleRequest = `
 GET https://api.vatcomply.com/currencies HTTP/1.1
@@ -157,12 +157,12 @@ const Currencies = () => {
       </p>
       <div className="card boxed">
         <div className="card-body p-0">
-          <Highlight>{exampleRequest}</Highlight>
+          <Highlighter code={exampleRequest} language="http" />
         </div>
       </div>
       <div className="card boxed mt-4">
         <div className="card-body p-0">
-          <Highlight language="json">{exampleResponse}</Highlight>
+          <Highlighter code={exampleResponse} language="json" />
         </div>
       </div>
     </div>

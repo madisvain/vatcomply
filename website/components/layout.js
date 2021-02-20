@@ -26,7 +26,18 @@ const Layout = ({ children }) => {
               Invoicing made easy
             </a>
           </li>
-          <Burger menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+          <li>
+            <Link href="/documentation">
+              <a>
+                <h5 className="text-center">
+                  API
+                  <br />
+                  Documentation
+                </h5>
+              </a>
+            </Link>
+          </li>
+          {/*<Burger menuOpen={menuOpen} setMenuOpen={setMenuOpen} />*/}
         </ul>
       </nav>
 

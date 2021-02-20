@@ -1,5 +1,4 @@
 @import url("https://fonts.googleapis.com/css?family=Space+Mono&display=swap");
-@import "highlight.js/scss/github.scss";
 
 $enable-rounded: false;
 $body-color: #00022e;
@@ -81,9 +80,5 @@ body {
 #documentation > div {
   @include media-breakpoint-up(sm) {
     padding-right: 40px;
-  }
-  pre,
-  pre code {
-    background-color: #fff;
   }
 }

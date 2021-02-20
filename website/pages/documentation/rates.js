@@ -1,4 +1,4 @@
-import Highlight from "../../components/highlight";
+import Highlighter from "../../components/highlighter";
 
 const exampleRequestLatest = `
 GET https://api.vatcomply.com/rates HTTP/1.1
@@ -142,12 +142,12 @@ const Currencies = () => {
       <h3 id="rates-latest">Latest rates</h3>
       <div className="card boxed">
         <div className="card-body p-0">
-          <Highlight>{exampleRequestLatest}</Highlight>
+          <Highlighter code={exampleRequestLatest} language="http" />
         </div>
       </div>
       <div className="card boxed mt-4">
         <div className="card-body p-0">
-          <Highlight language="json">{exampleResponseLates}</Highlight>
+          <Highlighter code={exampleResponseLates} language="json" />
         </div>
       </div>
       <br />
@@ -156,24 +156,24 @@ const Currencies = () => {
       <p>Rates quote against the EUR by default. You can quote against other currencies using the base parameter.</p>
       <div className="card boxed">
         <div className="card-body p-0">
-          <Highlight>{exampleRequestBase}</Highlight>
+          <Highlighter code={exampleRequestBase} language="http" />
         </div>
       </div>
       <div className="card boxed mt-4">
         <div className="card-body p-0">
-          <Highlight language="json">{exampleResponseBase}</Highlight>
+          <Highlighter code={exampleResponseBase} language="json" />
         </div>
       </div>
       <h3 id="rates-date">Date</h3>
       <p>A date parameter returns historical rates data for any date since 04.01.1999.</p>
       <div className="card boxed">
         <div className="card-body p-0">
-          <Highlight>{exampleRequestDate}</Highlight>
+          <Highlighter code={exampleRequestDate} language="json" />
         </div>
       </div>
       <div className="card boxed mt-4">
         <div className="card-body p-0">
-          <Highlight language="json">{exampleResponseDate}</Highlight>
+          <Highlighter code={exampleResponseDate} language="json" />
         </div>
       </div>
     </div>
