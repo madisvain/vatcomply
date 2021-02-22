@@ -32,8 +32,11 @@ from utils import load_rates
 
 
 class UJSONResponse(JSONResponse):
+    media_type = "application/json"
+
     def render(self, content: Any) -> bytes:
-        return ujson.dumps(content)
+        assert ujson is not None, "ujson must be installed to use UJSONResponse"
+        return ujson.dumps(content, ensure_ascii=False).encode("utf-8")
 
 
 app = Starlette(debug=DEBUG)
