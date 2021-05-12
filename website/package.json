@@ -11,7 +11,7 @@
     "flag-icon-css": "^3.5.0",
     "formik": "^2.2.6",
     "highlight.js": "^10.6.0",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "next": "^10.0.7",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
