@@ -1,5 +1,6 @@
 import fcntl
 import pendulum
+import pycountry
 import sentry_sdk
 import ujson
 import uvicorn
@@ -26,7 +27,13 @@ from typing import Any
 from auth import TokenAuthenticationBackend
 from db import database, Rates, Users
 from errors import AlreadyExistsError
-from models import LoginValidationModel, RatesQueryValidationModel, RegistrationValidationModel, VATValidationModel
+from models import (
+    LoginValidationModel,
+    RatesQueryValidationModel,
+    RegistrationValidationModel,
+    VATValidationModel,
+    VatRatesModel,
+)
 from settings import ALLOWED_HOSTS, CORS, DEBUG, FORCE_HTTPS, SENTRY_DSN, SYMBOLS, TESTING, VIES_URL
 from utils import load_rates
 
@@ -160,6 +167,32 @@ async def vat(request):
         return UJSONResponse(e.errors(), status_code=400)
 
 
+@app.route("/vat/rates")
+# @requires("authenticated")
+async def vat_rates(request):
+    try:
+        query = VATRatesModel(**request.query_params)
+        client = zeep.Client(wsdl=str(VIES_URL))
+        try:
+            response = zeep.helpers.serialize_object(
+                client.service.checkVat(countryCode=query.vat_number[:2], vatNumber=query.vat_number[2:])
+            )
+        except zeep.exceptions.Fault as e:
+            return UJSONResponse({"error": e.message})
+
+        return UJSONResponse(
+            {
+                "valid": response["valid"],
+                "vat_number": response["vatNumber"],
+                "name": response["name"],
+                "address": response["address"].strip(),
+                "country_code": response["countryCode"],
+            }
+        )
+    except ValidationError as e:
+        return UJSONResponse(e.errors(), status_code=400)
+
+
 @app.route("/geolocate", methods=["GET", "HEAD"])
 async def geolocate(request):
     country_code = request.headers.get("CF-IPCountry")
@@ -170,7 +203,19 @@ async def geolocate(request):
 @app.route("/countries")
 # @requires("authenticated")
 async def countries(request):
-    return UJSONResponse({})
+    countries = []
+    for country in list(pycountry.countries):
+        print(country)
+        countries.append(
+            {
+                "alpha_2": country.alpha_2,
+                "alpha_3": country.alpha_3,
+                "numeric": country.numeric,
+                "name": country.name,
+                "official_name": country.official_name if hasattr(country, "official_name") else None,
+            }
+        )
+    return UJSONResponse(countries)
 
 
 @app.route("/rates")

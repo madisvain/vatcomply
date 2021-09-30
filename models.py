@@ -62,3 +62,7 @@ class VATValidationModel(BaseModel):
     def format_validation(cls, v):
         # TODO: implement Regex validators
         return v
+
+
+class VatRatesModel(BaseModel):
+    vat_nu: str

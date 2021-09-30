@@ -5,6 +5,7 @@ databases[sqlite]
 gunicorn
 passlib
 pendulum
+pycountry
 pydantic[email]
 pytest
 sentry-sdk
