@@ -19,11 +19,16 @@ const Layout = ({ children }) => {
           </a>
         </Link>
         <ul className="nav">
-          <li>
+          <li className="d-none d-sm-block">
             <a href="https://upcount.app/">
               <img src="/upcount.svg" width="72" height="19" />
               <br />
               Invoicing made easy
+            </a>
+          </li>
+          <li>
+            <a href="https://github.com/madisvain/vatcomply" target="_blank" rel="noopener noreferrer">
+              <img src="/github.svg" width="32" height="32" />
             </a>
           </li>
           <li>
