@@ -6,7 +6,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "axios": "^0.21.1",
+    "axios": "^0.21.2",
     "bootstrap": "^4.6.0",
     "flag-icon-css": "^3.5.0",
     "formik": "^2.2.6",
