@@ -8,7 +8,6 @@ import zeep
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from babel.numbers import get_currency_name, get_currency_symbol
-from datetime import datetime
 from decimal import Decimal
 from passlib.hash import pbkdf2_sha256
 from pydantic import ValidationError
@@ -16,7 +15,6 @@ from pydantic.error_wrappers import ErrorWrapper
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.applications import Starlette
 from starlette.authentication import requires
-from starlette.background import BackgroundTask
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
@@ -35,7 +33,7 @@ from models import (
     VatRatesModel,
 )
 from settings import ALLOWED_HOSTS, CORS, DEBUG, FORCE_HTTPS, SENTRY_DSN, SYMBOLS, TESTING, VIES_URL
-from utils import load_rates
+from utils import load_countries, load_rates
 
 
 class UJSONResponse(JSONResponse):
@@ -90,6 +88,9 @@ async def startup():
 
             # Fill up database with rates
             scheduler.add_job(load_rates, kwargs={"last_90_days": False})
+
+            # Countries
+            scheduler.add_job(load_countries)
     except BlockingIOError:
         pass
 
