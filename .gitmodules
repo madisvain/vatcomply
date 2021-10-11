@@ -1,0 +1,3 @@
+[submodule "countries"]
+	path = countries
+	url = git@github.com:dr5hn/countries-states-cities-database.git
