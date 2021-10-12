@@ -1,3 +1,4 @@
+from enum import unique
 import databases
 import pendulum
 import sqlalchemy
@@ -5,6 +6,24 @@ import sqlalchemy
 from settings import DATABASE_URL, TEST_DATABASE_URL, TESTING
 
 metadata = sqlalchemy.MetaData()
+
+Countries = sqlalchemy.Table(
+    "countries",
+    metadata,
+    sqlalchemy.Column("name", sqlalchemy.String, nullable=False),
+    sqlalchemy.Column("iso2", sqlalchemy.String, nullable=False, unique=True),
+    sqlalchemy.Column("iso3", sqlalchemy.String, nullable=False),
+    sqlalchemy.Column("numeric_code", sqlalchemy.Integer),
+    sqlalchemy.Column("phone_code", sqlalchemy.Integer),
+    sqlalchemy.Column("capital", sqlalchemy.String, nullable=False),
+    sqlalchemy.Column("currency", sqlalchemy.String, nullable=False),
+    sqlalchemy.Column("tld", sqlalchemy.String, nullable=False),
+    sqlalchemy.Column("region", sqlalchemy.String, nullable=False),
+    sqlalchemy.Column("subregion", sqlalchemy.String, nullable=False),
+    sqlalchemy.Column("latitude", sqlalchemy.String, nullable=False),
+    sqlalchemy.Column("longitude", sqlalchemy.String, nullable=False),
+    sqlalchemy.Column("emoji", sqlalchemy.String, nullable=False),
+)
 
 Rates = sqlalchemy.Table(
     "rates",
