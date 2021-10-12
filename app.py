@@ -23,7 +23,7 @@ from starlette.responses import JSONResponse
 from typing import Any
 
 from auth import TokenAuthenticationBackend
-from db import database, Rates, Users
+from db import database, Countries, Rates, Users
 from errors import AlreadyExistsError
 from models import (
     LoginValidationModel,
@@ -198,7 +198,32 @@ async def vat_rates(request):
 async def geolocate(request):
     country_code = request.headers.get("CF-IPCountry")
     ip = request.headers.get("CF-Connecting-IP")
-    return UJSONResponse({"country_code": country_code.upper() if country_code else None, "ip": ip})
+
+    if not country_code:
+        return UJSONResponse({"ip": ip}, status_code=404)
+
+    # Get the rates data
+    record = await database.fetch_one(
+        query=Countries.select().where(Countries.c.iso2 == country_code.upper())
+    )
+
+    return UJSONResponse({
+        "country_code": country_code.upper() if country_code else None,
+        "name": record.name,
+        "iso2": record.iso2,
+        "iso3": record.iso3,
+        "numeric_code": record.numeric_code,
+        "phone_code": record.phone_code,
+        "capital": record.capital,
+        "currency": record.currency,
+        "tld": record.tld,
+        "region": record.region,
+        "subregion": record.subregion,
+        "latitude": Decimal(record.latitude),
+        "longitude": Decimal(record.longitude),
+        "emoji": record.emoji,
+        "ip": ip
+    })
 
 
 @app.route("/countries")
@@ -206,7 +231,6 @@ async def geolocate(request):
 async def countries(request):
     countries = []
     for country in list(pycountry.countries):
-        print(country)
         countries.append(
             {
                 "alpha_2": country.alpha_2,
