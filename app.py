@@ -160,7 +160,7 @@ async def vat(request):
                 "valid": response["valid"],
                 "vat_number": response["vatNumber"],
                 "name": response["name"],
-                "address": response["address"].strip(),
+                "address": response["address"].strip() if response["address"] else "",
                 "country_code": response["countryCode"],
             }
         )
