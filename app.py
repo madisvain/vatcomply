@@ -285,7 +285,7 @@ async def currencies(request):
             "name": get_currency_name(symbol, locale="en"),
             "symbol": get_currency_symbol(symbol, locale="en"),
         }
-    return UJSONResponse(currencies)
+    return UJSONResponse(currencies, headers={"Cache-Control": "max-age=86400"})
 
 
 if __name__ == "__main__":
