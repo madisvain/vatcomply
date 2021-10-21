@@ -254,6 +254,7 @@ async def countries(request):
 
 
 @app.route("/rates")
+@app.route("/rates/latest")
 @app.route("/rates/{date}")
 async def rates(request):
     query_params = dict(request.query_params)
