@@ -203,27 +203,27 @@ async def geolocate(request):
         return UJSONResponse({"ip": ip}, status_code=404)
 
     # Get the rates data
-    record = await database.fetch_one(
-        query=Countries.select().where(Countries.c.iso2 == country_code.upper())
-    )
+    record = await database.fetch_one(query=Countries.select().where(Countries.c.iso2 == country_code.upper()))
 
-    return UJSONResponse({
-        "country_code": country_code.upper() if country_code else None,
-        "name": record.name,
-        "iso2": record.iso2,
-        "iso3": record.iso3,
-        "numeric_code": record.numeric_code,
-        "phone_code": record.phone_code,
-        "capital": record.capital,
-        "currency": record.currency,
-        "tld": record.tld,
-        "region": record.region,
-        "subregion": record.subregion,
-        "latitude": Decimal(record.latitude),
-        "longitude": Decimal(record.longitude),
-        "emoji": record.emoji,
-        "ip": ip
-    })
+    return UJSONResponse(
+        {
+            "country_code": country_code.upper() if country_code else None,
+            "name": record.name,
+            "iso2": record.iso2,
+            "iso3": record.iso3,
+            "numeric_code": record.numeric_code,
+            "phone_code": record.phone_code,
+            "capital": record.capital,
+            "currency": record.currency,
+            "tld": record.tld,
+            "region": record.region,
+            "subregion": record.subregion,
+            "latitude": Decimal(record.latitude),
+            "longitude": Decimal(record.longitude),
+            "emoji": record.emoji,
+            "ip": ip,
+        }
+    )
 
 
 @app.route("/countries")
@@ -244,10 +244,14 @@ async def countries(request):
 
 
 @app.route("/rates")
-# @requires("authenticated")
+@app.route("/rates/{date}")
 async def rates(request):
+    query_params = request.query_params
+    if "date" in request.path_params:
+        query_params["date"] = request.path_parmas["date"]
+
     try:
-        query = RatesQueryValidationModel(**request.query_params)
+        query = RatesQueryValidationModel(**query_params)
 
         # Find the date
         date = query.date if query.date else pendulum.now().date()
