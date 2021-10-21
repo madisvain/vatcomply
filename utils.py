@@ -1,11 +1,22 @@
 import json
 import pendulum
 import requests
+import ujson
 
+from starlette.responses import JSONResponse
+from typing import Any
 from xml.etree import ElementTree
 
 from db import database, Countries, Rates
 from settings import RATES_URL, RATES_LAST_90_DAYS_URL
+
+
+class UJSONResponse(JSONResponse):
+    media_type = "application/json"
+
+    def render(self, content: Any) -> bytes:
+        assert ujson is not None, "ujson must be installed to use UJSONResponse"
+        return ujson.dumps(content, ensure_ascii=False).encode("utf-8")
 
 
 async def load_rates(last_90_days=True):
@@ -27,7 +38,7 @@ async def load_rates(last_90_days=True):
 
 
 async def load_countries():
-    with open('countries/countries.json') as f:
+    with open("countries/countries.json") as f:
         data = json.load(f)
         for country in data:
             if not await database.fetch_one(query=Countries.select().where(Countries.c.iso2 == country["iso2"])):

@@ -246,9 +246,9 @@ async def countries(request):
 @app.route("/rates")
 @app.route("/rates/{date}")
 async def rates(request):
-    query_params = request.query_params
+    query_params = dict(request.query_params)
     if "date" in request.path_params:
-        query_params["date"] = request.path_parmas["date"]
+        query_params["date"] = request.path_params["date"]
 
     try:
         query = RatesQueryValidationModel(**query_params)
