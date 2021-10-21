@@ -207,10 +207,10 @@ async def geolocate(request):
 
     return UJSONResponse(
         {
-            "country_code": country_code.upper() if country_code else None,
-            "name": record.name,
             "iso2": record.iso2,
             "iso3": record.iso3,
+            "country_code": country_code.upper() if country_code else None,
+            "name": record.name,
             "numeric_code": record.numeric_code,
             "phone_code": record.phone_code,
             "capital": record.capital,
@@ -229,15 +229,25 @@ async def geolocate(request):
 @app.route("/countries")
 # @requires("authenticated")
 async def countries(request):
+    records = await database.fetch_all(query=Countries.select().order_by(Countries.c.iso2.asc()))
+
     countries = []
-    for country in list(pycountry.countries):
+    for country in records:
         countries.append(
             {
-                "alpha_2": country.alpha_2,
-                "alpha_3": country.alpha_3,
-                "numeric": country.numeric,
+                "iso2": country.iso2,
+                "iso3": country.iso3,
                 "name": country.name,
-                "official_name": country.official_name if hasattr(country, "official_name") else None,
+                "numeric_code": country.numeric_code,
+                "phone_code": country.phone_code,
+                "capital": country.capital,
+                "currency": country.currency,
+                "tld": country.tld,
+                "region": country.region,
+                "subregion": country.subregion,
+                "latitude": Decimal(country.latitude),
+                "longitude": Decimal(country.longitude),
+                "emoji": country.emoji,
             }
         )
     return UJSONResponse(countries)
