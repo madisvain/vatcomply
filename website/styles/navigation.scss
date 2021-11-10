@@ -1,6 +1,10 @@
 nav#header {
   margin-bottom: 40px;
 
+  a#logo {
+    text-decoration: none;
+  }
+
   ul.nav {
     li {
       margin-top: 24px;
@@ -8,6 +12,7 @@ nav#header {
       a {
         color: $body-color;
         font-size: 12px;
+        text-decoration: none;
         &:hover {
           text-decoration: none;
         }

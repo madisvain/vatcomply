@@ -44,8 +44,8 @@ const Home = () => {
             <h2 className="text-center">VAT Number Validation API</h2>
           </div>
         </div>
-        <div className="row">
-          <div className="col">
+        <div className="row justify-content-center">
+          <div className="col-4">
             <Formik
               initialValues={{ vat_number: "" }}
               onSubmit={async (values, actions) => {
@@ -54,21 +54,25 @@ const Home = () => {
               }}
             >
               {(props) => (
-                <form className="form-inline justify-content-center" onSubmit={props.handleSubmit}>
-                  <div className="form-group mx-sm-3 mb-2">
-                    <input
-                      type="text"
-                      className="form-control form-control-lg"
-                      name="vat_number"
-                      placeholder="VAT number"
-                      onChange={props.handleChange}
-                      onBlur={props.handleBlur}
-                      value={props.values.vat_number}
-                    />
+                <form onSubmit={props.handleSubmit}>
+                  <div className="row">
+                    <div className="col-8">
+                      <input
+                        type="text"
+                        className="form-control form-control-lg"
+                        name="vat_number"
+                        placeholder="VAT number"
+                        onChange={props.handleChange}
+                        onBlur={props.handleBlur}
+                        value={props.values.vat_number}
+                      />
+                    </div>
+                    <div className="col-4">
+                      <button type="submit" className="btn btn-primary btn-lg mb-2">
+                        Validate
+                      </button>
+                    </div>
                   </div>
-                  <button type="submit" className="btn btn-primary btn-lg mb-2">
-                    Validate
-                  </button>
                 </form>
               )}
             </Formik>
@@ -114,18 +118,27 @@ const Home = () => {
         <div className="row">
           <div className="col">
             <h2 className="text-center">Exchange rates API</h2>
-            {!isEmpty(rates) ? (
-              <table className="table table-borderless mt-4">
-                <tbody>
-                  {map(rates.rates, (value, key) => (
-                    <tr key={key}>
-                      <td className="text-right">{key}</td>
-                      <td>{value}</td>
+
+            <div className="d-flex justify-content-center">
+              {!isEmpty(rates) ? (
+                <table className="table table-striped mt-4" style={{ width: 240 }}>
+                  <thead>
+                    <tr>
+                      <th>Currency</th>
+                      <th>Rate</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : null}
+                  </thead>
+                  <tbody>
+                    {map(rates.rates, (value, key) => (
+                      <tr key={key}>
+                        <td>{key}</td>
+                        <td>{value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
