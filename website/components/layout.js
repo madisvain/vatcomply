@@ -32,6 +32,16 @@ const Layout = ({ children }) => {
             </a>
           </li>
           <li>
+            <a
+              href="https://status.vatcomply.com/"
+              target="_blank"
+              className="text-center"
+              style={{ display: "block", fontSize: 18 }}
+            >
+              Status
+            </a>
+          </li>
+          <li>
             <Link href="/documentation">
               <a className="text-center" style={{ display: "block", fontSize: 18, borderBottom: "2px solid #00022e" }}>
                 API
