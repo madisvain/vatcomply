@@ -4,6 +4,7 @@ import { map, isBoolean, isEmpty, upperFirst } from "lodash";
 
 import axios from "axios";
 import Head from "next/head";
+import Link from "next/link";
 
 import Layout from "../components/layout";
 
@@ -42,6 +43,15 @@ const Home = () => {
         <div className="row">
           <div className="col">
             <h2 className="text-center">VAT Number Validation API</h2>
+            <p style={{ fontSize: 12, textAlign: "center" }}>
+              You can verify the validity of a VAT number issued by any Member State /
+              <br />
+              Northern Ireland by entering the number to be validated in the form or use the{" "}
+              <Link href="https://www.vatcomply.com/documentation#vat">
+                <a>API</a>
+              </Link>{" "}
+              for automation.
+            </p>
           </div>
         </div>
         <div className="row justify-content-center">
@@ -103,11 +113,28 @@ const Home = () => {
         <div className="row">
           <div className="col">
             <h2 className="text-center">Geolocation API</h2>
+            <p style={{ fontSize: 12, textAlign: "center" }}>
+              Locate and identify website visitors by IP address. The free geocoding{" "}
+              <Link href="https://www.vatcomply.com/documentation#geolocation">
+                <a>API</a>
+              </Link>{" "}
+              uses{" "}
+              <a
+                href="https://support.cloudflare.com/hc/en-us/articles/200168236-Configuring-Cloudflare-IP-Geolocation"
+                target="_blank"
+              >
+                CloudFlare
+              </a>{" "}
+              IP Geolocation
+              <br />
+              to which additional information about the geolocated country is provided.
+            </p>
             {!isEmpty(geolocation) ? (
               <p className="text-center mt-4">
                 From your IP address {geolocation.ip}
                 <br />
-                it was determined that you are from {geolocation.country_code}
+                it was determined that you are from <strong>{geolocation.name}</strong> {geolocation.emoji} with
+                currency <strong>{geolocation.currency}</strong>
               </p>
             ) : null}
           </div>
@@ -118,7 +145,14 @@ const Home = () => {
         <div className="row">
           <div className="col">
             <h2 className="text-center">Exchange rates API</h2>
-
+            <p style={{ fontSize: 12, textAlign: "center" }}>
+              <Link href="https://www.vatcomply.com/documentation#rates">
+                <a>Exchange rates API</a>
+              </Link>{" "}
+              is a free service for current and historical
+              <br />
+              foreign exchange rates published by the European Central Bank.
+            </p>
             <div className="d-flex justify-content-center">
               {!isEmpty(rates) ? (
                 <table className="table table-striped mt-4" style={{ width: 240 }}>

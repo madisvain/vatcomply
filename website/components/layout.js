@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 
-import Burger from "../components/burger";
+// import Burger from "../components/burger";
 
 const Layout = ({ children }) => {
   const [menuOpen, setMenuOpen] = useState(false);
