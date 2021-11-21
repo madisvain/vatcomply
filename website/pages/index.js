@@ -36,6 +36,10 @@ const Home = () => {
       <Head>
         <title>VAT validation, geolocation and exchange rates API</title>
         <meta charSet="utf-8" />
+        <meta
+          name="description"
+          content="VAT number validation, geolocation and exchange rates API for VAT compliance."
+        />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
       </Head>
 
