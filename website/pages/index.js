@@ -33,7 +33,7 @@ const Home = () => {
   return (
     <Layout>
       <Head>
-        <title>VAT number validation, geolocation and exchange rates API. VAT compliance.</title>
+        <title>VAT validation, geolocation and exchange rates API</title>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
       </Head>
