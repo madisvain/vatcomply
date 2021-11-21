@@ -47,7 +47,7 @@ const Home = () => {
               You can verify the validity of a VAT number issued by any Member State /
               <br />
               Northern Ireland by entering the number to be validated in the form or use the{" "}
-              <Link href="https://www.vatcomply.com/documentation#vat">
+              <Link href="/documentation#vat" prefetch={false}>
                 <a>API</a>
               </Link>{" "}
               for automation.
@@ -115,7 +115,7 @@ const Home = () => {
             <h2 className="text-center">Geolocation API</h2>
             <p style={{ fontSize: 12, textAlign: "center" }}>
               Locate and identify website visitors by IP address. The free geocoding{" "}
-              <Link href="https://www.vatcomply.com/documentation#geolocation">
+              <Link href="/documentation#geolocation" prefetch={false}>
                 <a>API</a>
               </Link>{" "}
               uses{" "}
@@ -146,7 +146,7 @@ const Home = () => {
           <div className="col">
             <h2 className="text-center">Exchange rates API</h2>
             <p style={{ fontSize: 12, textAlign: "center" }}>
-              <Link href="https://www.vatcomply.com/documentation#rates">
+              <Link href="/documentation#rates" prefetch={false}>
                 <a>Exchange rates API</a>
               </Link>{" "}
               is a free service for current and historical

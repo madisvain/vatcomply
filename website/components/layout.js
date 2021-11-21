@@ -9,7 +9,7 @@ const Layout = ({ children }) => {
   return (
     <div>
       <nav id="header" className="navbar navbar-light">
-        <Link href="/">
+        <Link href="/" prefetch={false}>
           <a id="logo">
             <h1>
               VAT
@@ -42,7 +42,7 @@ const Layout = ({ children }) => {
             </a>
           </li>
           <li>
-            <Link href="/documentation">
+            <Link href="/documentation" prefetch={false}>
               <a className="text-center" style={{ display: "block", fontSize: 18, borderBottom: "2px solid #00022e" }}>
                 API
               </a>
@@ -58,12 +58,12 @@ const Layout = ({ children }) => {
         <nav className="overlay-menu">
           <ul className="list-unstyled">
             <li>
-              <Link href="/">
+              <Link href="/" prefetch={false}>
                 <a className="link">Home</a>
               </Link>
             </li>
             <li>
-              <Link href="/documentation">
+              <Link href="/documentation" prefetch={false}>
                 <a className="link">API docs</a>
               </Link>
             </li>

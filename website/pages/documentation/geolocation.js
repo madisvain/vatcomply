@@ -27,12 +27,12 @@ const Geolocation = () => {
       </p>
       <div className="card boxed">
         <div className="card-body p-0">
-          <Highlighter code={exampleRequest} />
+          <Highlighter code={exampleRequest} language="http" />
         </div>
       </div>
       <div className="card boxed mt-4">
         <div className="card-body p-0">
-          <Highlighter code={exampleResponse} />
+          <Highlighter code={exampleResponse} language="json" />
         </div>
       </div>
     </div>

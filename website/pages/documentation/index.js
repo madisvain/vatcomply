@@ -1,5 +1,3 @@
-import React, { useEffect, useRef } from "react";
-
 import Head from "next/head";
 import Link from "next/link";
 
@@ -7,7 +5,6 @@ import Layout from "../../components/layout";
 import VAT from "./vat";
 import Rates from "./rates";
 import Geolocation from "./geolocation";
-import Countries from "./countries";
 import Currencies from "./currencies";
 
 const Documentation = () => {
