@@ -12,12 +12,12 @@
     "formik": "^2.2.9",
     "highlight.js": "^11.2.0",
     "lodash": "^4.17.21",
-    "next": "^12.0.4-canary.3",
+    "next": "^12.0.4",
     "prop-types": "^15.7.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-ga": "^3.3.0",
-    "react-syntax-highlighter": "^15.4.4",
+    "react-syntax-highlighter": "^15.4.5",
     "sass": "^1.42.1"
   },
   "license": "MIT"
