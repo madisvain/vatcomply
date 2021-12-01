@@ -38,9 +38,11 @@ async def load_rates(last_90_days=True):
 
 
 async def load_countries():
+    print("Loading countries ...")
     with open("countries/countries.json") as f:
         data = json.load(f)
         for country in data:
+            print(country)
             if not await database.fetch_one(query=Countries.select().where(Countries.c.iso2 == country["iso2"])):
                 await database.execute(
                     query=Countries.insert(),

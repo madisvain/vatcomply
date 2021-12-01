@@ -1,6 +1,5 @@
 import fcntl
 import pendulum
-import pycountry
 import sentry_sdk
 import ujson
 import uvicorn
