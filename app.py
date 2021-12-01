@@ -207,20 +207,20 @@ async def geolocate(request):
 
     return UJSONResponse(
         {
-            "iso2": record.iso2,
-            "iso3": record.iso3,
+            "iso2": record.iso2 if record else None,
+            "iso3": record.iso3 if record else None,
             "country_code": country_code.upper() if country_code else None,
-            "name": record.name,
-            "numeric_code": record.numeric_code,
-            "phone_code": record.phone_code,
-            "capital": record.capital,
-            "currency": record.currency,
-            "tld": record.tld,
-            "region": record.region,
-            "subregion": record.subregion,
-            "latitude": Decimal(record.latitude),
-            "longitude": Decimal(record.longitude),
-            "emoji": record.emoji,
+            "name": record.name if record else None,
+            "numeric_code": record.numeric_code if record else None,
+            "phone_code": record.phone_code if record else None,
+            "capital": record.capital if record else None,
+            "currency": record.currency if record else None,
+            "tld": record.tld if record else None,
+            "region": record.region if record else None,
+            "subregion": record.subregion if record else None,
+            "latitude": Decimal(record.latitude) if record else None,
+            "longitude": Decimal(record.longitude) if record else None,
+            "emoji": record.emoji if record else None,
             "ip": ip,
         }
     )
