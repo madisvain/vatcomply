@@ -20,6 +20,7 @@ class UJSONResponse(JSONResponse):
 
 
 async def load_rates(last_90_days=True):
+    print("Loading rates ...")
     r = requests.get(RATES_LAST_90_DAYS_URL if last_90_days else RATES_URL)
     envelope = ElementTree.fromstring(r.content)
 
@@ -35,6 +36,7 @@ async def load_rates(last_90_days=True):
                 query=Rates.insert(),
                 values={"date": time, "rates": {str(c.attrib["currency"]): float(c.attrib["rate"]) for c in list(d)}},
             )
+    print("Loading rates finised!")
 
 
 async def load_countries():
@@ -42,7 +44,6 @@ async def load_countries():
     with open("countries/countries.json") as f:
         data = json.load(f)
         for country in data:
-            print(country)
             if not await database.fetch_one(query=Countries.select().where(Countries.c.iso2 == country["iso2"])):
                 await database.execute(
                     query=Countries.insert(),
@@ -62,3 +63,4 @@ async def load_countries():
                         "emoji": country["emoji"],
                     },
                 )
+    print("Loading countries finised!")
