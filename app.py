@@ -44,6 +44,13 @@ from settings import (
 from utils import load_countries, load_rates
 
 
+CORS_HEADERS = {
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Methods": "GET",
+    "Access-Control-Allow-Origin": "*",
+}
+
+
 class UJSONResponse(JSONResponse):
     media_type = "application/json"
 
@@ -69,10 +76,14 @@ if SENTRY_DSN:
 
 """ CORS """
 # if CORS:
-app.add_middleware(CORSMiddleware, allow_origins=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+)
 
 """ Authentication """
-app.add_middleware(AuthenticationMiddleware, backend=TokenAuthenticationBackend())
+# app.add_middleware(AuthenticationMiddleware, backend=TokenAuthenticationBackend())
 
 
 """ Startup & Shutdown """
@@ -180,38 +191,11 @@ async def vat(request):
                 "name": response["name"],
                 "address": response["address"].strip() if response["address"] else "",
                 "country_code": response["countryCode"],
-            }
+            },
+            headers=CORS_HEADERS,
         )
     except ValidationError as e:
-        return UJSONResponse(e.errors(), status_code=400)
-
-
-@app.route("/vat/rates")
-# @requires("authenticated")
-async def vat_rates(request):
-    try:
-        query = VATRatesModel(**request.query_params)
-        client = zeep.Client(wsdl=str(VIES_URL))
-        try:
-            response = zeep.helpers.serialize_object(
-                client.service.checkVat(
-                    countryCode=query.vat_number[:2], vatNumber=query.vat_number[2:]
-                )
-            )
-        except zeep.exceptions.Fault as e:
-            return UJSONResponse({"error": e.message})
-
-        return UJSONResponse(
-            {
-                "valid": response["valid"],
-                "vat_number": response["vatNumber"],
-                "name": response["name"],
-                "address": response["address"].strip(),
-                "country_code": response["countryCode"],
-            }
-        )
-    except ValidationError as e:
-        return UJSONResponse(e.errors(), status_code=400)
+        return UJSONResponse(e.errors(), headers=CORS_HEADERS, status_code=400)
 
 
 @app.route("/geolocate", methods=["GET", "HEAD"])
@@ -220,7 +204,7 @@ async def geolocate(request):
     ip = request.headers.get("CF-Connecting-IP")
 
     if not country_code:
-        return UJSONResponse({"ip": ip}, status_code=404)
+        return UJSONResponse({"ip": ip}, headers=CORS_HEADERS, status_code=404)
 
     # Get the rates data
     record = await database.fetch_one(
@@ -244,7 +228,8 @@ async def geolocate(request):
             "longitude": Decimal(record.longitude) if record else None,
             "emoji": record.emoji if record else None,
             "ip": ip,
-        }
+        },
+        headers=CORS_HEADERS,
     )
 
 
@@ -274,7 +259,10 @@ async def countries(request):
                 "emoji": country.emoji,
             }
         )
-    return UJSONResponse(countries)
+    return UJSONResponse(
+        countries,
+        headers=CORS_HEADERS,
+    )
 
 
 @app.route("/rates")
@@ -316,10 +304,11 @@ async def rates(request):
                     del rates[rate]
 
         return UJSONResponse(
-            {"date": record.date.isoformat(), "base": query.base, "rates": rates}
+            {"date": record.date.isoformat(), "base": query.base, "rates": rates},
+            headers=CORS_HEADERS,
         )
     except ValidationError as e:
-        return UJSONResponse(e.errors(), status_code=400)
+        return UJSONResponse(e.errors(), headers=CORS_HEADERS, status_code=400)
 
 
 @app.route("/currencies")
@@ -331,7 +320,10 @@ async def currencies(request):
             "name": get_currency_name(symbol, locale="en"),
             "symbol": get_currency_symbol(symbol, locale="en"),
         }
-    return UJSONResponse(currencies, headers={"Cache-Control": "max-age=86400"})
+
+    headers = {"Cache-Control": "max-age=86400"}
+    headers.update(CORS_HEADERS)
+    return UJSONResponse(currencies, headers=headers)
 
 
 if __name__ == "__main__":
