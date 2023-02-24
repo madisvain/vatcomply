@@ -13,15 +13,12 @@ from pydantic import ValidationError
 from pydantic.error_wrappers import ErrorWrapper
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from starlette.applications import Starlette
-from starlette.authentication import requires
-from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import JSONResponse
 from typing import Any
 
-from auth import TokenAuthenticationBackend
 from db import database, Countries, Rates, Users
 from errors import AlreadyExistsError
 from models import (
@@ -33,7 +30,6 @@ from models import (
 )
 from settings import (
     ALLOWED_HOSTS,
-    CORS,
     DEBUG,
     FORCE_HTTPS,
     SENTRY_DSN,

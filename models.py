@@ -2,8 +2,7 @@ from datetime import date
 from typing import Optional
 
 from passlib.hash import pbkdf2_sha256
-from pydantic import BaseModel, ValidationError, validator, root_validator, EmailStr, SecretStr
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel, validator, root_validator, EmailStr, SecretStr
 
 from db import database, Users
 from settings import SYMBOLS
