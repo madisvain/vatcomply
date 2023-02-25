@@ -17,52 +17,41 @@ const Documentation = () => {
           name="description"
           content="VAT number validation, geolocation and exchange rates API for VAT compliance."
         />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, shrink-to-fit=no"
+        />
       </Head>
       <div className="container-fluid">
         <div className="row justify-content-between">
           <div id="sidebar" className="col-sm-3">
             <ul className="list-unstyled">
               <li>
-                <Link href="#vat">
-                  <a>VAT validation</a>
-                </Link>
+                <Link href="#vat">VAT validation</Link>
               </li>
               <li>
-                <Link href="#rates">
-                  <a>Rates</a>
-                </Link>
+                <Link href="#rates">Rates</Link>
                 <ul>
                   <li>
-                    <Link href="#rates-latest">
-                      <a>Latest</a>
-                    </Link>
+                    <Link href="#rates-latest">Latest</Link>
                   </li>
                   <li>
-                    <Link href="#rates-base">
-                      <a>Base rate</a>
-                    </Link>
+                    <Link href="#rates-base">Base rate</Link>
                   </li>
                   <li>
-                    <Link href="#rates-date">
-                      <a>Date</a>
-                    </Link>
+                    <Link href="#rates-date">Date</Link>
                   </li>
                 </ul>
               </li>
               <li>
-                <Link href="#currencies">
-                  <a>Currencies</a>
-                </Link>
+                <Link href="#currencies">Currencies</Link>
               </li>
               <li>
-                <Link href="#geolocation">
-                  <a>Geolocation</a>
-                </Link>
+                <Link href="#geolocation">Geolocation</Link>
               </li>
               {/*<li>
                 <Link href="#countries">
-                  <a>Countries</a>
+                  Countries
                 </Link>
               </li>*/}
             </ul>

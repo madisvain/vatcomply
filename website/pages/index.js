@@ -40,7 +40,10 @@ const Home = () => {
           name="description"
           content="VAT number validation, geolocation and exchange rates API for VAT compliance."
         />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, shrink-to-fit=no"
+        />
       </Head>
 
       <div id="hero" className="container">
@@ -48,11 +51,13 @@ const Home = () => {
           <div className="col">
             <h2 className="text-center">VAT Number Validation API</h2>
             <p style={{ fontSize: 12, textAlign: "center" }}>
-              You can verify the validity of a VAT number issued by any Member State /
+              You can verify the validity of a VAT number issued by any Member
+              State /
               <br />
-              Northern Ireland by entering the number to be validated in the form or use the{" "}
+              Northern Ireland by entering the number to be validated in the
+              form or use the{" "}
               <Link href="/documentation#vat" prefetch={false}>
-                <a>API</a>
+                API
               </Link>{" "}
               for automation.
             </p>
@@ -63,7 +68,9 @@ const Home = () => {
             <Formik
               initialValues={{ vat_number: "" }}
               onSubmit={async (values, actions) => {
-                const result = await axios(`https://api.vatcomply.com/vat?vat_number=${values.vat_number}`);
+                const result = await axios(
+                  `https://api.vatcomply.com/vat?vat_number=${values.vat_number}`
+                );
                 setVAT(result.data);
               }}
             >
@@ -82,7 +89,10 @@ const Home = () => {
                       />
                     </div>
                     <div className="col-4">
-                      <button type="submit" className="btn btn-primary btn-lg mb-2">
+                      <button
+                        type="submit"
+                        className="btn btn-primary btn-lg mb-2"
+                      >
                         Validate
                       </button>
                     </div>
@@ -102,8 +112,12 @@ const Home = () => {
                 <div className="card-body">
                   {map(vat, (value, key) => (
                     <dl className="row" key={key}>
-                      <dt className="col-sm-3 text-right">{upperFirst(key).replace("_", " ")}</dt>
-                      <dd className="col-sm-9">{isBoolean(value) ? (value ? "Yes" : "No") : value}</dd>
+                      <dt className="col-sm-3 text-right">
+                        {upperFirst(key).replace("_", " ")}
+                      </dt>
+                      <dd className="col-sm-9">
+                        {isBoolean(value) ? (value ? "Yes" : "No") : value}
+                      </dd>
                     </dl>
                   ))}
                 </div>
@@ -118,9 +132,10 @@ const Home = () => {
           <div className="col">
             <h2 className="text-center">Geolocation API</h2>
             <p style={{ fontSize: 12, textAlign: "center" }}>
-              Locate and identify website visitors by IP address. The free geocoding{" "}
+              Locate and identify website visitors by IP address. The free
+              geocoding{" "}
               <Link href="/documentation#geolocation" prefetch={false}>
-                <a>API</a>
+                API
               </Link>{" "}
               uses{" "}
               <a
@@ -131,13 +146,15 @@ const Home = () => {
               </a>{" "}
               IP Geolocation
               <br />
-              to which additional information about the geolocated country is provided.
+              to which additional information about the geolocated country is
+              provided.
             </p>
             {!isEmpty(geolocation) ? (
               <p className="text-center mt-4">
                 From your IP address {geolocation.ip}
                 <br />
-                it was determined that you are from <strong>{geolocation.name}</strong> {geolocation.emoji} with
+                it was determined that you are from{" "}
+                <strong>{geolocation.name}</strong> {geolocation.emoji} with
                 currency <strong>{geolocation.currency}</strong>
               </p>
             ) : null}
@@ -151,7 +168,7 @@ const Home = () => {
             <h2 className="text-center">Exchange rates API</h2>
             <p style={{ fontSize: 12, textAlign: "center" }}>
               <Link href="/documentation#rates" prefetch={false}>
-                <a>Exchange rates API</a>
+                Exchange rates API
               </Link>{" "}
               is a free service for current and historical
               <br />
@@ -159,7 +176,10 @@ const Home = () => {
             </p>
             <div className="d-flex justify-content-center">
               {!isEmpty(rates) ? (
-                <table className="table table-striped mt-4" style={{ width: 240 }}>
+                <table
+                  className="table table-striped mt-4"
+                  style={{ width: 240 }}
+                >
                   <thead>
                     <tr>
                       <th>Currency</th>

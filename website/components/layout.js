@@ -9,14 +9,12 @@ const Layout = ({ children }) => {
   return (
     <div>
       <nav id="header" className="navbar navbar-light">
-        <Link href="/" prefetch={false}>
-          <a id="logo">
-            <h1>
-              VAT
-              <br />
-              <small>comply</small>
-            </h1>
-          </a>
+        <Link href="/" id="logo" prefetch={false}>
+          <h1>
+            VAT
+            <br />
+            <small>comply</small>
+          </h1>
         </Link>
         <ul className="nav">
           <li className="d-none d-sm-block">
@@ -27,7 +25,11 @@ const Layout = ({ children }) => {
             </a>
           </li>
           <li>
-            <a href="https://github.com/madisvain/vatcomply" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://github.com/madisvain/vatcomply"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <img src="/github.svg" width="32" height="32" />
             </a>
           </li>
@@ -42,10 +44,17 @@ const Layout = ({ children }) => {
             </a>
           </li>
           <li>
-            <Link href="/documentation" prefetch={false}>
-              <a className="text-center" style={{ display: "block", fontSize: 18, borderBottom: "2px solid #00022e" }}>
-                API
-              </a>
+            <Link
+              href="/documentation"
+              className="text-center"
+              style={{
+                display: "block",
+                fontSize: 18,
+                borderBottom: "2px solid #00022e",
+              }}
+              prefetch={false}
+            >
+              API
             </Link>
           </li>
           {/*<Burger menuOpen={menuOpen} setMenuOpen={setMenuOpen} />*/}
@@ -58,18 +67,18 @@ const Layout = ({ children }) => {
         <nav className="overlay-menu">
           <ul className="list-unstyled">
             <li>
-              <Link href="/" prefetch={false}>
-                <a className="link">Home</a>
+              <Link href="/" className="link" prefetch={false}>
+                Home
               </Link>
             </li>
             <li>
-              <Link href="/documentation" prefetch={false}>
-                <a className="link">API docs</a>
+              <Link href="/documentation" className="link" prefetch={false}>
+                API docs
               </Link>
             </li>
             {/*<li>
-              <Link href="/about">
-                <a className="link">About</a>
+              <Link href="/about" className="link">
+                About
               </Link>
             </li>*/}
           </ul>
