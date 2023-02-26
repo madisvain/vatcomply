@@ -3,6 +3,7 @@ apscheduler
 babel
 databases[sqlite]
 gunicorn
+httpx
 passlib
 pendulum
 pycountry
