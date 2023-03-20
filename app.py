@@ -98,14 +98,14 @@ async def startup():
         scheduler.start()
 
         if not TESTING:
+            # Countries
+            scheduler.add_job(load_countries)
+
             # Updates lates 90 days data
             scheduler.add_job(load_rates, "interval", hours=1, minutes=10)
 
             # Fill up database with rates
             scheduler.add_job(load_rates, kwargs={"last_90_days": False})
-
-            # Countries
-            scheduler.add_job(load_countries)
     except BlockingIOError:
         pass
 
