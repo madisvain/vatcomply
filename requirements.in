@@ -6,7 +6,6 @@ gunicorn
 httpx
 passlib
 pendulum
-pycountry
 pydantic[email]
 pytest
 sentry-sdk

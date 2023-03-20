@@ -1,6 +1,4 @@
-from enum import unique
 import databases
-import pendulum
 import sqlalchemy
 
 from settings import DATABASE_URL, TEST_DATABASE_URL, TESTING
@@ -38,7 +36,9 @@ Users = sqlalchemy.Table(
     sqlalchemy.Column("pk", sqlalchemy.Integer, primary_key=True),
     sqlalchemy.Column("email", sqlalchemy.String, nullable=False, unique=True),
     sqlalchemy.Column("password", sqlalchemy.String, nullable=False),
-    sqlalchemy.Column("created_at", sqlalchemy.DateTime, default=sqlalchemy.func.now(), nullable=False),
+    sqlalchemy.Column(
+        "created_at", sqlalchemy.DateTime, default=sqlalchemy.func.now(), nullable=False
+    ),
     sqlalchemy.Column("last_login", sqlalchemy.DateTime),
 )
 
