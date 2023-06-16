@@ -6,6 +6,7 @@ gunicorn
 httpx
 passlib
 pendulum
+psycopg2-binary
 pydantic[email]
 pytest
 sentry-sdk
