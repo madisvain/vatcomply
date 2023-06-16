@@ -1,7 +1,7 @@
 alembic
 apscheduler
 babel
-databases[sqlite]
+databases[asyncpg]
 gunicorn
 httpx
 passlib
