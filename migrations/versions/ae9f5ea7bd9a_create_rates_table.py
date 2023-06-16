@@ -17,7 +17,11 @@ depends_on = None
 
 
 def upgrade():
-    op.create_table("rates", sa.Column("date", sa.Date, primary_key=True), sa.Column("rates", sa.JSON))
+    op.create_table(
+        "rates",
+        sa.Column("date", sa.Date, primary_key=True),
+        sa.Column("rates", sa.JSON),
+    )
 
 
 def downgrade():
