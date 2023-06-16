@@ -44,7 +44,7 @@ async def load_rates(last_90_days=True):
                     },
                 },
             )
-    print("Loading rates finised!")
+    print("Loading rates finished!")
 
 
 async def load_countries():
@@ -72,4 +72,4 @@ async def load_countries():
                     "emoji": country["emoji"],
                 },
             )
-    print("Loading countries finised!")
+    print("Loading countries finished!")

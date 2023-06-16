@@ -1,4 +1,5 @@
 import fcntl
+import json
 import pendulum
 import sentry_sdk
 import ujson
@@ -282,12 +283,13 @@ async def rates(request):
             .order_by(Rates.c.date.desc())
             .limit(1)
         )
+        record_rates = json.loads(record.rates)
 
         # Base re-calculation
         rates = {"EUR": 1}
-        rates.update(record.rates)
+        rates.update(record_rates)
         if query.base and query.base != "EUR":
-            base_rate = Decimal(record.rates[query.base])
+            base_rate = Decimal(record_rates[query.base])
             rates = {
                 currency: Decimal(rate) / base_rate for currency, rate in rates.items()
             }
