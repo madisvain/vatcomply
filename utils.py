@@ -60,7 +60,7 @@ async def load_countries():
                     "name": country["name"],
                     "iso2": country["iso2"],
                     "iso3": country["iso3"],
-                    "numeric_code": int(country["numeric_code"]),
+                    "numeric_code": country["numeric_code"],
                     "phone_code": country["phone_code"],
                     "capital": country["capital"],
                     "currency": country["currency"],
