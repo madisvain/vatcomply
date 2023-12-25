@@ -1,6 +1,6 @@
 # VATcomply
 
-VATcomply is a free API service for vat number validation, user ip geolocation and foreign exchange rates [published by the European Central Bank](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html).
+[VATcomply](https://www.vatcomply.com) is a free API service for vat number validation, user ip geolocation and foreign exchange rates [published by the European Central Bank](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html).
 
 ## Usage
 
@@ -10,12 +10,6 @@ Get the latest foreign exchange rates.
 
 ```http
 GET /rates
-```
-
-Get historical rates for any day since 1999.
-
-```http
-GET /rates/2018-03-26
 ```
 
 Rates are quoted against the Euro by default. Quote against a different currency by setting the base parameter in your request.
@@ -30,7 +24,7 @@ Request specific exchange rates by setting the symbols parameter.
 GET /rates?symbols=USD,GBP
 ```
 
-#### Rates history
+#### Rates history and query parameters combinations
 
 Get historical rates for a date
 
@@ -60,7 +54,7 @@ let demo = () => {
   alert("£1 = $" + rate.toFixed(4));
 };
 
-fetch("https://api.vatcomply.com/latest")
+fetch("https://api.vatcomply.com/rates")
   .then((resp) => resp.json())
   .then((data) => (fx.rates = data.rates))
   .then(demo);
@@ -68,14 +62,13 @@ fetch("https://api.vatcomply.com/latest")
 
 ## Stack
 
-VATcomply API is built upon [Starlette](https://github.com/encode/starlette) the asyncronous Python framework to achieve high throughput. The current setup can asyncronously handle thousands of requests per second.
+VATcomply API is built upon [Django](https://www.djangoproject.com/) with asyncronous views, [Pydantic](https://docs.pydantic.dev/latest/) and asyncronous ORM queries to achieve high throughput. The current setup can asyncronously handle thousands of requests per second.
 
 #### Libraries used
 
-- [Starlette](https://github.com/encode/starlette)
-- [SQLAlchemy](https://www.sqlalchemy.org/)
+- [Django](https://www.djangoproject.com/)
+- [Pydantic](https://docs.pydantic.dev/latest/)
 - [APScheduler](https://github.com/agronholm/apscheduler)
-- [uvloop](https://github.com/MagicStack/uvloop)
 - [ultraJSON](https://github.com/esnme/ultrajson)
 
 ## Deployment
@@ -105,10 +98,10 @@ On initialization it will check the database. If it's empty all the historic rat
 ## Development
 
 ```shell
-uvicorn app:app --reload
+export DEBUG=True; uvicorn vatcomply.asgi:application --reload
 ```
 
-or
+or for simplicity a Makefile is provided with all the commands for development.
 
 ```shell
 make run
@@ -116,15 +109,29 @@ make run
 
 ## Migrations
 
+Make migrations
+
 ```shell
-PYTHONPATH=.:\$PYTHONPATH alembic revision --autogenerate -m "create users table"
+make migrations
+```
+
+Run migrations
+
+```shell
+make migrate
+```
+
+## Tests
+
+```shell
+make test
 ```
 
 ## Contributing
 
 Thanks for your interest in the project! All pull requests are welcome from developers of all skill levels. To get started, simply fork the master branch on GitHub to your personal account and then clone the fork into your development environment.
 
-Madis Väin (madisvain on Github, Twitter) is the original creator of the VATcomply API.
+Madis Väin ([madisvain](https://github.com/madisvain) on Github) is the original creator of the VATcomply API.
 
 ## License
 

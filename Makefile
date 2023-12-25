@@ -1,11 +1,14 @@
 run:
-	uvicorn app:app --reload
+	export DEBUG=True; uvicorn vatcomply.asgi:application --reload
 
 pip:
 	pip install -r requirements.in --upgrade
 
 migrate:
-	PYTHONPATH=.:$PYTHONPATH alembic upgrade head
+	python manage.py migrate
+
+migrations:
+	python manage.py makemigrations
 
 test:
-	export TESTING=True; pytest -s --disable-warnings
+	python manage.py test --keepdb
