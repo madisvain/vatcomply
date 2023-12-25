@@ -33,6 +33,7 @@ class Command(BaseCommand):
             "eurofxref": "http://www.ecb.int/vocabulary/2002-08-01/eurofxref",
         }
         data = envelope.findall("./eurofxref:Cube/eurofxref:Cube[@time]", namespaces)
+        skipped = 0
         for i, d in enumerate(data):
             time = pendulum.parse(d.attrib["time"], strict=False)
             try:
@@ -44,6 +45,8 @@ class Command(BaseCommand):
                     },
                 )
             except IntegrityError:
-                self.stdout.write(f"Rate for {time} already exists, skipping...")
+                skipped += 1
 
-        self.stdout.write("Loading rates finished!")
+        self.stdout.write(
+            "Loading rates finished! Skipped {} existing rates.".format(skipped)
+        )
