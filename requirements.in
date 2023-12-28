@@ -1,4 +1,5 @@
 apscheduler
+babel
 django
 django-cors-headers
 gunicorn

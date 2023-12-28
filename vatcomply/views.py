@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import pendulum
 import zeep
+from babel.numbers import get_currency_name, get_currency_symbol
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -37,6 +38,18 @@ class CountriesView(View):
             )
 
         return JsonResponse(countries)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class CurrenciesView(View):
+    async def get(self, request):
+        currencies = {}
+        for symbol in list(settings.CURRENCY_SYMBOLS):
+            currencies[symbol] = {
+                "name": get_currency_name(symbol, locale="en"),
+                "symbol": get_currency_symbol(symbol, locale="en"),
+            }
+        return JsonResponse(currencies)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
