@@ -44,6 +44,7 @@ class CountriesView(View):
 class CurrenciesView(View):
     async def get(self, request):
         currencies = {}
+
         for symbol in list(settings.CURRENCY_SYMBOLS):
             currencies[symbol] = {
                 "name": get_currency_name(symbol, locale="en"),
@@ -58,7 +59,6 @@ class GeolocateView(View):
         country_code = request.headers.get("CF-IPCountry")
         ip = request.headers.get("CF-Connecting-IP")
 
-        country_code = "EE"
         if not country_code:
             return JsonResponse(
                 {
