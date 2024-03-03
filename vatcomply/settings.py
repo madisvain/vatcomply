@@ -172,7 +172,7 @@ CURRENCY_SYMBOLS = [
 VIES_WSDL = "https://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl"
 
 # Background scheduler
-BACKGROUND_SCHEDULER = os.getenv("BACKGROUND_SCHEDULER", False)
+BACKGROUND_SCHEDULER = env("BACKGROUND_SCHEDULER")
 
 # Sentry
 sentry_sdk.init(
