@@ -1,8 +1,5 @@
 from django.conf import settings
 from django.test import TestCase
-from django.core.management import call_command
-
-from vatcomply.models import Country
 
 
 class CurrenciesTest(TestCase):

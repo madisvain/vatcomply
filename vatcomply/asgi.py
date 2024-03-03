@@ -15,5 +15,4 @@ from vatcomply.middleware import BackgroundTasksMiddleware
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "vatcomply.settings")
 
-# application = BackgroundTasksMiddleware(get_asgi_application())
 application = BackgroundTasksMiddleware(get_asgi_application())

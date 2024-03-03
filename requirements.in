@@ -2,6 +2,7 @@ apscheduler
 babel
 django
 django-cors-headers
+django-environ
 gunicorn
 httpx
 lxml
