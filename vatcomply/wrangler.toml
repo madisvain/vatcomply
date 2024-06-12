@@ -1,0 +1,18 @@
+name = "vatcomply"
+main = "src/index.ts"
+compatibility_date = "2023-12-01"
+
+# [vars]
+# MY_VAR = "my-variable"
+
+# [[r2_buckets]]
+# binding = "MY_BUCKET"
+# bucket_name = "my-bucket"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "vatcomply"
+database_id = "b33ea0f8-7050-4b6b-846f-620131c75dd6"
+
+[triggers]
+crons = ["5 * * * *"]
