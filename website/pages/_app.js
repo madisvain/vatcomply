@@ -8,7 +8,7 @@ export default class VATComplyApp extends App {
     return (
       <>
         <Component {...pageProps} />
-        <script defer data-domain="vatcomply.com" src="https://plausible.io/js/script.js"></script>
+        <script src="https://analytics.ahrefs.com/analytics.js" data-key="HY2osB4vMi3oY1qFklkQ7A" async></script>
       </>
     );
   }
