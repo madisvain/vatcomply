@@ -58,6 +58,17 @@ class RatesTest(TestCase):
         self.assertEqual(len(response.json()["rates"]), 31)
         self.assertEqual(response.json()["rates"]["USD"], 1)
 
+    def test_invalid_base_currency(self):
+        response = self.client.get("/rates?base=INVALID")
+        self.assertEqual(response.status_code, 422)
+        self.assertIsInstance(response.json(), dict)
+        self.assertIn("query", response.json())
+        self.assertIn("base", response.json()["query"])
+        self.assertEqual(
+            response.json()["query"]["base"][0],
+            "Value error, Base currency INVALID is not supported.",
+        )
+
     def test_symbols_api(self):
         response = self.client.get("/rates?symbols=USD,JPY,GBP")
         self.assertEqual(response.status_code, 200)
@@ -75,6 +86,23 @@ class RatesTest(TestCase):
         self.assertIn("query", response.json())
         self.assertIn("symbols", response.json()["query"])
         self.assertIsInstance(response.json()["query"]["symbols"], list)
+
+    def test_non_string_symbols(self):
+        from vatcomply.schemas import RatesQueryParamsSchema
+
+        # Test with a string of comma-separated values
+        schema = RatesQueryParamsSchema(base="EUR", symbols="USD,GBP")
+        self.assertEqual(schema.symbols, ["USD", "GBP"])
+
+        # Test with None value
+        schema = RatesQueryParamsSchema(base="EUR", symbols=None)
+        self.assertIsNone(schema.symbols)
+
+        # Test with invalid type (should raise ValidationError)
+        from pydantic import ValidationError
+
+        with self.assertRaises(ValidationError):
+            RatesQueryParamsSchema(base="EUR", symbols=["USD", "GBP"])
 
     @override_settings(BACKGROUND_SCHEDULER=True)
     async def test_background_scheduler_middleware(self):

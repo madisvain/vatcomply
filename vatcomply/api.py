@@ -7,7 +7,6 @@ from django.conf import settings
 from django.http import JsonResponse, HttpRequest
 from ninja import NinjaAPI, Query
 from ninja.errors import ValidationError
-from pydantic import ValidationError as PydanticValidationError
 
 from vatcomply.constants import CurrencySymbol
 from vatcomply.models import Country, Rate
@@ -30,7 +29,6 @@ api = NinjaAPI(
 
 # Exception handlers
 @api.exception_handler(ValidationError)
-@api.exception_handler(PydanticValidationError)
 def validation_errors(request, exc):
     """
     Simplifies Pydantic validation errors to field: [messages] format
@@ -38,21 +36,12 @@ def validation_errors(request, exc):
     """
     errors = {}
 
-    if isinstance(exc, PydanticValidationError):
-        exc.errors = exc.errors()
-
     for error in exc.errors:
         fields = tuple(filter(lambda x: x not in ["body", "payload"], error["loc"]))
         message = error["msg"]
 
         # Convert path to dpath format
         path = "/".join(str(x) for x in fields)
-
-        if not path:
-            if "non_field_errors" not in errors:
-                errors["non_field_errors"] = []
-            errors["non_field_errors"].append(message)
-            continue
 
         # Check if the path already exists
         try:

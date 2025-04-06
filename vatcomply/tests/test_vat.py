@@ -1,5 +1,4 @@
 from django.test import TestCase
-from pydantic import ValidationError as PydanticValidationError
 from unittest.mock import patch
 from zeep.exceptions import Fault
 
