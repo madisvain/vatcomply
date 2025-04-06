@@ -17,11 +17,15 @@ from vatcomply.schemas import (
     GeolocateResponse,
     ErrorResponse,
     VATQueryParamsSchema,
-    RatesResponseSchema,
+    ValidateVATResponseSchema,
     RatesQueryParamsSchema,
+    RatesResponseSchema,
 )
 
-api = NinjaAPI()
+api = NinjaAPI(
+    title="Vatcomply API",
+    description="API for automated VAT compliance and currency conversion.",
+)
 
 
 # Exception handlers
@@ -147,7 +151,7 @@ async def geolocate(request: HttpRequest):
     }
 
 
-@api.get("/vat")
+@api.get("/vat", response={200: ValidateVATResponseSchema, 400: ErrorResponse})
 async def validate_vat(request, query: Query[VATQueryParamsSchema]):
     client = zeep.AsyncClient(wsdl=str(settings.VIES_WSDL))
     try:

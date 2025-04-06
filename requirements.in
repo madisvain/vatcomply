@@ -1,5 +1,6 @@
 apscheduler
 babel
+coverage
 django
 django-cors-headers
 django-environ
