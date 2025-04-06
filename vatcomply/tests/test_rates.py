@@ -30,8 +30,10 @@ class RatesTest(TestCase):
 
     def test_invalid_date_api(self):
         response = self.client.get("/rates?date=abc")
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 422)
         self.assertIsInstance(response.json(), dict)
+        self.assertIn("query", response.json())
+        self.assertIn("date", response.json()["query"])
 
     def test_date_weekend_api(self):
         response = self.client.get("/rates?date=2018-10-13")
@@ -67,7 +69,8 @@ class RatesTest(TestCase):
 
     def test_invalid_symbols_api(self):
         response = self.client.get("/rates?symbols=12345")
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 422)
         self.assertIsInstance(response.json(), dict)
-        self.assertIn("symbols", response.json())
-        self.assertIsInstance(response.json()["symbols"], list)
+        self.assertIn("query", response.json())
+        self.assertIn("symbols", response.json()["query"])
+        self.assertIsInstance(response.json()["query"]["symbols"], list)

@@ -9,16 +9,17 @@ from ninja import NinjaAPI, Query
 from ninja.errors import ValidationError
 from pydantic import ValidationError as PydanticValidationError
 
+from vatcomply.constants import CurrencySymbol
 from vatcomply.models import Country, Rate
 from vatcomply.schemas import (
     CountrySchema,
     CurrencySchema,
     GeolocateResponse,
     ErrorResponse,
-    VATValidationModel,
+    VATQueryParamsSchema,
+    RatesResponseSchema,
     RatesQueryParamsSchema,
 )
-from babel.numbers import get_currency_name, get_currency_symbol
 
 api = NinjaAPI()
 
@@ -97,10 +98,11 @@ async def countries(request):
 )
 def get_currencies(request):
     currencies = {}
-    for symbol in list(settings.CURRENCY_SYMBOLS):
+    for choice in CurrencySymbol.choices:
+        symbol = choice[0]
         currencies[symbol] = CurrencySchema(
-            name=get_currency_name(symbol, locale="en"),
-            symbol=get_currency_symbol(symbol, locale="en"),
+            name=choice[1],
+            symbol=symbol,
         )
     return currencies
 
@@ -146,58 +148,52 @@ async def geolocate(request: HttpRequest):
 
 
 @api.get("/vat")
-async def validate_vat(request, query: VATValidationModel):
+async def validate_vat(request, query: Query[VATQueryParamsSchema]):
+    client = zeep.AsyncClient(wsdl=str(settings.VIES_WSDL))
     try:
-        client = zeep.AsyncClient(wsdl=str(settings.VIES_WSDL))
-        try:
-            response = await zeep.helpers.serialize_object(
-                client.service.checkVat(
-                    countryCode=query.vat_number[:2], vatNumber=query.vat_number[2:]
-                )
+        response = await zeep.helpers.serialize_object(
+            client.service.checkVat(
+                countryCode=query.vat_number[:2], vatNumber=query.vat_number[2:]
             )
-        except zeep.exceptions.Fault as e:
-            return JsonResponse({"error": e.message}, status=400)
-
-        return JsonResponse(
-            {
-                "valid": response["valid"],
-                "vat_number": response["vatNumber"],
-                "name": response["name"],
-                "address": (response["address"].strip() if response["address"] else ""),
-                "country_code": response["countryCode"],
-            }
         )
-    except ValidationError as e:
-        return JsonResponse(e.errors(), status=400)
+    except zeep.exceptions.Fault as e:
+        return JsonResponse({"error": e.message}, status=400)
+
+    return JsonResponse(
+        {
+            "valid": response["valid"],
+            "vat_number": response["vatNumber"],
+            "name": response["name"],
+            "address": (response["address"].strip() if response["address"] else ""),
+            "country_code": response["countryCode"],
+        }
+    )
 
 
-@api.get("/rates")
+@api.get("/rates", response=RatesResponseSchema)
 async def rates(request, query: Query[RatesQueryParamsSchema]):
-    try:
-        # Find the date
-        date = query.date if query.date else pendulum.now().date()
+    # Find the date
+    date = query.date if query.date else pendulum.now().date()
 
-        # Get the rates data
-        record = await Rate.objects.filter(date__lte=date).order_by("-date").afirst()
+    # Get the rates data
+    record = await Rate.objects.filter(date__lte=date).order_by("-date").afirst()
 
-        # Base re-calculation
-        rates = {"EUR": 1}
-        rates.update(record.rates)
-        if query.base and query.base != "EUR":
-            base_rate = Decimal(record.rates[query.base])
-            rates = {
-                currency: Decimal(rate) / base_rate for currency, rate in rates.items()
-            }
-            rates.update({"EUR": Decimal(1) / base_rate})
+    # Base re-calculation
+    rates = {"EUR": 1}
+    rates.update(record.rates)
+    if query.base and query.base != "EUR":
+        base_rate = Decimal(record.rates[query.base])
+        rates = {
+            currency: Decimal(rate) / base_rate for currency, rate in rates.items()
+        }
+        rates.update({"EUR": Decimal(1) / base_rate})
 
-        # Symbols
-        if query.symbols:
-            for rate in list(rates):
-                if rate not in query.symbols:
-                    del rates[rate]
+    # Symbols
+    if query.symbols:
+        for rate in list(rates):
+            if rate not in query.symbols:
+                del rates[rate]
 
-        return JsonResponse(
-            {"date": record.date.isoformat(), "base": query.base, "rates": rates}
-        )
-    except ValidationError as e:
-        return JsonResponse(e.errors(), status=400)
+    return RatesResponseSchema(
+        date=record.date.isoformat(), base=query.base, rates=rates
+    )
