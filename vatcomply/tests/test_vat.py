@@ -1,4 +1,7 @@
 from django.test import TestCase
+from pydantic import ValidationError as PydanticValidationError
+from unittest.mock import patch
+from zeep.exceptions import Fault
 
 
 class VATTest(TestCase):
@@ -33,3 +36,27 @@ class VATTest(TestCase):
             response.json()["query"]["vat_number"][0],
             "Value error, As of 01/01/2021, the VoW service to validate UK (GB) VAT numbers ceased to exist while a new service to validate VAT numbers of businesses operating under the Protocol on Ireland and Northern Ireland appeared. These VAT numbers are starting with the “XI” prefix.",
         )
+
+    @patch("zeep.AsyncClient")
+    def test_vat_service_fault(self, mock_client):
+        # Mock SOAP fault
+        mock_client.return_value.service.checkVat.side_effect = Fault("SOAP fault")
+
+        response = self.client.get("/vat?vat_number=DE123456789")
+        self.assertEqual(response.status_code, 400)
+        self.assertIsInstance(response.json(), dict)
+        self.assertIn("error", response.json())
+
+    def test_validation_error_handling(self):
+        # Use real endpoint to test validation handling
+        response = self.client.get("/vat?vat_number=123")  # Invalid format
+        self.assertEqual(response.status_code, 422)
+        self.assertIsInstance(response.json(), dict)
+        self.assertIn("query", response.json())
+
+    def test_non_field_validation_error(self):
+        # Use real endpoint with non-field error
+        response = self.client.get("/vat")  # Missing required field
+        self.assertEqual(response.status_code, 422)
+        self.assertIsInstance(response.json(), dict)
+        self.assertIn("query", response.json())

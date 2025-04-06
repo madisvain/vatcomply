@@ -1,5 +1,6 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.core.management import call_command
+from vatcomply.middleware import BackgroundTasksMiddleware
 
 
 class RatesTest(TestCase):
@@ -74,3 +75,24 @@ class RatesTest(TestCase):
         self.assertIn("query", response.json())
         self.assertIn("symbols", response.json()["query"])
         self.assertIsInstance(response.json()["query"]["symbols"], list)
+
+    @override_settings(BACKGROUND_SCHEDULER=True)
+    async def test_background_scheduler_middleware(self):
+        # Mock app that just returns
+        async def mock_app(scope, receive, send):
+            return None
+
+        # Test middleware initialization
+        middleware = BackgroundTasksMiddleware(mock_app)
+
+        # Mock the lifespan startup message
+        scope = {"type": "lifespan"}
+
+        async def receive():
+            return {"type": "lifespan.startup"}
+
+        async def send(message):
+            pass
+
+        # Should not raise any exceptions
+        await middleware(scope, receive, send)
