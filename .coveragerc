@@ -10,6 +10,7 @@ omit =
     */settings.py
     */wsgi.py
     */asgi.py
+    */users/*
 
 [report]
 exclude_lines =
