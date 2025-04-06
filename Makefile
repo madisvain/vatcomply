@@ -2,7 +2,10 @@ run:
 	export DEBUG=True; uvicorn vatcomply.asgi:application --reload
 
 pip:
-	pip install -r requirements.in --upgrade
+	uv pip install -r requirements.in --upgrade
+
+freeze:
+	uv pip compile requirements.in -o requirements.txt
 
 migrate:
 	python manage.py migrate

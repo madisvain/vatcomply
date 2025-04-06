@@ -125,7 +125,7 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Countries
-COUNTRIES_URL = "https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/master/countries.json"
+COUNTRIES_URL = "https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/refs/heads/master/json/countries.json"
 
 # ECB
 RATES_LAST_90_DAYS_URL = (

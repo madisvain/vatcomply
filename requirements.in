@@ -4,7 +4,7 @@ django
 django-cors-headers
 django-environ
 gunicorn
-httpx
+httpx<0.28
 lxml
 pendulum
 pydantic

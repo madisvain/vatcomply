@@ -5,6 +5,7 @@ annotated-types==0.6.0
 anyio==4.2.0
     # via httpx
 apscheduler==3.10.4
+    # via -r requirements.in
 asgiref==3.7.2
     # via
     #   django
@@ -12,6 +13,7 @@ asgiref==3.7.2
 attrs==23.1.0
     # via zeep
 babel==2.14.0
+    # via -r requirements.in
 certifi==2023.11.17
     # via
     #   httpcore
@@ -24,11 +26,15 @@ click==8.1.7
     # via uvicorn
 django==4.2.8
     # via
+    #   -r requirements.in
     #   django-cors-headers
     #   sentry-sdk
 django-cors-headers==4.3.1
+    # via -r requirements.in
 django-environ==0.11.2
+    # via -r requirements.in
 gunicorn==21.2.0
+    # via -r requirements.in
 h11==0.14.0
     # via
     #   httpcore
@@ -36,6 +42,7 @@ h11==0.14.0
 httpcore==1.0.2
     # via httpx
 httpx==0.26.0
+    # via -r requirements.in
 idna==3.6
     # via
     #   anyio
@@ -44,13 +51,17 @@ idna==3.6
 isodate==0.6.1
     # via zeep
 lxml==4.9.4
-    # via zeep
+    # via
+    #   -r requirements.in
+    #   zeep
 packaging==23.2
     # via gunicorn
 pendulum==3.0.0
+    # via -r requirements.in
 platformdirs==4.1.0
     # via zeep
 pydantic==2.5.3
+    # via -r requirements.in
 pydantic-core==2.14.6
     # via pydantic
 python-dateutil==2.8.2
@@ -71,6 +82,7 @@ requests-file==1.5.1
 requests-toolbelt==1.0.0
     # via zeep
 sentry-sdk==1.39.1
+    # via -r requirements.in
 six==1.16.0
     # via
     #   apscheduler
@@ -94,9 +106,12 @@ tzdata==2023.3
 tzlocal==5.2
     # via apscheduler
 ujson==5.9.0
+    # via -r requirements.in
 urllib3==2.1.0
     # via
     #   requests
     #   sentry-sdk
 uvicorn==0.25.0
+    # via -r requirements.in
 zeep==4.2.1
+    # via -r requirements.in

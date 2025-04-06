@@ -21,7 +21,7 @@ class Command(BaseCommand):
                         name=country["name"],
                         iso3=country["iso3"],
                         numeric_code=country["numeric_code"],
-                        phone_code=country["phone_code"],
+                        phone_code=country["phonecode"],
                         capital=country["capital"],
                         currency=country["currency"],
                         tld=country["tld"],
