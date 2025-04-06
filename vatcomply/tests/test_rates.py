@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.core.management import call_command
 
 
-class VATTest(TestCase):
+class RatesTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         call_command("load_rates")

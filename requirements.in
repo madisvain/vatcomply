@@ -3,6 +3,8 @@ babel
 django
 django-cors-headers
 django-environ
+django-ninja
+dpath
 gunicorn
 httpx<0.28
 lxml
