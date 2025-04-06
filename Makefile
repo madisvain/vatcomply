@@ -15,3 +15,6 @@ migrations:
 
 test:
 	python manage.py test --keepdb
+
+coverage:
+	coverage run manage.py test --keepdb && coverage report -m

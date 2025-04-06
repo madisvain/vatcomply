@@ -11,7 +11,6 @@ permissions:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     env:
@@ -29,4 +28,7 @@ jobs:
         pip install -r requirements.txt
     - name: Run Tests
       run: |
-        python manage.py test
+        coverage run manage.py test
+        coverage xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3

@@ -24,14 +24,21 @@ charset-normalizer==3.3.2
     # via requests
 click==8.1.7
     # via uvicorn
+coverage==7.8.0
+    # via -r requirements.in
 django==4.2.8
     # via
     #   -r requirements.in
     #   django-cors-headers
+    #   django-ninja
     #   sentry-sdk
 django-cors-headers==4.3.1
     # via -r requirements.in
 django-environ==0.11.2
+    # via -r requirements.in
+django-ninja==1.4.0
+    # via -r requirements.in
+dpath==2.2.0
     # via -r requirements.in
 gunicorn==21.2.0
     # via -r requirements.in
@@ -61,7 +68,9 @@ pendulum==3.0.0
 platformdirs==4.1.0
     # via zeep
 pydantic==2.5.3
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   django-ninja
 pydantic-core==2.14.6
     # via pydantic
 python-dateutil==2.8.2

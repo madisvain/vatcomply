@@ -1,0 +1,22 @@
+[run]
+source = vatcomply
+omit = 
+    */tests/*
+    */migrations/*
+    */admin.py
+    */apps.py
+    */urls.py
+    manage.py
+    */settings.py
+    */wsgi.py
+    */asgi.py
+    */users/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if settings.DEBUG
+    pass
+    raise ImportError
