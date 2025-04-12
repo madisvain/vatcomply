@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 
 import environ
+import logfire
 import sentry_sdk
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -173,6 +174,13 @@ VIES_WSDL = "https://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl"
 
 # Background scheduler
 BACKGROUND_SCHEDULER = env("BACKGROUND_SCHEDULER")
+
+# Logfire
+LOGFIRE_TOKEN = env("LOGFIRE_TOKEN", default=None)
+if LOGFIRE_TOKEN:
+    logfire.configure()
+    logfire.instrument_django()
+    logfire.instrument_httpx()
 
 # Sentry
 sentry_sdk.init(
