@@ -23,17 +23,8 @@ from vatcomply.schemas import (
     ValidateVATResponseSchema,
     RatesQueryParamsSchema,
     RatesResponseSchema,
+    RootResponseSchema,
 )
-
-
-class RootResponseSchema(BaseModel):
-    name: str
-    version: str
-    status: str
-    description: str
-    documentation: str
-    endpoints: Dict[str, str]
-    contact: str
 
 
 api = NinjaAPI(
@@ -125,16 +116,12 @@ async def geolocate(request: HttpRequest):
     ip = request.headers.get("CF-Connecting-IP")
 
     if not country_code:
-        return 404, {
-            "error": "Country code not received from CloudFlare headers `CF-IPCountry`."
-        }
+        return 404, {"error": "Country code not received from CloudFlare headers `CF-IPCountry`."}
 
     try:
         record = await Country.objects.aget(iso2=country_code.upper())
     except Country.DoesNotExist:
-        return 404, {
-            "error": f"Data for country code `{country_code.upper()}` not found."
-        }
+        return 404, {"error": f"Data for country code `{country_code.upper()}` not found."}
 
     return 200, {
         "iso2": record.iso2,
@@ -160,9 +147,7 @@ async def validate_vat(request, query: Query[VATQueryParamsSchema]):
     client = zeep.AsyncClient(wsdl=str(settings.VIES_WSDL))
     try:
         response = await zeep.helpers.serialize_object(
-            client.service.checkVat(
-                countryCode=query.vat_number[:2], vatNumber=query.vat_number[2:]
-            )
+            client.service.checkVat(countryCode=query.vat_number[:2], vatNumber=query.vat_number[2:])
         )
     except zeep.exceptions.Fault as e:
         return JsonResponse({"error": e.message}, status=400)
@@ -191,9 +176,7 @@ async def rates(request, query: Query[RatesQueryParamsSchema]):
     rates.update(record.rates)
     if query.base and query.base != "EUR":
         base_rate = Decimal(record.rates[query.base])
-        rates = {
-            currency: Decimal(rate) / base_rate for currency, rate in rates.items()
-        }
+        rates = {currency: Decimal(rate) / base_rate for currency, rate in rates.items()}
         rates.update({"EUR": Decimal(1) / base_rate})
 
     # Symbols
@@ -202,9 +185,7 @@ async def rates(request, query: Query[RatesQueryParamsSchema]):
             if rate not in query.symbols:
                 del rates[rate]
 
-    return RatesResponseSchema(
-        date=record.date.isoformat(), base=query.base, rates=rates
-    )
+    return RatesResponseSchema(date=record.date.isoformat(), base=query.base, rates=rates)
 
 
 @api.get("/", response=RootResponseSchema, summary="API Information")

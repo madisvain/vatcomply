@@ -10,6 +10,16 @@ from vatcomply.constants import CurrencySymbol
 CURRENCY_SYMBOLS = [choice[0] for choice in CurrencySymbol.choices]
 
 
+class RootResponseSchema(BaseModel):
+    name: str
+    version: str
+    status: str
+    description: str
+    documentation: str
+    endpoints: Dict[str, str]
+    contact: str
+
+
 class CountrySchema(BaseModel):
     iso2: str
     iso3: str
