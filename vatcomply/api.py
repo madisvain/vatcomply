@@ -195,7 +195,6 @@ def root(request):
     """
     # Dynamically generate endpoints from registered routes
     endpoints = {}
-    print(settings.BASE_URL)
 
     # Extract routes using the proper Django Ninja structure
     for prefix, router in api._routers:
@@ -215,7 +214,6 @@ def root(request):
                 continue
 
             if endpoint_name and endpoint_name not in endpoints:
-                print(settings.BASE_URL, full_path)
                 endpoints[endpoint_name] = urljoin(settings.BASE_URL, full_path)
 
     return RootResponseSchema(
@@ -223,7 +221,7 @@ def root(request):
         version="1.0.0",
         status="operational",
         description="VAT validation API, geolocation tools, and ECB exchange rates",
-        documentation="https://api.vatcomply.com/docs",
+        documentation=urljoin(settings.BASE_URL, "docs"),
         endpoints=endpoints,
         contact="support@vatcomply.com",
     )
