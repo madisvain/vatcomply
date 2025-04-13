@@ -1,12 +1,16 @@
 import dpath
 import pendulum
 import zeep
+import re
 
 from decimal import Decimal
 from django.conf import settings
 from django.http import JsonResponse, HttpRequest
 from ninja import NinjaAPI, Query
 from ninja.errors import ValidationError
+from typing import Dict
+from pydantic import BaseModel
+from urllib.parse import urljoin
 
 from vatcomply.constants import CurrencySymbol
 from vatcomply.models import Country, Rate
@@ -20,6 +24,17 @@ from vatcomply.schemas import (
     RatesQueryParamsSchema,
     RatesResponseSchema,
 )
+
+
+class RootResponseSchema(BaseModel):
+    name: str
+    version: str
+    status: str
+    description: str
+    documentation: str
+    endpoints: Dict[str, str]
+    contact: str
+
 
 api = NinjaAPI(
     title="Vatcomply API",
@@ -189,4 +204,45 @@ async def rates(request, query: Query[RatesQueryParamsSchema]):
 
     return RatesResponseSchema(
         date=record.date.isoformat(), base=query.base, rates=rates
+    )
+
+
+@api.get("/", response=RootResponseSchema, summary="API Information")
+def root(request):
+    """
+    Returns general information about the API, its status, and available endpoints.
+    """
+    # Dynamically generate endpoints from registered routes
+    endpoints = {}
+    print(settings.BASE_URL)
+
+    # Extract routes using the proper Django Ninja structure
+    for prefix, router in api._routers:
+        for path, path_view in router.path_operations.items():
+            full_path = "/".join([i for i in (prefix, path) if i])
+
+            # Remove path converters (like {param:int} -> {param})
+            full_path = re.sub(r"{[^}:]+:", "{", full_path)
+
+            # Skip the root endpoint itself
+            if full_path == "/":
+                continue
+
+            # Create readable endpoint name from path
+            endpoint_name = full_path.strip("/")  # Remove leading/trailing slashes
+            if not endpoint_name:
+                continue
+
+            if endpoint_name and endpoint_name not in endpoints:
+                print(settings.BASE_URL, full_path)
+                endpoints[endpoint_name] = urljoin(settings.BASE_URL, full_path)
+
+    return RootResponseSchema(
+        name="VATComply API",
+        version="1.0.0",
+        status="operational",
+        description="VAT validation API, geolocation tools, and ECB exchange rates",
+        documentation="https://api.vatcomply.com/docs",
+        endpoints=endpoints,
+        contact="support@vatcomply.com",
     )
