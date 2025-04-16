@@ -4,6 +4,7 @@ from pydantic import BaseModel, field_validator
 from decimal import Decimal
 from typing import Optional, Dict
 from datetime import date as datetime_date
+from schwifty import IBAN
 
 from vatcomply.constants import CurrencySymbol
 
@@ -57,6 +58,30 @@ class GeolocateResponse(BaseModel):
     longitude: float
     emoji: str
     ip: Optional[str]
+
+
+"""
+IBAN
+"""
+
+
+class IBANQueryParamsSchema(BaseModel):
+    iban: IBAN
+
+
+class ValidateIBANResponseSchema(BaseModel):
+    valid: bool
+    iban: IBAN
+    bank_name: str
+    bic: str
+    country_code: str
+    country_name: str
+    checksum_digits: str
+    bank_code: str
+    branch_code: str
+    account_number: str
+    bban: str
+    in_sepa_zone: bool
 
 
 """

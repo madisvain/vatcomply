@@ -8,9 +8,9 @@ from django.conf import settings
 from django.http import JsonResponse, HttpRequest
 from ninja import NinjaAPI, Query
 from ninja.errors import ValidationError
-from typing import Dict
-from pydantic import BaseModel
+from pycountry import countries as pycountries
 from urllib.parse import urljoin
+from schwifty import IBAN
 
 from vatcomply.constants import CurrencySymbol
 from vatcomply.models import Country, Rate
@@ -19,6 +19,8 @@ from vatcomply.schemas import (
     CurrencySchema,
     GeolocateResponse,
     ErrorResponse,
+    IBANQueryParamsSchema,
+    ValidateIBANResponseSchema,
     VATQueryParamsSchema,
     ValidateVATResponseSchema,
     RatesQueryParamsSchema,
@@ -142,12 +144,37 @@ async def geolocate(request: HttpRequest):
     }
 
 
+@api.get("/iban", response={200: ValidateIBANResponseSchema, 400: ErrorResponse})
+async def validate_iban(request, query: Query[IBANQueryParamsSchema]):
+    iban = IBAN(query.iban)
+    country = pycountries.get(alpha_2=iban.country_code)
+
+    return JsonResponse(
+        {
+            "valid": True,
+            "iban": query.iban,
+            "bank_name": iban.bank_name,
+            "bic": iban.bic,
+            "country_code": iban.country_code,
+            "country_name": country.name,
+            "checksum_digits": iban.checksum_digits,
+            "bank_code": iban.bank_code,
+            "branch_code": iban.bban.branch_code,
+            "account_number": iban.account_code,
+            "bban": iban.bban,
+            "in_sepa_zone": iban.in_sepa_zone,
+        }
+    )
+
+
 @api.get("/vat", response={200: ValidateVATResponseSchema, 400: ErrorResponse})
 async def validate_vat(request, query: Query[VATQueryParamsSchema]):
     client = zeep.AsyncClient(wsdl=str(settings.VIES_WSDL))
     try:
         response = await zeep.helpers.serialize_object(
-            client.service.checkVat(countryCode=query.vat_number[:2], vatNumber=query.vat_number[2:])
+            client.service.checkVat(
+                countryCode=query.vat_number[:2], vatNumber=query.vat_number[2:]
+            )
         )
     except zeep.exceptions.Fault as e:
         return JsonResponse({"error": e.message}, status=400)
