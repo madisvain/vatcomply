@@ -112,8 +112,8 @@ class VATQueryParamsSchema(BaseModel):
 class ValidateVATResponseSchema(BaseModel):
     valid: bool
     vat_number: str
-    name: str
-    address: str
+    name: Optional[str] = None
+    address: str = ""
     country_code: str
 
 
