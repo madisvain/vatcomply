@@ -15,6 +15,5 @@ pycountry
 pydantic
 schwifty
 sentry-sdk[django]
-ujson
 uvicorn
 zeep

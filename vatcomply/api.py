@@ -125,7 +125,7 @@ async def geolocate(request: HttpRequest):
     except Country.DoesNotExist:
         return 404, {"error": f"Data for country code `{country_code.upper()}` not found."}
 
-    return 200, {
+    return {
         "iso2": record.iso2,
         "iso3": record.iso3,
         "country_code": country_code.upper(),
@@ -149,22 +149,20 @@ async def validate_iban(request, query: Query[IBANQueryParamsSchema]):
     iban = IBAN(query.iban)
     country = pycountries.get(alpha_2=iban.country_code)
 
-    return JsonResponse(
-        {
-            "valid": True,
-            "iban": query.iban,
-            "bank_name": iban.bank_name,
-            "bic": iban.bic,
-            "country_code": iban.country_code,
-            "country_name": country.name,
-            "checksum_digits": iban.checksum_digits,
-            "bank_code": iban.bank_code,
-            "branch_code": iban.bban.branch_code,
-            "account_number": iban.account_code,
-            "bban": iban.bban,
-            "in_sepa_zone": iban.in_sepa_zone,
-        }
-    )
+    return {
+        "valid": True,
+        "iban": query.iban,
+        "bank_name": iban.bank_name,
+        "bic": iban.bic,
+        "country_code": iban.country_code,
+        "country_name": country.name,
+        "checksum_digits": iban.checksum_digits,
+        "bank_code": iban.bank_code,
+        "branch_code": iban.bban.branch_code,
+        "account_number": iban.account_code,
+        "bban": iban.bban,
+        "in_sepa_zone": iban.in_sepa_zone,
+    }
 
 
 @api.get("/vat", response={200: ValidateVATResponseSchema, 400: ErrorResponse})
@@ -179,15 +177,13 @@ async def validate_vat(request, query: Query[VATQueryParamsSchema]):
     except zeep.exceptions.Fault as e:
         return JsonResponse({"error": e.message}, status=400)
 
-    return JsonResponse(
-        {
-            "valid": response["valid"],
-            "vat_number": response["vatNumber"],
-            "name": response["name"],
-            "address": (response["address"].strip() if response["address"] else ""),
-            "country_code": response["countryCode"],
-        }
-    )
+    return {
+        "valid": response["valid"],
+        "vat_number": response["vatNumber"],
+        "name": response["name"],
+        "address": (response["address"].strip() if response["address"] else ""),
+        "country_code": response["countryCode"],
+    }
 
 
 @api.get("/rates", response=RatesResponseSchema)
@@ -212,7 +208,7 @@ async def rates(request, query: Query[RatesQueryParamsSchema]):
             if rate not in query.symbols:
                 del rates[rate]
 
-    return RatesResponseSchema(date=record.date.isoformat(), base=query.base, rates=rates)
+    return {"date": record.date.isoformat(), "base": query.base, "rates": rates}
 
 
 @api.get("/", response=RootResponseSchema, summary="API Information")
@@ -243,12 +239,12 @@ def root(request):
             if endpoint_name and endpoint_name not in endpoints:
                 endpoints[endpoint_name] = urljoin(settings.BASE_URL, full_path)
 
-    return RootResponseSchema(
-        name="VATComply API",
-        version="1.0.0",
-        status="operational",
-        description="VAT validation API, geolocation tools, and ECB exchange rates",
-        documentation=urljoin(settings.BASE_URL, "docs"),
-        endpoints=endpoints,
-        contact="support@vatcomply.com",
-    )
+    return {
+        "name": "VATComply API",
+        "version": "1.0.0",
+        "status": "operational",
+        "description": "VAT validation API, geolocation tools, and ECB exchange rates",
+        "documentation": urljoin(settings.BASE_URL, "docs"),
+        "endpoints": endpoints,
+        "contact": "support@vatcomply.com",
+    }
