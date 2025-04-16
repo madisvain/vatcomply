@@ -67,12 +67,12 @@ fetch("https://api.vatcomply.com/rates")
 
 VATcomply API is built on Python with key technologies including:
 
-- **[Django](https://www.djangoproject.com/):** The core web framework, utilizing asynchronous views and ORM queries for high throughput.
-- **[Django Ninja](https://django-ninja.rest-framework.com/):** Powers the REST API development on top of Django.
-- **[Pydantic](https://docs.pydantic.dev/latest/):** Used for robust data validation.
-- **[APScheduler](https://github.com/agronholm/apscheduler):** Manages scheduled tasks, like fetching updated exchange rates.
-- **[Httpx](https://www.python-httpx.org/):** An asynchronous HTTP client for making external API calls (e.g., to the European Central Bank).
-- **[Uvicorn](https://www.uvicorn.org/):** ASGI servers for running the application.
+- [Django](https://www.djangoproject.com/): The core web framework, utilizing asynchronous views and ORM queries for high throughput.
+- [Django Ninja](https://django-ninja.rest-framework.com/): Powers the REST API development on top of Django.
+- [Pydantic](https://docs.pydantic.dev/latest/): Used for robust data validation.
+- [APScheduler](https://github.com/agronholm/apscheduler): Manages scheduled tasks, like fetching updated exchange rates.
+- [Httpx](https://www.python-httpx.org/): An asynchronous HTTP client for making external API calls (e.g., to the European Central Bank).
+- [Uvicorn](https://www.uvicorn.org/): ASGI servers for running the application.
 
 This stack enables the API to handle thousands of requests per second asynchronously.
 
