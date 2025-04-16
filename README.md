@@ -1,7 +1,7 @@
 # VATcomply
 
 [![codecov](https://codecov.io/gh/madisvain/vatcomply/graph/badge.svg?token=ELA0NIP808)](https://codecov.io/gh/madisvain/vatcomply)
-![tests](https://github.com/github/docs/actions/workflows/tests.yml/badge.svg)
+![tests](https://github.com/madisvain/vatcomply/actions/workflows/tests.yml/badge.svg)
 
 [VATcomply](https://www.vatcomply.com) is a free API service for vat number validation, user ip geolocation and foreign exchange rates [published by the European Central Bank](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html).
 
