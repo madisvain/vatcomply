@@ -11,7 +11,9 @@ httpx<0.28
 logfire[asgi,celery,django,httpx,psycopg]
 lxml
 pendulum
+pycountry
 pydantic
+schwifty
 sentry-sdk[django]
 ujson
 uvicorn

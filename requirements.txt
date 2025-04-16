@@ -158,6 +158,8 @@ protobuf==5.29.4
     #   googleapis-common-protos
     #   logfire
     #   opentelemetry-proto
+pycountry==24.6.1
+    # via schwifty
 pydantic==2.11.2
     # via
     #   -r requirements.in
@@ -184,6 +186,10 @@ requests-toolbelt==1.0.0
     # via zeep
 rich==14.0.0
     # via logfire
+rstr==3.2.2
+    # via schwifty
+schwifty==2025.1.0
+    # via -r requirements.in
 sentry-sdk==2.25.1
     # via -r requirements.in
 six==1.17.0
