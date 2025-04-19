@@ -5,7 +5,7 @@ pip:
 	uv pip install -r requirements.in --upgrade
 
 freeze:
-	uv pip compile requirements.in -o requirements.txt
+	uv pip compile requirements.in -o requirements.txt && uv pip compile requirements.txt -o uv.lock
 
 migrate:
 	python manage.py migrate
