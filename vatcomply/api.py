@@ -11,6 +11,8 @@ from ninja.errors import ValidationError
 from pycountry import countries as pycountries
 from urllib.parse import urljoin
 from schwifty import IBAN
+from zeep.cache import InMemoryCache
+from zeep.transports import AsyncTransport
 
 from vatcomply.constants import CurrencySymbol
 from vatcomply.models import Country, Rate
@@ -167,7 +169,8 @@ async def validate_iban(request, query: Query[IBANQueryParamsSchema]):
 
 @api.get("/vat", response={200: ValidateVATResponseSchema, 400: ErrorResponse})
 async def validate_vat(request, query: Query[VATQueryParamsSchema]):
-    client = zeep.AsyncClient(wsdl=str(settings.VIES_WSDL))
+    transport = AsyncTransport(cache=InMemoryCache())
+    client = zeep.AsyncClient(wsdl=str(settings.VIES_WSDL), transport=transport)
     try:
         response = await zeep.helpers.serialize_object(
             client.service.checkVat(
