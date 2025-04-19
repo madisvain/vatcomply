@@ -215,7 +215,7 @@ async def rates(request, query: Query[RatesQueryParamsSchema]):
 
 
 @api.get("/", response=RootResponseSchema, summary="API Information")
-def root(request):
+async def root(request):
     """
     Returns general information about the API, its status, and available endpoints.
     """
