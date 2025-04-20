@@ -34,6 +34,9 @@ if os.getenv("ALLOWED_HOSTS"):
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
 
+# Throttling
+THROTTLE = env.bool("THROTTLE", default=True)
+
 
 # Application definition
 INSTALLED_APPS = [
@@ -132,9 +135,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 COUNTRIES_URL = "https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/refs/heads/master/json/countries.json"
 
 # ECB
-RATES_LAST_90_DAYS_URL = (
-    "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml"
-)
+RATES_LAST_90_DAYS_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml"
 RATES_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml"
 CURRENCY_SYMBOLS = [
     "EUR",

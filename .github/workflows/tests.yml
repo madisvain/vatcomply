@@ -15,6 +15,7 @@ jobs:
 
     env:
       SECRET_KEY: ${{ github.sha }}
+      THROTTLE: false
 
     steps:
     - uses: actions/checkout@v3

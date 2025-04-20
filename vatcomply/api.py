@@ -8,6 +8,7 @@ from django.conf import settings
 from django.http import JsonResponse, HttpRequest
 from ninja import NinjaAPI, Query
 from ninja.errors import ValidationError
+from ninja.throttling import AnonRateThrottle
 from pycountry import countries as pycountries
 from urllib.parse import urljoin
 from schwifty import IBAN
@@ -30,10 +31,14 @@ from vatcomply.schemas import (
     RootResponseSchema,
 )
 
+THROTTLE_CLASSES = []
+if settings.THROTTLE:
+    THROTTLE_CLASSES.append(AnonRateThrottle("2/s"))
 
 api = NinjaAPI(
     title="Vatcomply API",
     description="API for automated VAT compliance and currency conversion.",
+    throttle=THROTTLE_CLASSES,
 )
 
 
