@@ -36,6 +36,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # Throttling
 THROTTLE = env.bool("THROTTLE", default=True)
+NUM_PROXIES = env.int("NUM_PROXIES", default=0)
 
 
 # Application definition
