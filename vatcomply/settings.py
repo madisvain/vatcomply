@@ -183,7 +183,7 @@ BACKGROUND_SCHEDULER = env("BACKGROUND_SCHEDULER")
 LOGFIRE_TOKEN = env("LOGFIRE_TOKEN", default=None)
 if LOGFIRE_TOKEN:
     logfire.configure()
-    logfire.instrument_django()
+    logfire.instrument_django(capture_headers=True)
     logfire.instrument_httpx()
 
 # Sentry
