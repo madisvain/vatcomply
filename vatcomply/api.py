@@ -1,5 +1,6 @@
 import dpath
 import pendulum
+import os
 import zeep
 import re
 
@@ -173,8 +174,12 @@ async def validate_iban(request, query: Query[IBANQueryParamsSchema]):
 
 @api.get("/vat", response={200: ValidateVATResponseSchema, 400: ErrorResponse})
 async def validate_vat(request, query: Query[VATQueryParamsSchema]):
+    # Use local WSDL file to avoid downloading it every time
+    wsdl_path = os.path.join(os.path.dirname(__file__), "wsdl", "checkVatService.wsdl")
+
+    # Create async transport for SOAP requests
     transport = AsyncTransport()
-    client = zeep.AsyncClient(wsdl=str(settings.VIES_WSDL), transport=transport)
+    client = zeep.AsyncClient(wsdl=wsdl_path, transport=transport)
     try:
         response = await zeep.helpers.serialize_object(
             client.service.checkVat(
