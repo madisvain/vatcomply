@@ -9,3 +9,7 @@ profile = "black"
 [tool.black]
 line-length = 100
 target-version = ['py313']
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
