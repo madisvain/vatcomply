@@ -3,11 +3,42 @@
 [![codecov](https://codecov.io/gh/madisvain/vatcomply/graph/badge.svg?token=ELA0NIP808)](https://codecov.io/gh/madisvain/vatcomply)
 ![tests](https://github.com/madisvain/vatcomply/actions/workflows/tests.yml/badge.svg)
 
-[VATcomply](https://www.vatcomply.com) is a free API service for vat number validation, user ip geolocation and foreign exchange rates [published by the European Central Bank](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html).
+[VATcomply](https://www.vatcomply.com) is a free API service providing:
 
-## Usage
+- **VAT number validation** - Validate European VAT numbers using the official VIES database
+- **Foreign exchange rates** - Daily rates from the European Central Bank with historical data
+- **Visitor IP geolocation** - Automatic country detection from visitor's IP address
+- **IBAN validation** - International Bank Account Number validation
+- **Country & currency data** - Comprehensive country and currency information
 
-#### Lates & specific date rates
+## API Documentation
+
+### VAT Number Validation
+
+Validate European VAT numbers using the official VIES (VAT Information Exchange System) database.
+
+```http
+GET /vat?vat_number=BE0123456789
+```
+
+**Response:**
+```json
+{
+  "valid": true,
+  "vat_number": "123456789",
+  "name": "COMPANY NAME",
+  "address": "COMPANY ADDRESS",
+  "country_code": "BE"
+}
+```
+
+**Supported countries:** All EU member states plus Northern Ireland (XI prefix)
+
+**Note:** UK (GB) VAT numbers are no longer supported since Brexit (01/01/2021). Use XI prefix for Northern Ireland businesses.
+
+### Foreign Exchange Rates
+
+#### Latest rates
 
 Get the latest foreign exchange rates.
 
@@ -15,11 +46,28 @@ Get the latest foreign exchange rates.
 GET /rates
 ```
 
-Rates are quoted against the Euro by default. Quote against a different currency by setting the base parameter in your request.
+**Response:**
+```json
+{
+  "date": "2024-01-15",
+  "base": "EUR",
+  "rates": {
+    "USD": 1.0856,
+    "GBP": 0.8642,
+    "JPY": 156.92
+  }
+}
+```
+
+#### Base currency conversion
+
+Rates are quoted against the Euro by default. Quote against a different currency by setting the base parameter.
 
 ```http
 GET /rates?base=USD
 ```
+
+#### Specific currencies
 
 Request specific exchange rates by setting the symbols parameter.
 
@@ -27,24 +75,20 @@ Request specific exchange rates by setting the symbols parameter.
 GET /rates?symbols=USD,GBP
 ```
 
-#### Rates history and query parameters combinations
+#### Historical rates
 
-Get historical rates for a date
+Get historical rates for a specific date.
 
 ```http
 GET /rates?date=2018-01-01
 ```
 
-Limit results to specific exchange rates to save bandwidth with the symbols parameter.
+#### Combined parameters
+
+Combine parameters for precise data retrieval.
 
 ```http
-GET /rates?date=2018-01-01&symbols=ILS,JPY
-```
-
-Quote the historical rates against a different currency.
-
-```http
-GET /rates?date=2018-01-01&base=USD
+GET /rates?date=2018-01-01&symbols=USD,GBP&base=EUR
 ```
 
 #### Client side usage
@@ -63,6 +107,139 @@ fetch("https://api.vatcomply.com/rates")
   .then(demo);
 ```
 
+### Visitor IP Geolocation
+
+Get country information for the visitor's IP address automatically.
+
+```http
+GET /geolocate
+```
+
+**Response:**
+```json
+{
+  "iso2": "US",
+  "iso3": "USA",
+  "country_code": "US",
+  "name": "United States",
+  "numeric_code": 840,
+  "phone_code": "+1",
+  "capital": "Washington",
+  "currency": "USD",
+  "tld": ".us",
+  "region": "Americas",
+  "subregion": "Northern America",
+  "latitude": 39.76,
+  "longitude": -98.5,
+  "emoji": "🇺🇸",
+  "ip": "192.168.1.1"
+}
+```
+
+**Note:** This endpoint uses CloudFlare headers to detect the visitor's country. Custom IP addresses are not supported.
+
+### IBAN Validation
+
+Validate International Bank Account Numbers (IBAN).
+
+```http
+GET /iban?iban=GB82WEST12345698765432
+```
+
+**Response:**
+```json
+{
+  "valid": true,
+  "iban": "GB82WEST12345698765432",
+  "bank_name": "Westpac Banking Corporation",
+  "bic": "WESTGB2L",
+  "country_code": "GB",
+  "country_name": "United Kingdom",
+  "checksum_digits": "82",
+  "bank_code": "WEST",
+  "branch_code": "123456",
+  "account_number": "98765432",
+  "bban": "WEST12345698765432",
+  "in_sepa_zone": false
+}
+```
+
+### Countries
+
+Get a list of all countries with detailed information.
+
+```http
+GET /countries
+```
+
+**Response:**
+```json
+[
+  {
+    "iso2": "AD",
+    "iso3": "AND",
+    "name": "Andorra",
+    "numeric_code": 20,
+    "phone_code": "+376",
+    "capital": "Andorra la Vella",
+    "currency": "EUR",
+    "tld": ".ad",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "latitude": 42.5,
+    "longitude": 1.5,
+    "emoji": "🇦🇩"
+  }
+]
+```
+
+### Currencies
+
+Get information about all supported currencies.
+
+```http
+GET /currencies
+```
+
+**Response:**
+```json
+{
+  "USD": {
+    "name": "United States Dollar",
+    "symbol": "USD"
+  },
+  "EUR": {
+    "name": "Euro",
+    "symbol": "EUR"
+  }
+}
+```
+
+## Rate Limiting
+
+The API includes built-in rate limiting to ensure fair usage:
+
+- **Anonymous requests:** 2 requests per second
+- No authentication required
+- Rate limits are applied per IP address
+
+## Error Handling
+
+All endpoints return appropriate HTTP status codes:
+
+- `200` - Success
+- `400` - Bad Request (invalid parameters)
+- `404` - Not Found (invalid country code, etc.)
+- `422` - Validation Error (malformed data)
+- `429` - Too Many Requests (rate limit exceeded)
+
+**Error Response Format:**
+```json
+{
+  "error": "Error message description"
+}
+```
+
 ## Stack
 
 VATcomply API is built on Python with key technologies including:
@@ -76,60 +253,71 @@ VATcomply API is built on Python with key technologies including:
 
 This stack enables the API to handle thousands of requests per second asynchronously.
 
-## Deployment
-
-#### Virtualenv
-
-```shell
-pyenv shell 3.x.x
-```
-
-#### Install packages
-
-```shell
-virtualenv env
-. env/bin/activate
-pip install -r requirements.in --upgrade
-```
-
-#### Load in initial data & Scheduler
-
-The scheduler will keep your database up to date hourly with information from European Central bank. It will download the last 90 days worth of data every hour.
-
-_The reference rates are usually updated around 16:00 CET on every working day, except on TARGET closing days. They are based on a regular daily concertation procedure between central banks across Europe, which normally takes place at 14:15 CET._
-
-On initialization it will check the database. If it's empty all the historic rates will be downloaded and records created in the database.
-
 ## Development
 
+### Setup
+
 ```shell
-export DEBUG=True; uvicorn vatcomply.asgi:application --reload
+# Set up Python environment
+pyenv shell 3.11.x
+virtualenv env
+. env/bin/activate
+
+# Install dependencies
+make pip      # or: uv pip install -r requirements.in --upgrade
+make freeze   # or: uv pip compile requirements.in -o requirements.txt
 ```
 
-or for simplicity a Makefile is provided with all the commands for development.
+### Database Setup
 
 ```shell
-make run
+# Run migrations
+make migrate     # or: python manage.py migrate
+
+# Load initial data
+python manage.py load_countries  # Load country data
+python manage.py load_rates      # Load exchange rates (historical)
+python manage.py load_rates --last-90-days  # Load last 90 days only
 ```
 
-## Migrations
-
-Make migrations
+### Running the Server
 
 ```shell
-make migrations
+# Development server
+make run      # or: export DEBUG=True; uvicorn vatcomply.asgi:application --reload
 ```
 
-Run migrations
+### Background Scheduler
+
+The scheduler keeps exchange rates updated hourly from the European Central Bank:
+
+- Downloads the last 90 days of data every hour
+- Rates are updated around 16:00 CET on working days
+- Based on daily concertation between European central banks at 14:15 CET
+- On first run, downloads all historical rates if database is empty
+
+### Database Migrations
 
 ```shell
-make migrate
+# Create new migrations
+make migrations  # or: python manage.py makemigrations
+
+# Apply migrations
+make migrate     # or: python manage.py migrate
 ```
 
-## Tests
+### Testing
 
 ```shell
-make test
+# Run all tests
+make test        # or: python manage.py test --keepdb
+
+# Run specific tests
+python manage.py test vatcomply.tests.test_rates
+python manage.py test vatcomply.tests.test_rates.RatesTest
+
+# Test with coverage
+make coverage    # or: coverage run manage.py test --keepdb && coverage report -m
 ```
 
 ## Contributing
