@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VATcomply - Free VAT & Exchange Rate API</title>
+    <meta name="description" content="Free API service for VAT number validation, foreign exchange rates, IP geolocation, and IBAN validation">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/http.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1f2937',
+                        secondary: '#3b82f6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+    <div class="max-w-4xl mx-auto px-6 py-8">
+        <!-- Header -->
+        <header class="mb-12">
+            <div class="flex items-center gap-4 mb-6">
+                <img src="https://codecov.io/gh/madisvain/vatcomply/graph/badge.svg?token=ELA0NIP808" alt="codecov" class="h-5">
+                <img src="https://github.com/madisvain/vatcomply/actions/workflows/tests.yml/badge.svg" alt="tests" class="h-5">
+            </div>
+            
+            <h1 class="text-4xl font-bold text-primary mb-4">VATcomply</h1>
+            
+            <p class="text-lg text-gray-600 mb-6">
+                <a href="https://www.vatcomply.com" class="text-secondary hover:underline">VATcomply</a> is a free API service providing:
+            </p>
+            
+            <ul class="space-y-2 mb-6">
+                <li class="flex items-start gap-2">
+                    <span class="text-secondary font-semibold">•</span>
+                    <span><strong>VAT number validation</strong> - Validate European VAT numbers using the official VIES database</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="text-secondary font-semibold">•</span>
+                    <span><strong>Foreign exchange rates</strong> - Daily rates from the European Central Bank with historical data</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="text-secondary font-semibold">•</span>
+                    <span><strong>Visitor IP geolocation</strong> - Automatic country detection from visitor's IP address</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="text-secondary font-semibold">•</span>
+                    <span><strong>IBAN validation</strong> - International Bank Account Number validation</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="text-secondary font-semibold">•</span>
+                    <span><strong>Country & currency data</strong> - Comprehensive country and currency information</span>
+                </li>
+            </ul>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p class="text-blue-800">
+                    📖 <a href="https://api.vatcomply.com/docs" class="font-semibold text-secondary hover:underline">Interactive API Documentation</a> - Complete Swagger/OpenAPI schema with live testing
+                </p>
+            </div>
+        </header>
+
+        <!-- API Documentation -->
+        <main class="space-y-12">
+            <section>
+                <h2 class="text-2xl font-bold text-primary mb-6">API Documentation</h2>
+                
+                <!-- VAT Validation -->
+                <div class="mb-10">
+                    <h3 class="text-xl font-semibold text-primary mb-4">VAT Number Validation</h3>
+                    <p class="text-gray-600 mb-4">Validate European VAT numbers using the official VIES (VAT Information Exchange System) database.</p>
+                    
+                    <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4">
+                        <pre><code class="language-http">GET /vat?vat_number=BE0123456789</code></pre>
+                    </div>
+                    
+                    <p class="font-semibold text-gray-700 mb-2">Response:</p>
+                    <pre class="rounded-lg overflow-x-auto text-sm mb-4"><code class="language-json">{
+  "valid": true,
+  "vat_number": "123456789",
+  "name": "COMPANY NAME",
+  "address": "COMPANY ADDRESS",
+  "country_code": "BE"
+}</code></pre>
+                    
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <p class="text-yellow-800"><strong>Supported countries:</strong> All EU member states plus Northern Ireland (XI prefix)</p>
+                        <p class="text-yellow-800 mt-2"><strong>Note:</strong> UK (GB) VAT numbers are no longer supported since Brexit (01/01/2021). Use XI prefix for Northern Ireland businesses.</p>
+                    </div>
+                </div>
+
+                <!-- Exchange Rates -->
+                <div class="mb-10">
+                    <h3 class="text-xl font-semibold text-primary mb-4">Foreign Exchange Rates</h3>
+                    
+                    <h4 class="text-lg font-medium text-gray-800 mb-3">Latest rates</h4>
+                    <p class="text-gray-600 mb-4">Get the latest foreign exchange rates.</p>
+                    
+                    <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4">
+                        <pre><code class="language-http">GET /rates</code></pre>
+                    </div>
+                    
+                    <p class="font-semibold text-gray-700 mb-2">Response:</p>
+                    <pre class="rounded-lg overflow-x-auto text-sm mb-6"><code class="language-json">{
+  "date": "2024-01-15",
+  "base": "EUR",
+  "rates": {
+    "USD": 1.0856,
+    "GBP": 0.8642,
+    "JPY": 156.92
+  }
+}</code></pre>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-800 mb-3">Base currency conversion</h4>
+                            <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-3">
+                                <pre><code class="language-http">GET /rates?base=USD</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-800 mb-3">Specific currencies</h4>
+                            <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-3">
+                                <pre><code class="language-http">GET /rates?symbols=USD,GBP</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-800 mb-3">Historical rates</h4>
+                            <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-3">
+                                <pre><code class="language-http">GET /rates?date=2018-01-01</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-800 mb-3">Combined parameters</h4>
+                            <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-3">
+                                <pre><code class="language-http text-xs">GET /rates?date=2018-01-01&symbols=USD,GBP&base=EUR</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other Endpoints -->
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-semibold text-primary mb-4">Visitor IP Geolocation</h3>
+                        <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4">
+                            <pre><code class="language-http">GET /geolocate</code></pre>
+                        </div>
+                        <p class="text-sm text-gray-600">Automatic country detection from visitor's IP using CloudFlare headers.</p>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-xl font-semibold text-primary mb-4">IBAN Validation</h3>
+                        <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4">
+                            <pre><code class="language-http text-sm">GET /iban?iban=GB82WEST12345698765432</code></pre>
+                        </div>
+                        <p class="text-sm text-gray-600">Validate International Bank Account Numbers with detailed information.</p>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-xl font-semibold text-primary mb-4">Countries</h3>
+                        <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4">
+                            <pre><code class="language-http">GET /countries</code></pre>
+                        </div>
+                        <p class="text-sm text-gray-600">Complete list of countries with detailed information.</p>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-xl font-semibold text-primary mb-4">Currencies</h3>
+                        <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4">
+                            <pre><code class="language-http">GET /currencies</code></pre>
+                        </div>
+                        <p class="text-sm text-gray-600">Information about all supported currencies.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Rate Limiting -->
+            <section class="bg-white rounded-lg p-6 border border-gray-200">
+                <h2 class="text-2xl font-bold text-primary mb-4">Rate Limiting & Usage</h2>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Rate Limits</h3>
+                        <ul class="space-y-1 text-gray-600">
+                            <li>• <strong>Anonymous requests:</strong> 2 requests per second</li>
+                            <li>• No authentication required</li>
+                            <li>• Rate limits applied per IP address</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">HTTP Status Codes</h3>
+                        <ul class="space-y-1 text-gray-600 text-sm">
+                            <li>• <code class="bg-gray-100 px-2 py-1 rounded">200</code> Success</li>
+                            <li>• <code class="bg-gray-100 px-2 py-1 rounded">400</code> Bad Request</li>
+                            <li>• <code class="bg-gray-100 px-2 py-1 rounded">404</code> Not Found</li>
+                            <li>• <code class="bg-gray-100 px-2 py-1 rounded">422</code> Validation Error</li>
+                            <li>• <code class="bg-gray-100 px-2 py-1 rounded">429</code> Rate Limit Exceeded</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Technology Stack -->
+            <section>
+                <h2 class="text-2xl font-bold text-primary mb-4">Technology Stack</h2>
+                <p class="text-gray-600 mb-4">VATcomply API is built on Python with key technologies including:</p>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <ul class="space-y-2 text-gray-600">
+                        <li>• <strong>Django</strong> - Core web framework with async views</li>
+                        <li>• <strong>Django Ninja</strong> - REST API framework</li>
+                        <li>• <strong>Pydantic</strong> - Data validation</li>
+                    </ul>
+                    <ul class="space-y-2 text-gray-600">
+                        <li>• <strong>APScheduler</strong> - Background task scheduler</li>
+                        <li>• <strong>Httpx</strong> - Async HTTP client</li>
+                        <li>• <strong>Uvicorn</strong> - ASGI server</li>
+                    </ul>
+                </div>
+                <p class="text-gray-600 mt-4">This stack enables the API to handle thousands of requests per second asynchronously.</p>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-16 pt-8 border-t border-gray-200 text-center text-gray-500">
+            <p>© VATcomply - MIT License</p>
+            <p class="mt-2">
+                <a href="https://github.com/madisvain/vatcomply" class="text-secondary hover:underline">View on GitHub</a>
+            </p>
+        </footer>
+    </div>
+    
+    <script>
+        // Initialize syntax highlighting
+        hljs.highlightAll();
+    </script>
+</body>
+</html>
