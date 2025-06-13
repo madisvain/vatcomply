@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/documentation",
+      "destination": "https://api.vatcomply.com/docs",
+      "permanent": true
+    }
+  ]
+}

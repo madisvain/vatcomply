@@ -20,12 +20,4 @@
         <priority>0.8</priority>
     </url>
     
-    <!-- Status Page -->
-    <url>
-        <loc>https://status.vatcomply.com/</loc>
-        <lastmod>2025-06-12</lastmod>
-        <changefreq>daily</changefreq>
-        <priority>0.6</priority>
-    </url>
-    
 </urlset>
