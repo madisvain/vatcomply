@@ -39,6 +39,25 @@ api = NinjaAPI(
     title="Vatcomply API",
     description="API for automated VAT compliance and currency conversion.",
     throttle=THROTTLE_CLASSES,
+    openapi_extra={
+        "info": {
+            "x-logo": {"url": "https://www.vatcomply.com/logo.png"},
+            "contact": {
+                "name": "VATcomply",
+                "url": "https://github.com/madisvain/vatcomply/issues",
+                "email": "support@vatcomply.com",
+            },
+            "license": {
+                "name": "MIT License",
+                "url": "https://github.com/madisvain/vatcomply/blob/master/LICENSE",
+            },
+        },
+        "externalDocs": {
+            "description": "Find more information",
+            "url": "https://www.vatcomply.com",
+        },
+        "servers": [{"url": "https://api.vatcomply.com", "description": "Production server"}],
+    },
 )
 
 
