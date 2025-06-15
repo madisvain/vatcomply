@@ -41,10 +41,9 @@ api = NinjaAPI(
     throttle=THROTTLE_CLASSES,
     openapi_extra={
         "info": {
-            "x-logo": {"url": "https://www.vatcomply.com/logo.png"},
             "contact": {
                 "name": "VATcomply",
-                "url": "https://github.com/madisvain/vatcomply/issues",
+                "url": "https://www.vatcomply.com",
                 "email": "support@vatcomply.com",
             },
             "license": {
@@ -53,10 +52,9 @@ api = NinjaAPI(
             },
         },
         "externalDocs": {
-            "description": "Find more information",
-            "url": "https://www.vatcomply.com",
+            "description": "Report a bug or request a feature",
+            "url": "https://github.com/madisvain/vatcomply/issues",
         },
-        "servers": [{"url": "https://api.vatcomply.com", "description": "Production server"}],
     },
 )
 
