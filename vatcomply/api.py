@@ -194,19 +194,17 @@ async def validate_vat(request, query: Query[VATQueryParamsSchema]):
     # Use local WSDL file to avoid downloading it every time
     wsdl_path = os.path.join(os.path.dirname(__file__), "wsdl", "checkVatService.wsdl")
 
-    # Create async transport for SOAP requests
-    transport = AsyncTransport()
-    client = zeep.AsyncClient(wsdl=wsdl_path, transport=transport)
-    try:
-        response = await zeep.helpers.serialize_object(
-            client.service.checkVat(
-                countryCode=query.vat_number[:2], vatNumber=query.vat_number[2:]
+    # Create async transport for SOAP requests with context isolation
+    async with AsyncTransport() as transport:
+        client = zeep.AsyncClient(wsdl=wsdl_path, transport=transport)
+        try:
+            response = await zeep.helpers.serialize_object(
+                client.service.checkVat(
+                    countryCode=query.vat_number[:2], vatNumber=query.vat_number[2:]
+                )
             )
-        )
-    except zeep.exceptions.Fault as e:
-        return JsonResponse({"error": e.message}, status=400)
-    finally:
-        await transport.aclose()
+        except zeep.exceptions.Fault as e:
+            return JsonResponse({"error": e.message}, status=400)
 
     return {
         "valid": response["valid"],
