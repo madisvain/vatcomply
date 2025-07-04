@@ -10,6 +10,7 @@ from django.http import JsonResponse, HttpRequest
 from ninja import NinjaAPI, Query
 from ninja.errors import ValidationError
 from ninja.throttling import AnonRateThrottle
+from opentelemetry import context
 from pycountry import countries as pycountries
 from urllib.parse import urljoin
 from schwifty import IBAN
@@ -194,8 +195,13 @@ async def validate_vat(request, query: Query[VATQueryParamsSchema]):
     # Use local WSDL file to avoid downloading it every time
     wsdl_path = os.path.join(os.path.dirname(__file__), "wsdl", "checkVatService.wsdl")
 
-    # Create async transport for SOAP requests with context isolation
-    async with AsyncTransport() as transport:
+    # Detach from OpenTelemetry context to avoid context token issues
+    # This prevents the "ContextVar token was created in a different Context" error
+    token = context.attach(context.Context())
+    
+    try:
+        # Create async transport for SOAP requests
+        transport = AsyncTransport()
         client = zeep.AsyncClient(wsdl=wsdl_path, transport=transport)
         try:
             response = await zeep.helpers.serialize_object(
@@ -205,14 +211,19 @@ async def validate_vat(request, query: Query[VATQueryParamsSchema]):
             )
         except zeep.exceptions.Fault as e:
             return JsonResponse({"error": e.message}, status=400)
+        finally:
+            await transport.aclose()
 
-    return {
-        "valid": response["valid"],
-        "vat_number": response["vatNumber"],
-        "name": response["name"],
-        "address": (response["address"].strip() if response["address"] else ""),
-        "country_code": response["countryCode"],
-    }
+        return {
+            "valid": response["valid"],
+            "vat_number": response["vatNumber"],
+            "name": response["name"],
+            "address": (response["address"].strip() if response["address"] else ""),
+            "country_code": response["countryCode"],
+        }
+    finally:
+        # Restore the original context
+        context.detach(token)
 
 
 @api.get("/rates", response=RatesResponseSchema)
