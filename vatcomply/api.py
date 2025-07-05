@@ -1,3 +1,4 @@
+import asyncio
 import dpath
 import pendulum
 import os
@@ -10,7 +11,6 @@ from django.http import JsonResponse, HttpRequest
 from ninja import NinjaAPI, Query
 from ninja.errors import ValidationError
 from ninja.throttling import AnonRateThrottle
-from opentelemetry import context
 from pycountry import countries as pycountries
 from urllib.parse import urljoin
 from schwifty import IBAN
@@ -190,29 +190,28 @@ async def validate_iban(request, query: Query[IBANQueryParamsSchema]):
     }
 
 
+async def _isolated_vat_check(vat_number: str, wsdl_path: str):
+    """Run VAT check in completely isolated context to avoid OpenTelemetry issues."""
+    # Create async transport for SOAP requests
+    transport = AsyncTransport()
+    client = zeep.AsyncClient(wsdl=wsdl_path, transport=transport)
+    try:
+        response = await zeep.helpers.serialize_object(
+            client.service.checkVat(countryCode=vat_number[:2], vatNumber=vat_number[2:])
+        )
+        return response
+    finally:
+        await transport.aclose()
+
+
 @api.get("/vat", response={200: ValidateVATResponseSchema, 400: ErrorResponse})
 async def validate_vat(request, query: Query[VATQueryParamsSchema]):
     # Use local WSDL file to avoid downloading it every time
     wsdl_path = os.path.join(os.path.dirname(__file__), "wsdl", "checkVatService.wsdl")
 
-    # Detach from OpenTelemetry context to avoid context token issues
-    # This prevents the "ContextVar token was created in a different Context" error
-    token = context.attach(context.Context())
-    
     try:
-        # Create async transport for SOAP requests
-        transport = AsyncTransport()
-        client = zeep.AsyncClient(wsdl=wsdl_path, transport=transport)
-        try:
-            response = await zeep.helpers.serialize_object(
-                client.service.checkVat(
-                    countryCode=query.vat_number[:2], vatNumber=query.vat_number[2:]
-                )
-            )
-        except zeep.exceptions.Fault as e:
-            return JsonResponse({"error": e.message}, status=400)
-        finally:
-            await transport.aclose()
+        # Run in a new task to isolate from current OpenTelemetry context
+        response = await asyncio.create_task(_isolated_vat_check(query.vat_number, wsdl_path))
 
         return {
             "valid": response["valid"],
@@ -221,9 +220,8 @@ async def validate_vat(request, query: Query[VATQueryParamsSchema]):
             "address": (response["address"].strip() if response["address"] else ""),
             "country_code": response["countryCode"],
         }
-    finally:
-        # Restore the original context
-        context.detach(token)
+    except zeep.exceptions.Fault as e:
+        return JsonResponse({"error": e.message}, status=400)
 
 
 @api.get("/rates", response=RatesResponseSchema)
