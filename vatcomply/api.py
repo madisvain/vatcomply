@@ -224,7 +224,7 @@ async def validate_vat(request, query: Query[VATQueryParamsSchema]):
         return JsonResponse({"error": e.message}, status=400)
 
 
-@api.get("/rates", response=RatesResponseSchema)
+@api.get("/rates", response={200: RatesResponseSchema, 400: ErrorResponse})
 async def rates(request, query: Query[RatesQueryParamsSchema]):
     # Find the date
     date = query.date if query.date else pendulum.now().date()
@@ -236,7 +236,11 @@ async def rates(request, query: Query[RatesQueryParamsSchema]):
     rates = {"EUR": 1}
     rates.update(record.rates)
     if query.base and query.base != "EUR":
-        base_rate = Decimal(record.rates[query.base])
+        if query.base not in settings.CURRENCY_SYMBOLS:
+            return 400, {"error": f"Base currency '{query.base}' not supported"}
+        if query.base not in rates:
+            return 400, {"error": f"Base currency '{query.base}' not available in current rates data"}
+        base_rate = Decimal(rates[query.base])
         rates = {currency: Decimal(rate) / base_rate for currency, rate in rates.items()}
         rates.update({"EUR": Decimal(1) / base_rate})
 
