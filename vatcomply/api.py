@@ -1,4 +1,4 @@
-import asyncio
+import contextlib
 import dpath
 import pendulum
 import os
@@ -190,16 +190,16 @@ async def validate_iban(request, query: Query[IBANQueryParamsSchema]):
     }
 
 
-async def _isolated_vat_check(vat_number: str, wsdl_path: str):
-    """Run VAT check in completely isolated context to avoid OpenTelemetry issues."""
-    # Create async transport for SOAP requests
+@contextlib.asynccontextmanager
+async def _vat_check_context(vat_number: str, wsdl_path: str):
+    """Run VAT check with proper context management to avoid OpenTelemetry issues."""
     transport = AsyncTransport()
     client = zeep.AsyncClient(wsdl=wsdl_path, transport=transport)
     try:
         response = await zeep.helpers.serialize_object(
             client.service.checkVat(countryCode=vat_number[:2], vatNumber=vat_number[2:])
         )
-        return response
+        yield response
     finally:
         await transport.aclose()
 
@@ -210,16 +210,15 @@ async def validate_vat(request, query: Query[VATQueryParamsSchema]):
     wsdl_path = os.path.join(os.path.dirname(__file__), "wsdl", "checkVatService.wsdl")
 
     try:
-        # Run in a new task to isolate from current OpenTelemetry context
-        response = await asyncio.create_task(_isolated_vat_check(query.vat_number, wsdl_path))
-
-        return {
-            "valid": response["valid"],
-            "vat_number": response["vatNumber"],
-            "name": response["name"],
-            "address": (response["address"].strip() if response["address"] else ""),
-            "country_code": response["countryCode"],
-        }
+        # Use context manager to properly handle OpenTelemetry context
+        async with _vat_check_context(query.vat_number, wsdl_path) as response:
+            return {
+                "valid": response["valid"],
+                "vat_number": response["vatNumber"],
+                "name": response["name"],
+                "address": (response["address"].strip() if response["address"] else ""),
+                "country_code": response["countryCode"],
+            }
     except zeep.exceptions.Fault as e:
         return JsonResponse({"error": e.message}, status=400)
 
