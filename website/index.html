@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VATcomply - Free VAT & Exchange Rate API</title>
+    <title>VAT validation & Exchange Rates API thats free</title>
     <meta name="description" content="Free API service for VAT number validation, foreign exchange rates, IP geolocation, and IBAN validation">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
@@ -88,7 +88,7 @@
                 
                 <!-- VAT Validation -->
                 <div class="mb-10">
-                    <h3 class="text-xl font-semibold text-primary mb-4">VAT Number Validation</h3>
+                    <h2 class="text-xl font-semibold text-primary mb-4">VAT Number Validation</h2>
                     <p class="text-gray-600 mb-4">Validate European VAT numbers using the official VIES (VAT Information Exchange System) database.</p>
                     
                     <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4">
@@ -112,7 +112,7 @@
 
                 <!-- Exchange Rates -->
                 <div class="mb-10">
-                    <h3 class="text-xl font-semibold text-primary mb-4">Foreign Exchange Rates</h3>
+                    <h2 class="text-xl font-semibold text-primary mb-4">Foreign Exchange Rates</h2>
                     
                     <h4 class="text-lg font-medium text-gray-800 mb-3">Latest rates</h4>
                     <p class="text-gray-600 mb-4">Get the latest foreign exchange rates.</p>
@@ -166,7 +166,7 @@
                 <!-- Other Endpoints -->
                 <div class="grid md:grid-cols-2 gap-8">
                     <div>
-                        <h3 class="text-xl font-semibold text-primary mb-4">Visitor IP Geolocation</h3>
+                        <h2 class="text-xl font-semibold text-primary mb-4">Visitor IP Geolocation</h2>
                         <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4">
                             <pre><code class="language-http">GET /geolocate</code></pre>
                         </div>
@@ -174,7 +174,7 @@
                     </div>
                     
                     <div>
-                        <h3 class="text-xl font-semibold text-primary mb-4">IBAN Validation</h3>
+                        <h2 class="text-xl font-semibold text-primary mb-4">IBAN Validation</h2>
                         <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4">
                             <pre><code class="language-http text-sm">GET /iban?iban=GB82WEST12345698765432</code></pre>
                         </div>
@@ -182,7 +182,7 @@
                     </div>
                     
                     <div>
-                        <h3 class="text-xl font-semibold text-primary mb-4">Countries</h3>
+                        <h2 class="text-xl font-semibold text-primary mb-4">Countries</h2>
                         <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4">
                             <pre><code class="language-http">GET /countries</code></pre>
                         </div>
@@ -190,7 +190,7 @@
                     </div>
                     
                     <div>
-                        <h3 class="text-xl font-semibold text-primary mb-4">Currencies</h3>
+                        <h2 class="text-xl font-semibold text-primary mb-4">Currencies</h2>
                         <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4">
                             <pre><code class="language-http">GET /currencies</code></pre>
                         </div>
@@ -204,7 +204,7 @@
                 <h2 class="text-2xl font-bold text-primary mb-4">Rate Limiting & Usage</h2>
                 <div class="grid md:grid-cols-2 gap-6">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Rate Limits</h3>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-2">Rate Limits</h2>
                         <ul class="space-y-1 text-gray-600">
                             <li>• <strong>Anonymous requests:</strong> 2 requests per second</li>
                             <li>• No authentication required</li>
@@ -212,7 +212,7 @@
                         </ul>
                     </div>
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2">HTTP Status Codes</h3>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-2">HTTP Status Codes</h2>
                         <ul class="space-y-1 text-gray-600 text-sm">
                             <li>• <code class="bg-gray-100 px-2 py-1 rounded">200</code> Success</li>
                             <li>• <code class="bg-gray-100 px-2 py-1 rounded">400</code> Bad Request</li>

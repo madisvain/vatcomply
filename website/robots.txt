@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Block problematic status page incident date range URLs that cause canonical issues
+Disallow: /incidents/*/
+
+# Allow main status page
+Allow: /
+
+Sitemap: https://www.vatcomply.com/sitemap.xml
