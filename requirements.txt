@@ -67,6 +67,8 @@ idna==3.10
     #   requests
 importlib-metadata==8.6.1
     # via opentelemetry-api
+importlib-resources==6.5.2
+    # via schwifty
 isodate==0.7.2
     # via zeep
 logfire==3.14.0
@@ -206,6 +208,7 @@ time-machine==2.16.0
     # via pendulum
 typing-extensions==4.13.1
     # via
+    #   anyio
     #   logfire
     #   opentelemetry-sdk
     #   pydantic

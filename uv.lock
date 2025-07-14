@@ -89,6 +89,10 @@ importlib-metadata==8.6.1
     # via
     #   -r requirements.txt
     #   opentelemetry-api
+importlib-resources==6.5.2
+    # via
+    #   -r requirements.txt
+    #   schwifty
 isodate==0.7.2
     # via
     #   -r requirements.txt
@@ -275,6 +279,7 @@ time-machine==2.16.0
 typing-extensions==4.13.1
     # via
     #   -r requirements.txt
+    #   anyio
     #   logfire
     #   opentelemetry-sdk
     #   pydantic
