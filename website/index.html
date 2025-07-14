@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VAT validation & Exchange Rates API thats free</title>
     <meta name="description" content="Free API service for VAT number validation, foreign exchange rates, IP geolocation, and IBAN validation">
+    <link rel="canonical" href="https://www.vatcomply.com/" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -22,6 +23,142 @@
                 }
             }
         }
+    </script>
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "Organization",
+                "@id": "https://www.vatcomply.com/#organization",
+                "name": "VATcomply",
+                "url": "https://www.vatcomply.com",
+                "logo": {
+                    "@type": "ImageObject",
+                    "url": "https://www.vatcomply.com/logo.png"
+                },
+                "contactPoint": {
+                    "@type": "ContactPoint",
+                    "email": "support@vatcomply.com",
+                    "contactType": "customer service"
+                },
+                "sameAs": [
+                    "https://github.com/madisvain/vatcomply"
+                ]
+            },
+            {
+                "@type": "WebSite",
+                "@id": "https://www.vatcomply.com/#website",
+                "url": "https://www.vatcomply.com",
+                "name": "VATcomply",
+                "description": "Free API service for VAT number validation, foreign exchange rates, IP geolocation, and IBAN validation",
+                "publisher": {
+                    "@id": "https://www.vatcomply.com/#organization"
+                },
+                "inLanguage": "en-US"
+            },
+            {
+                "@type": "WebAPI",
+                "@id": "https://api.vatcomply.com/#api",
+                "name": "VATcomply API",
+                "description": "Free API service providing VAT validation, exchange rates, IP geolocation, and IBAN validation",
+                "url": "https://api.vatcomply.com",
+                "documentation": "https://api.vatcomply.com/docs",
+                "provider": {
+                    "@id": "https://www.vatcomply.com/#organization"
+                },
+                "termsOfService": "https://www.vatcomply.com/terms",
+                "license": "https://github.com/madisvain/vatcomply/blob/master/LICENSE"
+            },
+            {
+                "@type": "SoftwareApplication",
+                "name": "VAT Validation Service",
+                "description": "Validate European VAT numbers using the official VIES database",
+                "applicationCategory": "BusinessApplication",
+                "operatingSystem": "Any",
+                "permissions": "none",
+                "isAccessibleForFree": true,
+                "offers": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "EUR"
+                },
+                "provider": {
+                    "@id": "https://www.vatcomply.com/#organization"
+                }
+            },
+            {
+                "@type": "SoftwareApplication", 
+                "name": "Exchange Rates Service",
+                "description": "Foreign exchange rates from the European Central Bank with historical data",
+                "applicationCategory": "BusinessApplication",
+                "operatingSystem": "Any",
+                "permissions": "none",
+                "isAccessibleForFree": true,
+                "offers": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "EUR"
+                },
+                "provider": {
+                    "@id": "https://www.vatcomply.com/#organization"
+                }
+            },
+            {
+                "@type": "SoftwareApplication",
+                "name": "IP Geolocation Service",
+                "description": "Automatic country detection from visitor's IP address",
+                "applicationCategory": "BusinessApplication",
+                "operatingSystem": "Any",
+                "permissions": "none",
+                "isAccessibleForFree": true,
+                "offers": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "EUR"
+                },
+                "provider": {
+                    "@id": "https://www.vatcomply.com/#organization"
+                }
+            },
+            {
+                "@type": "SoftwareApplication",
+                "name": "IBAN Validation Service",
+                "description": "International Bank Account Number validation with detailed information",
+                "applicationCategory": "BusinessApplication",
+                "operatingSystem": "Any",
+                "permissions": "none",
+                "isAccessibleForFree": true,
+                "offers": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "EUR"
+                },
+                "provider": {
+                    "@id": "https://www.vatcomply.com/#organization"
+                }
+            },
+            {
+                "@type": "SoftwareApplication",
+                "name": "Country & Currency Data Service",
+                "description": "Comprehensive country and currency information",
+                "applicationCategory": "BusinessApplication",
+                "operatingSystem": "Any",
+                "permissions": "none",
+                "isAccessibleForFree": true,
+                "offers": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "EUR"
+                },
+                "provider": {
+                    "@id": "https://www.vatcomply.com/#organization"
+                }
+            }
+        ]
+    }
     </script>
 </head>
 <body class="bg-gray-50 text-gray-900">
@@ -84,7 +221,7 @@
         <!-- API Documentation -->
         <main class="space-y-12">
             <section>
-                <h2 class="text-2xl font-bold text-primary mb-6">API Documentation</h2>
+                <span class="text-2xl font-bold text-primary mb-6">API Documentation</span>
                 
                 <!-- VAT Validation -->
                 <div class="mb-10">
