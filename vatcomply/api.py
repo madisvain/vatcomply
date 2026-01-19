@@ -1,103 +1,67 @@
-import contextlib
-import dpath
-import pendulum
-import os
-import zeep
-import re
+"""
+VATcomply API
 
+Provides VAT validation, currency rates, geolocation, and IBAN validation endpoints.
+"""
+
+import contextlib
+import os
+import re
 from decimal import Decimal
+from typing import Annotated, Optional
+
+import pendulum
+import zeep
 from django.conf import settings
-from django.http import JsonResponse, HttpRequest
-from ninja import NinjaAPI, Query
-from ninja.errors import ValidationError
-from ninja.throttling import AnonRateThrottle
+from django_bolt import BoltAPI, Request
+from django_bolt.exceptions import BadRequest, NotFound
+from django_bolt.middleware import rate_limit
+from django_bolt.openapi import OpenAPIConfig
+from django_bolt.params import Query
 from pycountry import countries as pycountries
-from urllib.parse import urljoin
 from schwifty import IBAN
+from urllib.parse import urljoin
 from zeep.transports import AsyncTransport
 
 from vatcomply.constants import CurrencySymbol
+from vatcomply.error_handler import CustomErrorMiddleware
 from vatcomply.models import Country, Rate
 from vatcomply.schemas import (
     CountrySchema,
     CurrencySchema,
-    GeolocateResponse,
     ErrorResponse,
-    IBANQueryParamsSchema,
-    ValidateIBANResponseSchema,
-    VATQueryParamsSchema,
-    ValidateVATResponseSchema,
-    RatesQueryParamsSchema,
+    GeolocateResponse,
     RatesResponseSchema,
     RootResponseSchema,
+    ValidateIBANResponseSchema,
+    ValidateVATResponseSchema,
 )
 
-THROTTLE_CLASSES = []
-if settings.THROTTLE:
-    THROTTLE_CLASSES.append(AnonRateThrottle("2/s"))
+# Validation constants
+VAT_PATTERN = r"^[A-Z]{2}[\dA-Z]{8,12}$"
+CURRENCY_SYMBOLS = [choice[0] for choice in CurrencySymbol.choices]
 
-api = NinjaAPI(
-    title="Vatcomply API",
-    description="API for automated VAT compliance and currency conversion.",
-    throttle=THROTTLE_CLASSES,
-    openapi_extra={
-        "info": {
-            "contact": {
-                "name": "VATcomply",
-                "url": "https://www.vatcomply.com",
-                "email": "support@vatcomply.com",
-            },
-            "license": {
-                "name": "MIT License",
-                "url": "https://github.com/madisvain/vatcomply/blob/master/LICENSE",
-            },
-        },
-        "externalDocs": {
-            "description": "Report a bug or request a feature",
-            "url": "https://github.com/madisvain/vatcomply/issues",
-        },
-    },
+# Configure rate limiting based on settings
+RATE_LIMIT = "2/s" if settings.THROTTLE else None
+
+# Create the API instance
+api = BoltAPI(
+    middleware=[CustomErrorMiddleware],
+    openapi_config=OpenAPIConfig(
+        title="Vatcomply API",
+        version="1.0.0",
+        description="API for automated VAT compliance and currency conversion.",
+    ),
 )
 
 
-# Exception handlers
-@api.exception_handler(ValidationError)
-def validation_errors(request, exc):
-    """
-    Simplifies Pydantic validation errors to field: [messages] format
-    where messages is always a list of error messages
-    """
-    errors = {}
-
-    for error in exc.errors:
-        fields = tuple(filter(lambda x: x not in ["body", "payload"], error["loc"]))
-        message = error["msg"]
-
-        # Convert path to dpath format
-        path = "/".join(str(x) for x in fields)
-
-        # Check if the path already exists
-        try:
-            current_value = dpath.get(errors, path)
-            # If the path exists, ensure it's a list and append the new message
-            if not isinstance(current_value, list):
-                dpath.set(errors, path, [current_value])
-            dpath.get(errors, path).append(message)
-        except KeyError:
-            # If the path doesn't exist, create it with a list containing the message
-            dpath.new(errors, path, [message])
-
-    return JsonResponse(errors, status=422)
-
-
-@api.get("/countries", response=list[CountrySchema], summary="Get list of countries")
-async def countries(request):
-    """
-    Fetches a list of countries with their details.
-    """
-    countries = []
+@api.get("/countries", summary="Get list of countries")
+@rate_limit(RATE_LIMIT)
+async def countries(request: Request) -> list[CountrySchema]:
+    """Fetches a list of countries with their details."""
+    result = []
     async for country in Country.objects.order_by("iso2").all():
-        countries.append(
+        result.append(
             CountrySchema(
                 iso2=country.iso2,
                 iso3=country.iso3,
@@ -109,20 +73,18 @@ async def countries(request):
                 tld=country.tld,
                 region=country.region,
                 subregion=country.subregion,
-                latitude=Decimal(country.latitude),
-                longitude=Decimal(country.longitude),
+                latitude=float(country.latitude),
+                longitude=float(country.longitude),
                 emoji=country.emoji,
             )
         )
-    return countries
+    return result
 
 
-@api.get(
-    "/currencies",
-    response=dict[str, CurrencySchema],
-    summary="Get list of supported currencies",
-)
-def get_currencies(request):
+@api.get("/currencies", summary="Get list of supported currencies")
+@rate_limit(RATE_LIMIT)
+def get_currencies(request: Request) -> dict[str, CurrencySchema]:
+    """Returns all supported currencies."""
     currencies = {}
     for choice in CurrencySymbol.choices:
         symbol = choice[0]
@@ -133,61 +95,74 @@ def get_currencies(request):
     return currencies
 
 
-@api.get(
-    "/geolocate",
-    response={200: GeolocateResponse, 404: ErrorResponse},
-    summary="Geolocate by IP",
-)
-async def geolocate(request: HttpRequest):
-    country_code = request.headers.get("CF-IPCountry")
-    ip = request.headers.get("CF-Connecting-IP")
+@api.get("/geolocate", summary="Geolocate by IP")
+@rate_limit(RATE_LIMIT)
+async def geolocate(request: Request) -> GeolocateResponse:
+    """Geolocates the user based on CDN headers (Cloudflare or Bunny.net)."""
+    # HTTP headers are case-insensitive; use lowercase for ASGI compatibility
+    # Try Cloudflare first, then Bunny.net
+    country_code = request.headers.get("cf-ipcountry") or request.headers.get(
+        "cdn-requestcountrycode"
+    )
+    ip = request.headers.get("cf-connecting-ip")
 
     if not country_code:
-        return 404, {"error": "Country code not received from CloudFlare headers `CF-IPCountry`."}
+        raise NotFound(
+            detail="Country code not received from CDN headers (CF-IPCountry or Cdn-RequestCountryCode)."
+        )
 
     try:
         record = await Country.objects.aget(iso2=country_code.upper())
     except Country.DoesNotExist:
-        return 404, {"error": f"Data for country code `{country_code.upper()}` not found."}
+        raise NotFound(detail=f"Data for country code `{country_code.upper()}` not found.")
 
-    return {
-        "iso2": record.iso2,
-        "iso3": record.iso3,
-        "country_code": country_code.upper(),
-        "name": record.name,
-        "numeric_code": record.numeric_code,
-        "phone_code": record.phone_code,
-        "capital": record.capital,
-        "currency": record.currency,
-        "tld": record.tld,
-        "region": record.region,
-        "subregion": record.subregion,
-        "latitude": record.latitude,
-        "longitude": record.longitude,
-        "emoji": record.emoji,
-        "ip": ip,
-    }
+    return GeolocateResponse(
+        iso2=record.iso2,
+        iso3=record.iso3,
+        country_code=country_code.upper(),
+        name=record.name,
+        numeric_code=record.numeric_code,
+        phone_code=record.phone_code,
+        capital=record.capital,
+        currency=record.currency,
+        tld=record.tld,
+        region=record.region,
+        subregion=record.subregion,
+        latitude=record.latitude,
+        longitude=record.longitude,
+        emoji=record.emoji,
+        ip=ip,
+    )
 
 
-@api.get("/iban", response={200: ValidateIBANResponseSchema, 400: ErrorResponse})
-async def validate_iban(request, query: Query[IBANQueryParamsSchema]):
-    iban = IBAN(query.iban)
-    country = pycountries.get(alpha_2=iban.country_code)
+@api.get("/iban", summary="Validate IBAN")
+@rate_limit(RATE_LIMIT)
+async def validate_iban(
+    request: Request,
+    iban: Annotated[str, Query(description="IBAN to validate")],
+) -> ValidateIBANResponseSchema:
+    """Validates an IBAN and returns details about the bank account."""
+    try:
+        iban_obj = IBAN(iban)
+    except ValueError as e:
+        raise BadRequest(detail=str(e))
 
-    return {
-        "valid": True,
-        "iban": query.iban,
-        "bank_name": iban.bank_name,
-        "bic": iban.bic,
-        "country_code": iban.country_code,
-        "country_name": country.name,
-        "checksum_digits": iban.checksum_digits,
-        "bank_code": iban.bank_code,
-        "branch_code": iban.bban.branch_code,
-        "account_number": iban.account_code,
-        "bban": iban.bban,
-        "in_sepa_zone": iban.in_sepa_zone,
-    }
+    country = pycountries.get(alpha_2=iban_obj.country_code)
+
+    return ValidateIBANResponseSchema(
+        valid=True,
+        iban=iban,
+        bank_name=iban_obj.bank_name or "",
+        bic=str(iban_obj.bic) if iban_obj.bic else "",
+        country_code=iban_obj.country_code,
+        country_name=country.name if country else "",
+        checksum_digits=iban_obj.checksum_digits,
+        bank_code=iban_obj.bank_code or "",
+        branch_code=iban_obj.bban.branch_code or "",
+        account_number=iban_obj.account_code or "",
+        bban=str(iban_obj.bban),
+        in_sepa_zone=iban_obj.in_sepa_zone,
+    )
 
 
 @contextlib.asynccontextmanager
@@ -204,88 +179,127 @@ async def _vat_check_context(vat_number: str, wsdl_path: str):
         await transport.aclose()
 
 
-@api.get("/vat", response={200: ValidateVATResponseSchema, 400: ErrorResponse})
-async def validate_vat(request, query: Query[VATQueryParamsSchema]):
+@api.get("/vat", summary="Validate VAT number")
+@rate_limit(RATE_LIMIT)
+async def validate_vat(
+    request: Request,
+    vat_number: Annotated[str, Query(description="VAT number to validate")],
+) -> ValidateVATResponseSchema:
+    """Validates an EU VAT number using the VIES service."""
+    # Validate VAT number format
+    if not re.match(VAT_PATTERN, vat_number):
+        raise BadRequest(
+            detail="Invalid VAT number format. Expected format: Two-letter country code followed by 8-12 digits or letters."
+        )
+
+    # Brexit check
+    if vat_number.startswith("GB"):
+        raise BadRequest(
+            detail="As of 01/01/2021, the VoW service to validate UK (GB) VAT numbers ceased to exist "
+            "while a new service to validate VAT numbers of businesses operating under the Protocol "
+            'on Ireland and Northern Ireland appeared. These VAT numbers are starting with the "XI" prefix.'
+        )
+
     # Use local WSDL file to avoid downloading it every time
     wsdl_path = os.path.join(os.path.dirname(__file__), "wsdl", "checkVatService.wsdl")
 
     try:
         # Use context manager to properly handle OpenTelemetry context
-        async with _vat_check_context(query.vat_number, wsdl_path) as response:
-            return {
-                "valid": response["valid"],
-                "vat_number": response["vatNumber"],
-                "name": response["name"],
-                "address": (response["address"].strip() if response["address"] else ""),
-                "country_code": response["countryCode"],
-            }
+        async with _vat_check_context(vat_number, wsdl_path) as response:
+            return ValidateVATResponseSchema(
+                valid=response["valid"],
+                vat_number=response["vatNumber"],
+                name=response["name"],
+                address=(response["address"].strip() if response["address"] else ""),
+                country_code=response["countryCode"],
+            )
     except zeep.exceptions.Fault as e:
-        return JsonResponse({"error": e.message}, status=400)
+        raise BadRequest(detail=e.message)
 
 
-@api.get("/rates", response={200: RatesResponseSchema, 400: ErrorResponse})
-async def rates(request, query: Query[RatesQueryParamsSchema]):
-    # Find the date
-    date = query.date if query.date else pendulum.now().date()
+@api.get("/rates", summary="Get exchange rates")
+@rate_limit(RATE_LIMIT)
+async def rates(
+    request: Request,
+    base: Annotated[str, Query(description="Base currency for rates")] = "EUR",
+    symbols: Annotated[
+        Optional[str], Query(description="Comma-separated currency symbols to filter")
+    ] = None,
+    date: Annotated[
+        Optional[str],
+        Query(description="Date for historical rates (YYYY-MM-DD)"),
+    ] = None,
+) -> RatesResponseSchema:
+    """Returns exchange rates from the European Central Bank."""
+    # Validate base currency
+    if base not in CURRENCY_SYMBOLS:
+        raise BadRequest(detail=f"Base currency '{base}' is not supported.")
+
+    # Parse and validate symbols
+    symbols_list = None
+    if symbols:
+        symbols_list = symbols.split(",")
+        for symbol in symbols_list:
+            if symbol not in CURRENCY_SYMBOLS:
+                raise BadRequest(detail=f"Currency '{symbol}' is not supported.")
+
+    # Parse and validate date
+    query_date = pendulum.now().date()
+    if date:
+        try:
+            query_date = pendulum.parse(date).date()
+        except Exception:
+            raise BadRequest(detail=f"Invalid date format: '{date}'. Expected format: YYYY-MM-DD")
 
     # Get the rates data
-    record = await Rate.objects.filter(date__lte=date).order_by("-date").afirst()
+    record = await Rate.objects.filter(date__lte=query_date).order_by("-date").afirst()
+    if not record:
+        raise NotFound(detail="No rate data available for the specified date.")
 
-    # Base re-calculation
-    rates = {"EUR": 1}
-    rates.update(record.rates)
-    if query.base and query.base != "EUR":
-        if query.base not in settings.CURRENCY_SYMBOLS:
-            return 400, {"error": f"Base currency '{query.base}' not supported"}
-        if query.base not in rates:
-            return 400, {"error": f"Base currency '{query.base}' not available in current rates data"}
-        base_rate = Decimal(rates[query.base])
-        rates = {currency: Decimal(rate) / base_rate for currency, rate in rates.items()}
-        rates.update({"EUR": Decimal(1) / base_rate})
+    # Base re-calculation - only include currencies defined in CURRENCY_SYMBOLS
+    rates_data = {"EUR": 1.0}
+    rates_data.update({k: float(v) for k, v in record.rates.items() if k in CURRENCY_SYMBOLS})
 
-    # Symbols
-    if query.symbols:
-        for rate in list(rates):
-            if rate not in query.symbols:
-                del rates[rate]
+    if base != "EUR":
+        if base not in rates_data:
+            raise BadRequest(detail=f"Base currency '{base}' not available in current rates data")
+        base_rate = Decimal(str(rates_data[base]))
+        rates_data = {
+            currency: float(Decimal(str(rate)) / base_rate) for currency, rate in rates_data.items()
+        }
+        rates_data["EUR"] = float(Decimal("1") / base_rate)
 
-    return {"date": record.date.isoformat(), "base": query.base, "rates": rates}
+    # Filter symbols
+    if symbols_list:
+        rates_data = {k: v for k, v in rates_data.items() if k in symbols_list}
+
+    return RatesResponseSchema(
+        date=record.date.isoformat(),
+        base=base,
+        rates=rates_data,
+    )
 
 
-@api.get("/", response=RootResponseSchema, summary="API Information")
-async def root(request):
-    """
-    Returns general information about the API, its status, and available endpoints.
-    """
-    # Dynamically generate endpoints from registered routes
-    endpoints = {}
-
-    # Extract routes using the proper Django Ninja structure
-    for prefix, router in api._routers:
-        for path, path_view in router.path_operations.items():
-            full_path = "/".join([i for i in (prefix, path) if i])
-
-            # Remove path converters (like {param:int} -> {param})
-            full_path = re.sub(r"{[^}:]+:", "{", full_path)
-
-            # Skip the root endpoint itself
-            if full_path == "/":
-                continue
-
-            # Create readable endpoint name from path
-            endpoint_name = full_path.strip("/")  # Remove leading/trailing slashes
-            if not endpoint_name:
-                continue
-
-            if endpoint_name and endpoint_name not in endpoints:
-                endpoints[endpoint_name] = urljoin(settings.BASE_URL, full_path)
-
-    return {
-        "name": "VATComply API",
-        "version": "1.0.0",
-        "status": "operational",
-        "description": "VAT validation API, geolocation tools, and ECB exchange rates",
-        "documentation": urljoin(settings.BASE_URL, "docs"),
-        "endpoints": endpoints,
-        "contact": "support@vatcomply.com",
+@api.get("/", summary="API Information")
+@rate_limit(RATE_LIMIT)
+async def root(request: Request) -> RootResponseSchema:
+    """Returns general information about the API, its status, and available endpoints."""
+    # Static endpoint list for Django Bolt (simpler than introspection)
+    endpoints = {
+        "countries": urljoin(settings.BASE_URL, "/countries"),
+        "currencies": urljoin(settings.BASE_URL, "/currencies"),
+        "geolocate": urljoin(settings.BASE_URL, "/geolocate"),
+        "iban": urljoin(settings.BASE_URL, "/iban"),
+        "vat": urljoin(settings.BASE_URL, "/vat"),
+        "rates": urljoin(settings.BASE_URL, "/rates"),
     }
+
+    return RootResponseSchema(
+        name="VATComply API",
+        version="1.0.0",
+        status="operational",
+        description="VAT validation API, geolocation tools, and ECB exchange rates",
+        documentation=urljoin(settings.BASE_URL, "docs"),
+        endpoints=endpoints,
+        contact="support@vatcomply.com",
+    )

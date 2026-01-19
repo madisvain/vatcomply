@@ -11,8 +11,6 @@ import os
 
 from django.core.asgi import get_asgi_application
 
-from vatcomply.middleware import BackgroundTasksMiddleware
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "vatcomply.settings")
 
-application = BackgroundTasksMiddleware(get_asgi_application())
+application = get_asgi_application()

@@ -1,64 +1,97 @@
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.core.management import call_command
 
+from django_bolt.testing import TestClient
+
+from vatcomply.api import api
 from vatcomply.models import Country
 
 
-class GeolocateTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
+class GeolocateTest(TransactionTestCase):
+    def setUp(self):
         # Load countries data since geolocate endpoint depends on it
         call_command("load_countries")
 
     def test_geolocate_without_headers(self):
-        """Test geolocate endpoint without required CloudFlare headers"""
-        response = self.client.get("/geolocate")
-        self.assertEqual(response.status_code, 404)
-        self.assertIsInstance(response.json(), dict)
-        self.assertIn("error", response.json())
-        self.assertEqual(
-            response.json()["error"],
-            "Country code not received from CloudFlare headers `CF-IPCountry`.",
-        )
+        """Test geolocate endpoint without required CDN headers"""
+        with TestClient(api) as client:
+            response = client.get("/geolocate")
+            self.assertEqual(response.status_code, 404)
+            data = response.json()
+            self.assertIsInstance(data, dict)
+            self.assertIn("detail", data)
+            self.assertEqual(
+                data["detail"],
+                "Country code not received from CDN headers (CF-IPCountry or Cdn-RequestCountryCode).",
+            )
 
     def test_geolocate_with_invalid_country(self):
         """Test geolocate endpoint with invalid country code"""
-        response = self.client.get(
-            "/geolocate",
-            HTTP_CF_IPCOUNTRY="XX",  # Invalid country code
-            HTTP_CF_CONNECTING_IP="1.2.3.4",
-        )
-        self.assertEqual(response.status_code, 404)
-        self.assertIsInstance(response.json(), dict)
-        self.assertIn("error", response.json())
-        self.assertEqual(
-            response.json()["error"], "Data for country code `XX` not found."
-        )
+        with TestClient(api) as client:
+            response = client.get(
+                "/geolocate",
+                headers={
+                    "cf-ipcountry": "XX",  # Invalid country code
+                    "cf-connecting-ip": "1.2.3.4",
+                },
+            )
+            self.assertEqual(response.status_code, 404)
+            data = response.json()
+            self.assertIsInstance(data, dict)
+            self.assertIn("detail", data)
+            self.assertEqual(
+                data["detail"], "Data for country code `XX` not found."
+            )
 
     def test_geolocate_success(self):
         """Test successful geolocate endpoint call"""
-        response = self.client.get(
-            "/geolocate", HTTP_CF_IPCOUNTRY="DE", HTTP_CF_CONNECTING_IP="85.214.132.117"
-        )
+        with TestClient(api) as client:
+            response = client.get(
+                "/geolocate",
+                headers={
+                    "cf-ipcountry": "DE",
+                    "cf-connecting-ip": "85.214.132.117",
+                },
+            )
 
-        self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response.json(), dict)
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertIsInstance(data, dict)
 
-        country = Country.objects.get(iso2="DE")
+            country = Country.objects.get(iso2="DE")
 
-        data = response.json()
-        self.assertEqual(data["country_code"], "DE")
-        self.assertEqual(data["iso2"], country.iso2)
-        self.assertEqual(data["iso3"], country.iso3)
-        self.assertEqual(data["name"], country.name)
-        self.assertEqual(data["numeric_code"], country.numeric_code)
-        self.assertEqual(data["phone_code"], country.phone_code)
-        self.assertEqual(data["capital"], country.capital)
-        self.assertEqual(data["currency"], country.currency)
-        self.assertEqual(data["tld"], country.tld)
-        self.assertEqual(data["region"], country.region)
-        self.assertEqual(data["subregion"], country.subregion)
-        self.assertEqual(data["latitude"], country.latitude)
-        self.assertEqual(data["longitude"], country.longitude)
-        self.assertEqual(data["emoji"], country.emoji)
-        self.assertEqual(data["ip"], "85.214.132.117")
+            self.assertEqual(data["country_code"], "DE")
+            self.assertEqual(data["iso2"], country.iso2)
+            self.assertEqual(data["iso3"], country.iso3)
+            self.assertEqual(data["name"], country.name)
+            self.assertEqual(data["numeric_code"], country.numeric_code)
+            self.assertEqual(data["phone_code"], country.phone_code)
+            self.assertEqual(data["capital"], country.capital)
+            self.assertEqual(data["currency"], country.currency)
+            self.assertEqual(data["tld"], country.tld)
+            self.assertEqual(data["region"], country.region)
+            self.assertEqual(data["subregion"], country.subregion)
+            self.assertEqual(data["latitude"], country.latitude)
+            self.assertEqual(data["longitude"], country.longitude)
+            self.assertEqual(data["emoji"], country.emoji)
+            self.assertEqual(data["ip"], "85.214.132.117")
+
+    def test_geolocate_with_bunny_header(self):
+        """Test geolocate endpoint with Bunny.net CDN header"""
+        with TestClient(api) as client:
+            response = client.get(
+                "/geolocate",
+                headers={
+                    "cdn-requestcountrycode": "FR",
+                },
+            )
+
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertIsInstance(data, dict)
+
+            country = Country.objects.get(iso2="FR")
+
+            self.assertEqual(data["country_code"], "FR")
+            self.assertEqual(data["iso2"], country.iso2)
+            self.assertEqual(data["name"], country.name)

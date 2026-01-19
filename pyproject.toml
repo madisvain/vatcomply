@@ -1,7 +1,30 @@
 [project]
 name = "vatcomply"
 version = "0.1.0"
-requires-python = ">=3.11, <=3.12"
+requires-python = ">=3.11, <3.13"
+dependencies = [
+    "babel",
+    "django",
+    "django-bolt",
+    "django-cors-headers",
+    "django-environ",
+    "dpath",
+    "gunicorn",
+    "httpx<0.28",
+    "logfire[asgi,celery,django,httpx,psycopg]",
+    "lxml",
+    "msgspec",
+    "pendulum",
+    "pycountry",
+    "schwifty",
+    "sentry-sdk[django]",
+    "zeep",
+]
+
+[project.optional-dependencies]
+dev = [
+    "coverage",
+]
 
 [tool.isort]
 profile = "black"

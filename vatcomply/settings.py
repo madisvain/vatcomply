@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "corsheaders",
+    "django_bolt",
     "vatcomply",
     "vatcomply.users",
 ]
@@ -89,7 +90,7 @@ WSGI_APPLICATION = "vatcomply.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "db.sqlite3",
+        "NAME": env("DATABASE_PATH", default="db.sqlite3"),
     }
 }
 
@@ -139,6 +140,7 @@ COUNTRIES_URL = "https://raw.githubusercontent.com/dr5hn/countries-states-cities
 RATES_LAST_90_DAYS_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml"
 RATES_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml"
 CURRENCY_SYMBOLS = [
+    # All currencies ever published by ECB (for historical data support)
     "EUR",
     "USD",
     "JPY",

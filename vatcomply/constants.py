@@ -3,6 +3,11 @@ from babel.numbers import get_currency_name
 
 
 class CurrencySymbol(models.TextChoices):
+    # All currencies ever published by ECB (for historical data support)
+    # Note: Some currencies no longer published for current rates:
+    # - HRK: Croatia joined Eurozone 2023
+    # - RUB: Suspended due to sanctions 2022
+    # - BGN: Bulgaria preparing for Eurozone
     EUR = "EUR", get_currency_name("EUR", locale="en")
     USD = "USD", get_currency_name("USD", locale="en")
     JPY = "JPY", get_currency_name("JPY", locale="en")

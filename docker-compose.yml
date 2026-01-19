@@ -1,0 +1,42 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_PATH=/app/data/db.sqlite3
+    volumes:
+      - db-data:/app/data
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  cron:
+    build: .
+    command: cron -f
+    env_file:
+      - .env
+    environment:
+      - DATABASE_PATH=/app/data/db.sqlite3
+    volumes:
+      - db-data:/app/data
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  migrate:
+    build: .
+    command: sh -c "uv run python manage.py migrate && uv run python manage.py load_countries && uv run python manage.py load_rates"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_PATH=/app/data/db.sqlite3
+    volumes:
+      - db-data:/app/data
+
+volumes:
+  db-data:

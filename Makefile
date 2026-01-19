@@ -1,20 +1,29 @@
 run:
-	export DEBUG=True; uvicorn vatcomply.asgi:application --reload
+	DEBUG=True uv run python manage.py runbolt --dev
 
 pip:
-	uv pip install -r requirements.in --upgrade
+	uv sync
 
 freeze:
-	uv pip compile requirements.in -o requirements.txt && uv pip compile requirements.txt -o uv.lock
+	uv lock
 
 migrate:
-	python manage.py migrate
+	uv run python manage.py migrate
 
 migrations:
-	python manage.py makemigrations
+	uv run python manage.py makemigrations
 
 test:
-	python manage.py test --keepdb
+	uv run python manage.py test --keepdb
 
 coverage:
-	coverage run manage.py test --keepdb && coverage report -m
+	uv run coverage run manage.py test --keepdb && uv run coverage report -m
+
+up:
+	colima start && docker-compose up --build
+
+down:
+	docker-compose down && colima stop
+
+build:
+	docker-compose build
