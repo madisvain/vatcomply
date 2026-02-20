@@ -1,3 +1,5 @@
+.PHONY: run pip freeze migrate migrations test coverage up down build
+
 run:
 	DEBUG=True uv run python manage.py runbolt --dev
 
@@ -20,10 +22,10 @@ coverage:
 	uv run coverage run manage.py test --keepdb && uv run coverage report -m
 
 up:
-	colima start && docker-compose up --build
+	colima start && docker compose up --build
 
 down:
-	docker-compose down && colima stop
+	docker compose down && colima stop
 
 build:
-	docker-compose build
+	docker compose build

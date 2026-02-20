@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.6 /uv /usr/local/bin/uv
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ RUN uv sync --frozen --no-dev
 
 # Copy application code and collect static files
 COPY . .
-RUN SECRET_KEY=build-only uv run python manage.py collectstatic --noinput || true
+RUN SECRET_KEY=build-only uv run python manage.py collectstatic --noinput
 
 
 # Runtime stage - minimal image
@@ -40,7 +40,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.6 /uv /usr/local/bin/uv
 
 WORKDIR /app
 
@@ -56,6 +56,11 @@ RUN chmod 0644 /etc/cron.d/vatcomply-cron && \
 
 # Make startup script executable
 RUN chmod +x /app/start.sh
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash appuser && \
+    chown -R appuser:appuser /app
+USER appuser
 
 EXPOSE 8000
 

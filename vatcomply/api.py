@@ -29,7 +29,6 @@ from vatcomply.models import Country, Rate
 from vatcomply.schemas import (
     CountrySchema,
     CurrencySchema,
-    ErrorResponse,
     GeolocateResponse,
     RatesResponseSchema,
     RootResponseSchema,
@@ -137,7 +136,7 @@ async def geolocate(request: Request) -> GeolocateResponse:
 
 @api.get("/iban", summary="Validate IBAN")
 @rate_limit(RATE_LIMIT)
-async def validate_iban(
+def validate_iban(
     request: Request,
     iban: Annotated[str, Query(description="IBAN to validate")],
 ) -> ValidateIBANResponseSchema:
@@ -165,18 +164,23 @@ async def validate_iban(
     )
 
 
+# Module-level WSDL path and cached client to avoid blocking WSDL parsing on every request
+_VIES_WSDL_PATH = os.path.join(os.path.dirname(__file__), "wsdl", "checkVatService.wsdl")
+_vat_transport = AsyncTransport(timeout=30)
+_vat_client = zeep.AsyncClient(wsdl=_VIES_WSDL_PATH, transport=_vat_transport)
+
+
 @contextlib.asynccontextmanager
-async def _vat_check_context(vat_number: str, wsdl_path: str):
+async def _vat_check_context(vat_number: str):
     """Run VAT check with proper context management to avoid OpenTelemetry issues."""
-    transport = AsyncTransport()
-    client = zeep.AsyncClient(wsdl=wsdl_path, transport=transport)
     try:
-        response = await zeep.helpers.serialize_object(
-            client.service.checkVat(countryCode=vat_number[:2], vatNumber=vat_number[2:])
+        result = await _vat_client.service.checkVat(
+            countryCode=vat_number[:2], vatNumber=vat_number[2:]
         )
+        response = zeep.helpers.serialize_object(result)
         yield response
     finally:
-        await transport.aclose()
+        pass
 
 
 @api.get("/vat", summary="Validate VAT number")
@@ -200,12 +204,9 @@ async def validate_vat(
             'on Ireland and Northern Ireland appeared. These VAT numbers are starting with the "XI" prefix.'
         )
 
-    # Use local WSDL file to avoid downloading it every time
-    wsdl_path = os.path.join(os.path.dirname(__file__), "wsdl", "checkVatService.wsdl")
-
     try:
         # Use context manager to properly handle OpenTelemetry context
-        async with _vat_check_context(vat_number, wsdl_path) as response:
+        async with _vat_check_context(vat_number) as response:
             return ValidateVATResponseSchema(
                 valid=response["valid"],
                 vat_number=response["vatNumber"],
@@ -247,8 +248,8 @@ async def rates(
     query_date = pendulum.now().date()
     if date:
         try:
-            query_date = pendulum.parse(date).date()
-        except Exception:
+            query_date = pendulum.parse(date, strict=True).date()
+        except (ValueError, pendulum.parsing.exceptions.ParserError):
             raise BadRequest(detail=f"Invalid date format: '{date}'. Expected format: YYYY-MM-DD")
 
     # Get the rates data

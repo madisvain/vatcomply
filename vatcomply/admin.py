@@ -6,9 +6,9 @@ from vatcomply.models import Rate, Country
 
 @admin.register(Rate, site=site)
 class RateAdmin(admin.ModelAdmin):
-    list_display = [
-        "date",
-    ]
+    list_display = ["date"]
+    ordering = ["-date"]
+    date_hierarchy = "date"
 
 
 @admin.register(Country, site=site)

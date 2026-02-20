@@ -9,9 +9,7 @@ dependencies = [
     "django-cors-headers",
     "django-environ",
     "dpath",
-    "gunicorn",
     "httpx<0.28",
-    "logfire[asgi,celery,django,httpx,psycopg]",
     "lxml",
     "msgspec",
     "pendulum",
@@ -31,8 +29,13 @@ profile = "black"
 
 [tool.black]
 line-length = 100
-target-version = ['py313']
+target-version = ['py311']
 
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
+
+[dependency-groups]
+dev = [
+    "zensical>=0.0.23",
+]

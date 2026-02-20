@@ -1,0 +1,58 @@
+[project]
+site_name = "VATcomply"
+site_description = "Free API service for VAT number validation, foreign exchange rates, IP geolocation, and IBAN validation"
+site_author = "VATcomply"
+site_url = "https://www.vatcomply.com/"
+copyright = "Copyright &copy; VATcomply - MIT License"
+
+nav = [
+    { "Home" = "index.md" },
+    { "API Reference" = [
+        { "API Root" = "api/root.md" },
+        { "VAT Validation" = "api/vat-validation.md" },
+        { "Exchange Rates" = "api/exchange-rates.md" },
+        { "Geolocation" = "api/geolocation.md" },
+        { "IBAN Validation" = "api/iban-validation.md" },
+        { "Countries" = "api/countries.md" },
+        { "Currencies" = "api/currencies.md" },
+    ]},
+    { "Rate Limiting" = "rate-limiting.md" },
+    { "Technology Stack" = "technology-stack.md" },
+]
+
+repo_url = "https://github.com/madisvain/vatcomply"
+repo_name = "madisvain/vatcomply"
+
+[project.theme]
+language = "en"
+features = [
+    "content.code.copy",
+    "content.code.select",
+    "navigation.footer",
+    "navigation.indexes",
+    "navigation.instant",
+    "navigation.instant.prefetch",
+    "navigation.path",
+    "navigation.sections",
+    "navigation.top",
+    "navigation.tracking",
+    "search.highlight",
+]
+
+[[project.theme.palette]]
+scheme = "default"
+primary = "indigo"
+accent = "blue"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+scheme = "slate"
+primary = "indigo"
+accent = "blue"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to light mode"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/madisvain/vatcomply"

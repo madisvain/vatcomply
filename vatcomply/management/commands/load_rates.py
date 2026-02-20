@@ -3,10 +3,12 @@ import pendulum
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.db import IntegrityError
 from xml.etree import ElementTree
 
 from vatcomply.models import Rate
+
+BATCH_SIZE = 500
+REQUEST_TIMEOUT = 60
 
 
 class Command(BaseCommand):
@@ -22,10 +24,16 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write("Loading rates...")
 
-        last_90_days = True if options["last_90_days"] else False
-        r = httpx.get(
-            settings.RATES_LAST_90_DAYS_URL if last_90_days else settings.RATES_URL
-        )
+        last_90_days = bool(options["last_90_days"])
+        url = settings.RATES_LAST_90_DAYS_URL if last_90_days else settings.RATES_URL
+
+        try:
+            r = httpx.get(url, timeout=REQUEST_TIMEOUT)
+            r.raise_for_status()
+        except httpx.HTTPError as e:
+            self.stderr.write(f"Failed to fetch rates data: {e}")
+            return
+
         envelope = ElementTree.fromstring(r.content)
 
         namespaces = {
@@ -33,20 +41,27 @@ class Command(BaseCommand):
             "eurofxref": "http://www.ecb.int/vocabulary/2002-08-01/eurofxref",
         }
         data = envelope.findall("./eurofxref:Cube/eurofxref:Cube[@time]", namespaces)
-        skipped = 0
-        for i, d in enumerate(data):
-            time = pendulum.parse(d.attrib["time"], strict=False)
-            try:
-                Rate.objects.create(
+
+        batch = []
+        for d in data:
+            time = pendulum.parse(d.attrib["time"], strict=True)
+            batch.append(
+                Rate(
                     date=time,
                     rates={
                         str(c.attrib["currency"]): float(c.attrib["rate"])
                         for c in list(d)
                     },
                 )
-            except IntegrityError:
-                skipped += 1
+            )
+
+        created = Rate.objects.bulk_create(
+            batch,
+            batch_size=BATCH_SIZE,
+            ignore_conflicts=True,
+        )
 
         self.stdout.write(
-            "Loading rates finished! Skipped {} existing rates.".format(skipped)
+            f"Loading rates finished! Processed {len(batch)} dates, "
+            f"created {len(created)} new rates."
         )

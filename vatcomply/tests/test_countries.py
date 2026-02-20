@@ -1,4 +1,4 @@
-from django.test import TransactionTestCase
+from django.test import TestCase
 from django.core.management import call_command
 
 from django_bolt.testing import TestClient
@@ -7,7 +7,7 @@ from vatcomply.api import api
 from vatcomply.models import Country
 
 
-class CountriesTest(TransactionTestCase):
+class CountriesTest(TestCase):
     def setUp(self):
         call_command("load_countries")
 

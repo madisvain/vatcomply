@@ -8,7 +8,6 @@ import os
 from pathlib import Path
 
 import environ
-import logfire
 import sentry_sdk
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -16,9 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(
     DEBUG=(bool, False),
-    ALLOWED_HOSTS=(list, []),
     SECRET_KEY=(str),
-    BACKGROUND_SCHEDULER=(bool, False),
 )
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
@@ -28,10 +25,9 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-if os.getenv("ALLOWED_HOSTS"):
-    ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(",")
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
-# CORS
+# CORS - Intentionally open: this is a public API service
 CORS_ALLOW_ALL_ORIGINS = True
 
 # Throttling
@@ -127,7 +123,16 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = "static/"
 
 # Base URL
-BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
+BASE_URL = env("BASE_URL", default="http://localhost:8000")
+
+# Security settings for production
+if not DEBUG:
+    SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -139,58 +144,22 @@ COUNTRIES_URL = "https://raw.githubusercontent.com/dr5hn/countries-states-cities
 # ECB
 RATES_LAST_90_DAYS_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml"
 RATES_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml"
-CURRENCY_SYMBOLS = [
-    # All currencies ever published by ECB (for historical data support)
-    "EUR",
-    "USD",
-    "JPY",
-    "BGN",
-    "CZK",
-    "DKK",
-    "GBP",
-    "HUF",
-    "PLN",
-    "RON",
-    "SEK",
-    "CHF",
-    "ISK",
-    "NOK",
-    "HRK",
-    "RUB",
-    "TRY",
-    "AUD",
-    "BRL",
-    "CAD",
-    "CNY",
-    "HKD",
-    "IDR",
-    "ILS",
-    "INR",
-    "KRW",
-    "MXN",
-    "MYR",
-    "NZD",
-    "PHP",
-    "SGD",
-    "THB",
-    "ZAR",
-]
 
 # VIES
 VIES_WSDL = "https://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl"
 
-# Background scheduler
-BACKGROUND_SCHEDULER = env("BACKGROUND_SCHEDULER")
-
-# Logfire
-LOGFIRE_TOKEN = env("LOGFIRE_TOKEN", default=None)
-if LOGFIRE_TOKEN:
-    logfire.configure()
-    logfire.instrument_django(capture_headers=True)
-    logfire.instrument_httpx()
-
 # Sentry
+def before_send(event, hint):
+    # Filter out OpenTelemetry context detach errors (known issue with async Django)
+    if "exc_info" in hint:
+        exc_value = hint["exc_info"][1]
+        if isinstance(exc_value, ValueError) and "was created in a different Context" in str(exc_value):
+            return None
+    return event
+
+
 sentry_sdk.init(
-    dsn=os.getenv("SENTRY_DSN"),
+    dsn=env("SENTRY_DSN", default=""),
     enable_tracing=False,
+    before_send=before_send,
 )

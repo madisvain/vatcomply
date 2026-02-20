@@ -1,24 +1,19 @@
-from django.test import TransactionTestCase
-from unittest.mock import patch
-from zeep.exceptions import Fault
+from django.test import TestCase
+from unittest.mock import patch, AsyncMock, MagicMock
 
 from django_bolt.testing import TestClient
 
 from vatcomply.api import api
 
 
-class VATTest(TransactionTestCase):
-    def test_vat_api(self):
-        with TestClient(api) as client:
-            response = client.get("/vat?vat_number=EE101600930")
-            self.assertEqual(response.status_code, 200)
-            self.assertIsInstance(response.json(), dict)
-
+class VATTest(TestCase):
     def test_vat_blank_api(self):
         with TestClient(api) as client:
             response = client.get("/vat?vat_number=")
             self.assertEqual(response.status_code, 400)
-            self.assertIsInstance(response.json(), dict)
+            data = response.json()
+            self.assertIsInstance(data, dict)
+            self.assertIn("detail", data)
 
     def test_vat_invalid_format_api(self):
         with TestClient(api) as client:
@@ -35,11 +30,34 @@ class VATTest(TransactionTestCase):
             data = response.json()
             self.assertIsInstance(data, dict)
             self.assertIn("detail", data)
+            self.assertIn("GB", data["detail"])
 
-    @patch("zeep.AsyncClient")
+    @patch("vatcomply.api._vat_client")
+    def test_vat_valid_number(self, mock_client):
+        mock_service = MagicMock()
+        mock_service.checkVat = AsyncMock(return_value={
+            "valid": True,
+            "vatNumber": "101600930",
+            "countryCode": "EE",
+            "name": "Test Company",
+            "address": "Test Address",
+        })
+        mock_client.service = mock_service
+
+        with TestClient(api) as client:
+            response = client.get("/vat?vat_number=EE101600930")
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertTrue(data["valid"])
+            self.assertEqual(data["country_code"], "EE")
+            self.assertEqual(data["name"], "Test Company")
+
+    @patch("vatcomply.api._vat_client")
     def test_vat_service_fault(self, mock_client):
-        # Mock SOAP fault
-        mock_client.return_value.service.checkVat.side_effect = Fault("SOAP fault")
+        from zeep.exceptions import Fault
+        mock_service = MagicMock()
+        mock_service.checkVat = AsyncMock(side_effect=Fault("INVALID_INPUT"))
+        mock_client.service = mock_service
 
         with TestClient(api) as client:
             response = client.get("/vat?vat_number=DE123456789")
@@ -48,16 +66,8 @@ class VATTest(TransactionTestCase):
             self.assertIsInstance(data, dict)
             self.assertIn("detail", data)
 
-    def test_validation_error_handling(self):
-        with TestClient(api) as client:
-            # Use real endpoint to test validation handling
-            response = client.get("/vat?vat_number=123")  # Invalid format
-            self.assertEqual(response.status_code, 400)
-            self.assertIsInstance(response.json(), dict)
-
     def test_non_field_validation_error(self):
         with TestClient(api) as client:
-            # Use real endpoint with non-field error
             response = client.get("/vat")  # Missing required field
             self.assertEqual(response.status_code, 422)
             self.assertIsInstance(response.json(), dict)
