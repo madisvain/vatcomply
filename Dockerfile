@@ -46,6 +46,10 @@ WORKDIR /app
 # Copy app (including .venv) from builder
 COPY --from=builder /app /app
 
+# Ensure venv is active for all commands
+ENV VIRTUAL_ENV=/app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
+
 # Setup cron (must be owned by root — cron service overrides USER below)
 COPY crontab /etc/cron.d/vatcomply-cron
 RUN chmod 0644 /etc/cron.d/vatcomply-cron && \
