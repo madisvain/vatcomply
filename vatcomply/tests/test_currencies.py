@@ -56,7 +56,7 @@ def test_metadata_fields_present(client):
     expected_fields = [
         "name", "symbol", "numeric_code", "currency_symbol",
         "currency_symbol_narrow", "decimal_places", "rounding",
-        "countries", "official_countries", "historical",
+        "countries",
     ]
     for field in expected_fields:
         assert field in usd, f"Missing field: {field}"
@@ -80,17 +80,6 @@ def test_countries_non_empty_for_major_currencies(client):
     assert len(data["USD"]["countries"]) > 0
     assert len(data["EUR"]["countries"]) > 0
 
-
-def test_historical_hrk(client):
-    response = client.get("/currencies?search=HRK")
-    hrk = response.json()["HRK"]
-    assert hrk["historical"]
-
-
-def test_non_historical_usd(client):
-    response = client.get("/currencies?search=USD")
-    usd = response.json()["USD"]
-    assert not usd["historical"]
 
 
 def test_currency_symbol_values(client):

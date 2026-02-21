@@ -48,8 +48,6 @@ class CurrencySchema(Serializer):
     decimal_places: int = 2
     rounding: int = 0
     countries: list[str] = []
-    official_countries: list[str] = []
-    historical: bool = False
 
 
 class GeolocateResponse(Serializer):

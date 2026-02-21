@@ -23,13 +23,9 @@ def _build_currency_to_territories():
     territory_currencies = get_global("territory_currencies")
 
     all_territories: dict[str, list[str]] = {}
-    tender_territories: dict[str, list[str]] = {}
-    # Track if a currency ever appeared in any territory (for historical detection)
-    ever_used: set[str] = set()
 
     for territory, currencies in territory_currencies.items():
         for currency_code, start, end, tender in currencies:
-            ever_used.add(currency_code)
             # Check if currently active
             if start:
                 start_date = date(*start)
@@ -40,14 +36,12 @@ def _build_currency_to_territories():
                 if end_date < today:
                     continue
             all_territories.setdefault(currency_code, []).append(territory)
-            if tender:
-                tender_territories.setdefault(currency_code, []).append(territory)
 
-    return all_territories, tender_territories, ever_used
+    return all_territories
 
 
 # Build cached lookup tables at import time
-_all_territories, _tender_territories, _ever_used = _build_currency_to_territories()
+_all_territories = _build_currency_to_territories()
 
 # Cache currency_fractions from babel
 _currency_fractions = get_global("currency_fractions")
@@ -70,12 +64,8 @@ def get_currency_metadata(code: str) -> dict:
     fractions = _currency_fractions.get(code, default_fractions)
     rounding = fractions[1]
 
-    # countries and official_countries from cached reverse mapping
+    # countries from cached reverse mapping
     countries = sorted(_all_territories.get(code, []))
-    official_countries = sorted(_tender_territories.get(code, []))
-
-    # historical: currency was used by some territory but no longer active anywhere
-    historical = code in _ever_used and len(countries) == 0
 
     return {
         "numeric_code": numeric_code,
@@ -84,6 +74,4 @@ def get_currency_metadata(code: str) -> dict:
         "decimal_places": decimal_places,
         "rounding": rounding,
         "countries": countries,
-        "official_countries": official_countries,
-        "historical": historical,
     }

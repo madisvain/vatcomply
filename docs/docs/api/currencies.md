@@ -36,8 +36,6 @@ The response is a JSON object keyed by currency code. Each value contains:
 | `decimal_places`        | integer      | Number of decimal places (e.g. `2` for USD, `0` for JPY)      |
 | `rounding`              | integer      | Rounding increment (usually `0`)                               |
 | `countries`             | array        | ISO 3166-1 alpha-2 codes of countries using this currency      |
-| `official_countries`    | array        | Countries where this currency is legal tender                  |
-| `historical`            | boolean      | `true` if the currency is no longer in active use              |
 
 ## Example Requests
 
@@ -71,9 +69,7 @@ GET /currencies?search=dollar
     "currency_symbol_narrow": null,
     "decimal_places": 2,
     "rounding": 0,
-    "countries": ["AD", "AT", "AX", "BE", "BL", "CY", "DE", "EA", "EE", "ES", "FI", "FR", "GF", "GP", "GR", "HR", "IC", "IE", "IT", "LT", "LU", "LV", "MC", "ME", "MF", "MQ", "MT", "NL", "PM", "PT", "RE", "SI", "SK", "SM", "VA", "XK", "YT"],
-    "official_countries": ["AD", "AT", "AX", "BE", "BL", "CY", "DE", "EA", "EE", "ES", "FI", "FR", "GF", "GP", "GR", "HR", "IC", "IE", "IT", "LT", "LU", "LV", "MC", "ME", "MF", "MQ", "MT", "NL", "PM", "PT", "RE", "SI", "SK", "SM", "VA", "XK", "YT"],
-    "historical": false
+    "countries": ["AD", "AT", "AX", "BE", "BL", "CY", "DE", "EA", "EE", "ES", "FI", "FR", "GF", "GP", "GR", "HR", "IC", "IE", "IT", "LT", "LU", "LV", "MC", "ME", "MF", "MQ", "MT", "NL", "PM", "PT", "RE", "SI", "SK", "SM", "VA", "XK", "YT"]
   },
   "USD": {
     "name": "US Dollar",
@@ -83,9 +79,7 @@ GET /currencies?search=dollar
     "currency_symbol_narrow": null,
     "decimal_places": 2,
     "rounding": 0,
-    "countries": ["AS", "BQ", "DG", "EC", "FM", "GU", "HT", "IO", "MH", "MP", "PA", "PR", "PW", "SV", "TC", "TL", "UM", "US", "VG", "VI", "ZW"],
-    "official_countries": ["AS", "BQ", "DG", "EC", "FM", "GU", "HT", "IO", "MH", "MP", "PA", "PR", "PW", "SV", "TC", "TL", "UM", "US", "VG", "VI", "ZW"],
-    "historical": false
+    "countries": ["AS", "BQ", "DG", "EC", "FM", "GU", "HT", "IO", "MH", "MP", "PA", "PR", "PW", "SV", "TC", "TL", "UM", "US", "VG", "VI", "ZW"]
   },
   "GBP": {
     "name": "British Pound",
@@ -95,9 +89,7 @@ GET /currencies?search=dollar
     "currency_symbol_narrow": null,
     "decimal_places": 2,
     "rounding": 0,
-    "countries": ["GB", "GG", "GS", "IM", "JE", "TA"],
-    "official_countries": ["GB", "GG", "GS", "IM", "JE", "TA"],
-    "historical": false
+    "countries": ["GB", "GG", "GS", "IM", "JE", "TA"]
   }
 }
 ```
