@@ -8,7 +8,7 @@ import logging
 
 import dpath
 import msgspec
-from django_bolt.exceptions import RequestValidationError
+from django_bolt.exceptions import HTTPException, RequestValidationError
 from django_bolt.middleware_response import MiddlewareResponse
 
 logger = logging.getLogger(__name__)
@@ -35,6 +35,8 @@ class CustomErrorMiddleware:
             return await self.get_response(request)
         except RequestValidationError as exc:
             return self._handle_validation_error(exc)
+        except HTTPException:
+            raise  # Let Django Bolt handle HTTP exceptions (BadRequest, NotFound, etc.)
         except Exception as exc:
             return self._handle_unexpected_error(exc)
 

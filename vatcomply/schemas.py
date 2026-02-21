@@ -44,6 +44,14 @@ class CurrencySchema(msgspec.Struct):
 
     name: str
     symbol: str
+    numeric_code: str = ""
+    currency_symbol: str = ""
+    currency_symbol_narrow: Optional[str] = None
+    decimal_places: int = 2
+    rounding: int = 0
+    countries: list[str] = []
+    official_countries: list[str] = []
+    historical: bool = False
 
 
 class GeolocateResponse(msgspec.Struct):
@@ -99,9 +107,3 @@ class RatesResponseSchema(msgspec.Struct):
     date: str
     base: str
     rates: dict[str, float]
-
-
-class ErrorResponse(msgspec.Struct):
-    """Error response."""
-
-    error: str

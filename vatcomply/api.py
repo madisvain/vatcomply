@@ -4,7 +4,7 @@ VATcomply API
 Provides VAT validation, currency rates, geolocation, and IBAN validation endpoints.
 """
 
-import contextlib
+import logging
 import os
 import re
 from decimal import Decimal
@@ -12,6 +12,7 @@ from typing import Annotated, Optional
 
 import pendulum
 import zeep
+import zeep.helpers
 from django.conf import settings
 from django_bolt import BoltAPI, Request
 from django_bolt.exceptions import BadRequest, NotFound
@@ -23,7 +24,12 @@ from schwifty import IBAN
 from urllib.parse import urljoin
 from zeep.transports import AsyncTransport
 
+logger = logging.getLogger(__name__)
+
+from django.db import models
+
 from vatcomply.constants import CurrencySymbol
+from vatcomply.currency_metadata import get_currency_metadata
 from vatcomply.error_handler import CustomErrorMiddleware
 from vatcomply.models import Country, Rate
 from vatcomply.schemas import (
@@ -38,7 +44,7 @@ from vatcomply.schemas import (
 
 # Validation constants
 VAT_PATTERN = r"^[A-Z]{2}[\dA-Z]{8,12}$"
-CURRENCY_SYMBOLS = [choice[0] for choice in CurrencySymbol.choices]
+CURRENCY_SYMBOLS = {choice[0] for choice in CurrencySymbol.choices}
 
 # Configure rate limiting based on settings
 RATE_LIMIT = "2/s" if settings.THROTTLE else None
@@ -56,10 +62,29 @@ api = BoltAPI(
 
 @api.get("/countries", summary="Get list of countries")
 @rate_limit(RATE_LIMIT)
-async def countries(request: Request) -> list[CountrySchema]:
+async def countries(
+    request: Request,
+    search: Annotated[Optional[str], Query(description="Search by country name, ISO2, or ISO3 code")] = None,
+    region: Annotated[Optional[str], Query(description="Filter by region (e.g. Europe)")] = None,
+    subregion: Annotated[Optional[str], Query(description="Filter by subregion (e.g. Northern Europe)")] = None,
+    currency: Annotated[Optional[str], Query(description="Filter by currency code (e.g. EUR)")] = None,
+) -> list[CountrySchema]:
     """Fetches a list of countries with their details."""
+    qs = Country.objects.order_by("iso2")
+    if search:
+        qs = qs.filter(
+            models.Q(name__icontains=search)
+            | models.Q(iso2__icontains=search)
+            | models.Q(iso3__icontains=search)
+        )
+    if region:
+        qs = qs.filter(region__iexact=region)
+    if subregion:
+        qs = qs.filter(subregion__iexact=subregion)
+    if currency:
+        qs = qs.filter(currency__iexact=currency)
     result = []
-    async for country in Country.objects.order_by("iso2").all():
+    async for country in qs:
         result.append(
             CountrySchema(
                 iso2=country.iso2,
@@ -82,14 +107,24 @@ async def countries(request: Request) -> list[CountrySchema]:
 
 @api.get("/currencies", summary="Get list of supported currencies")
 @rate_limit(RATE_LIMIT)
-def get_currencies(request: Request) -> dict[str, CurrencySchema]:
-    """Returns all supported currencies."""
+def get_currencies(
+    request: Request,
+    search: Annotated[Optional[str], Query(description="Search by currency code or name")] = None,
+) -> dict[str, CurrencySchema]:
+    """Returns all supported currencies, optionally filtered by a search term."""
     currencies = {}
     for choice in CurrencySymbol.choices:
         symbol = choice[0]
+        name = choice[1]
+        if search:
+            term = search.lower()
+            if term not in symbol.lower() and term not in name.lower():
+                continue
+        meta = get_currency_metadata(symbol)
         currencies[symbol] = CurrencySchema(
-            name=choice[1],
+            name=name,
             symbol=symbol,
+            **meta,
         )
     return currencies
 
@@ -164,23 +199,27 @@ def validate_iban(
     )
 
 
-# Module-level WSDL path and cached client to avoid blocking WSDL parsing on every request
+# Lazy-initialized WSDL client to avoid crash at import if WSDL file is missing
 _VIES_WSDL_PATH = os.path.join(os.path.dirname(__file__), "wsdl", "checkVatService.wsdl")
-_vat_transport = AsyncTransport(timeout=30)
-_vat_client = zeep.AsyncClient(wsdl=_VIES_WSDL_PATH, transport=_vat_transport)
+_vat_client = None
 
 
-@contextlib.asynccontextmanager
-async def _vat_check_context(vat_number: str):
-    """Run VAT check with proper context management to avoid OpenTelemetry issues."""
-    try:
-        result = await _vat_client.service.checkVat(
-            countryCode=vat_number[:2], vatNumber=vat_number[2:]
-        )
-        response = zeep.helpers.serialize_object(result)
-        yield response
-    finally:
-        pass
+def _get_vat_client():
+    """Lazy-init the zeep AsyncClient on first use."""
+    global _vat_client
+    if _vat_client is None:
+        transport = AsyncTransport(timeout=30)
+        _vat_client = zeep.AsyncClient(wsdl=_VIES_WSDL_PATH, transport=transport)
+    return _vat_client
+
+
+async def _vat_check(vat_number: str):
+    """Run VAT check and return serialized response."""
+    client = _get_vat_client()
+    result = await client.service.checkVat(
+        countryCode=vat_number[:2], vatNumber=vat_number[2:]
+    )
+    return zeep.helpers.serialize_object(result)
 
 
 @api.get("/vat", summary="Validate VAT number")
@@ -205,15 +244,14 @@ async def validate_vat(
         )
 
     try:
-        # Use context manager to properly handle OpenTelemetry context
-        async with _vat_check_context(vat_number) as response:
-            return ValidateVATResponseSchema(
-                valid=response["valid"],
-                vat_number=response["vatNumber"],
-                name=response["name"],
-                address=(response["address"].strip() if response["address"] else ""),
-                country_code=response["countryCode"],
-            )
+        response = await _vat_check(vat_number)
+        return ValidateVATResponseSchema(
+            valid=response["valid"],
+            vat_number=response["vatNumber"],
+            name=response["name"],
+            address=(response["address"].strip() if response["address"] else ""),
+            country_code=response["countryCode"],
+        )
     except zeep.exceptions.Fault as e:
         raise BadRequest(detail=e.message)
 
@@ -244,13 +282,15 @@ async def rates(
             if symbol not in CURRENCY_SYMBOLS:
                 raise BadRequest(detail=f"Currency '{symbol}' is not supported.")
 
-    # Parse and validate date
+    # Parse and validate date (enforce YYYY-MM-DD format)
     query_date = pendulum.now().date()
     if date:
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
+            raise BadRequest(detail=f"Invalid date format: '{date}'. Expected format: YYYY-MM-DD")
         try:
             query_date = pendulum.parse(date, strict=True).date()
         except (ValueError, pendulum.parsing.exceptions.ParserError):
-            raise BadRequest(detail=f"Invalid date format: '{date}'. Expected format: YYYY-MM-DD")
+            raise BadRequest(detail=f"Invalid date: '{date}'. Expected a valid date in YYYY-MM-DD format.")
 
     # Get the rates data
     record = await Rate.objects.filter(date__lte=query_date).order_by("-date").afirst()
