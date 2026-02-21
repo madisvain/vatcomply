@@ -1,15 +1,13 @@
 """
 Response schemas for VATcomply API.
 
-Uses msgspec.Struct for high-performance serialization with Django Bolt.
-Validation logic has been moved to the API endpoints.
+Uses Django Bolt's Serializer for model integration and high-performance serialization.
 """
 
-import msgspec
-from typing import Optional
+from django_bolt.serializers import Serializer
 
 
-class RootResponseSchema(msgspec.Struct):
+class RootResponseSchema(Serializer):
     """Root API information response."""
 
     name: str
@@ -21,7 +19,7 @@ class RootResponseSchema(msgspec.Struct):
     contact: str
 
 
-class CountrySchema(msgspec.Struct):
+class CountrySchema(Serializer):
     """Country details response."""
 
     iso2: str
@@ -34,19 +32,19 @@ class CountrySchema(msgspec.Struct):
     tld: str
     region: str
     subregion: str
-    latitude: float  # msgspec uses float instead of Decimal
+    latitude: float
     longitude: float
     emoji: str
 
 
-class CurrencySchema(msgspec.Struct):
+class CurrencySchema(Serializer):
     """Currency information response."""
 
     name: str
     symbol: str
     numeric_code: str = ""
     currency_symbol: str = ""
-    currency_symbol_narrow: Optional[str] = None
+    currency_symbol_narrow: str | None = None
     decimal_places: int = 2
     rounding: int = 0
     countries: list[str] = []
@@ -54,7 +52,7 @@ class CurrencySchema(msgspec.Struct):
     historical: bool = False
 
 
-class GeolocateResponse(msgspec.Struct):
+class GeolocateResponse(Serializer):
     """IP geolocation response."""
 
     iso2: str
@@ -71,10 +69,10 @@ class GeolocateResponse(msgspec.Struct):
     latitude: float
     longitude: float
     emoji: str
-    ip: Optional[str] = None
+    ip: str | None = None
 
 
-class ValidateIBANResponseSchema(msgspec.Struct):
+class ValidateIBANResponseSchema(Serializer):
     """IBAN validation response."""
 
     valid: bool
@@ -91,17 +89,17 @@ class ValidateIBANResponseSchema(msgspec.Struct):
     in_sepa_zone: bool
 
 
-class ValidateVATResponseSchema(msgspec.Struct):
+class ValidateVATResponseSchema(Serializer):
     """VAT validation response."""
 
     valid: bool
     vat_number: str
     country_code: str
-    name: Optional[str] = None
+    name: str | None = None
     address: str = ""
 
 
-class RatesResponseSchema(msgspec.Struct):
+class RatesResponseSchema(Serializer):
     """Exchange rates response."""
 
     date: str

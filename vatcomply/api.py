@@ -8,7 +8,7 @@ import logging
 import os
 import re
 from decimal import Decimal
-from typing import Annotated, Optional
+from typing import Annotated
 
 import pendulum
 import zeep
@@ -16,6 +16,7 @@ import zeep.helpers
 from django.conf import settings
 from django_bolt import BoltAPI, Request
 from django_bolt.exceptions import BadRequest, NotFound
+from django_bolt.health import register_health_checks
 from django_bolt.middleware import rate_limit
 from django_bolt.openapi import OpenAPIConfig
 from django_bolt.params import Query
@@ -47,7 +48,11 @@ VAT_PATTERN = r"^[A-Z]{2}[\dA-Z]{8,12}$"
 CURRENCY_SYMBOLS = {choice[0] for choice in CurrencySymbol.choices}
 
 # Configure rate limiting based on settings
-RATE_LIMIT = "2/s" if settings.THROTTLE else None
+if settings.THROTTLE:
+    throttle = rate_limit(rps=2, burst=4)
+else:
+    def throttle(f):
+        return f
 
 # Create the API instance
 api = BoltAPI(
@@ -59,15 +64,18 @@ api = BoltAPI(
     ),
 )
 
+# Register health check endpoints (/health, /ready)
+register_health_checks(api)
+
 
 @api.get("/countries", summary="Get list of countries")
-@rate_limit(RATE_LIMIT)
+@throttle
 async def countries(
     request: Request,
-    search: Annotated[Optional[str], Query(description="Search by country name, ISO2, or ISO3 code")] = None,
-    region: Annotated[Optional[str], Query(description="Filter by region (e.g. Europe)")] = None,
-    subregion: Annotated[Optional[str], Query(description="Filter by subregion (e.g. Northern Europe)")] = None,
-    currency: Annotated[Optional[str], Query(description="Filter by currency code (e.g. EUR)")] = None,
+    search: Annotated[str | None, Query(description="Search by country name, ISO2, or ISO3 code")] = None,
+    region: Annotated[str | None, Query(description="Filter by region (e.g. Europe)")] = None,
+    subregion: Annotated[str | None, Query(description="Filter by subregion (e.g. Northern Europe)")] = None,
+    currency: Annotated[str | None, Query(description="Filter by currency code (e.g. EUR)")] = None,
 ) -> list[CountrySchema]:
     """Fetches a list of countries with their details."""
     qs = Country.objects.order_by("iso2")
@@ -85,31 +93,15 @@ async def countries(
         qs = qs.filter(currency__iexact=currency)
     result = []
     async for country in qs:
-        result.append(
-            CountrySchema(
-                iso2=country.iso2,
-                iso3=country.iso3,
-                name=country.name,
-                numeric_code=country.numeric_code,
-                phone_code=country.phone_code,
-                capital=country.capital,
-                currency=country.currency,
-                tld=country.tld,
-                region=country.region,
-                subregion=country.subregion,
-                latitude=float(country.latitude),
-                longitude=float(country.longitude),
-                emoji=country.emoji,
-            )
-        )
+        result.append(CountrySchema.from_model(country))
     return result
 
 
 @api.get("/currencies", summary="Get list of supported currencies")
-@rate_limit(RATE_LIMIT)
+@throttle
 def get_currencies(
     request: Request,
-    search: Annotated[Optional[str], Query(description="Search by currency code or name")] = None,
+    search: Annotated[str | None, Query(description="Search by currency code or name")] = None,
 ) -> dict[str, CurrencySchema]:
     """Returns all supported currencies, optionally filtered by a search term."""
     currencies = {}
@@ -130,7 +122,7 @@ def get_currencies(
 
 
 @api.get("/geolocate", summary="Geolocate by IP")
-@rate_limit(RATE_LIMIT)
+@throttle
 async def geolocate(request: Request) -> GeolocateResponse:
     """Geolocates the user based on CDN headers (Cloudflare or Bunny.net)."""
     # HTTP headers are case-insensitive; use lowercase for ASGI compatibility
@@ -170,7 +162,7 @@ async def geolocate(request: Request) -> GeolocateResponse:
 
 
 @api.get("/iban", summary="Validate IBAN")
-@rate_limit(RATE_LIMIT)
+@throttle
 def validate_iban(
     request: Request,
     iban: Annotated[str, Query(description="IBAN to validate")],
@@ -223,7 +215,7 @@ async def _vat_check(vat_number: str):
 
 
 @api.get("/vat", summary="Validate VAT number")
-@rate_limit(RATE_LIMIT)
+@throttle
 async def validate_vat(
     request: Request,
     vat_number: Annotated[str, Query(description="VAT number to validate")],
@@ -257,15 +249,15 @@ async def validate_vat(
 
 
 @api.get("/rates", summary="Get exchange rates")
-@rate_limit(RATE_LIMIT)
+@throttle
 async def rates(
     request: Request,
     base: Annotated[str, Query(description="Base currency for rates")] = "EUR",
     symbols: Annotated[
-        Optional[str], Query(description="Comma-separated currency symbols to filter")
+        str | None, Query(description="Comma-separated currency symbols to filter")
     ] = None,
     date: Annotated[
-        Optional[str],
+        str | None,
         Query(description="Date for historical rates (YYYY-MM-DD)"),
     ] = None,
 ) -> RatesResponseSchema:
@@ -322,7 +314,7 @@ async def rates(
 
 
 @api.get("/", summary="API Information")
-@rate_limit(RATE_LIMIT)
+@throttle
 async def root(request: Request) -> RootResponseSchema:
     """Returns general information about the API, its status, and available endpoints."""
     # Static endpoint list for Django Bolt (simpler than introspection)

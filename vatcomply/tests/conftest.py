@@ -3,8 +3,12 @@
 from unittest.mock import patch, MagicMock
 
 import pytest
+from django.conf import settings
 from django.core.management import call_command
 from django_bolt.testing import TestClient
+
+# Disable rate limiting during tests (must be set before api module import)
+settings.THROTTLE = False
 
 from vatcomply.api import api
 from vatcomply.models import Country, Rate

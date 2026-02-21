@@ -2,16 +2,13 @@
 Custom error handler middleware for VATcomply API.
 
 Maintains the existing {field: [messages]} error format for backwards compatibility.
+Unexpected exceptions are handled by Bolt's built-in exception handler.
 """
-
-import logging
 
 import dpath
 import msgspec
-from django_bolt.exceptions import HTTPException, RequestValidationError
+from django_bolt.exceptions import RequestValidationError
 from django_bolt.middleware_response import MiddlewareResponse
-
-logger = logging.getLogger(__name__)
 
 
 def _make_json_response(data: dict, status_code: int) -> MiddlewareResponse:
@@ -25,7 +22,7 @@ def _make_json_response(data: dict, status_code: int) -> MiddlewareResponse:
 
 
 class CustomErrorMiddleware:
-    """Convert validation errors to {field: [messages]} format and catch unhandled exceptions."""
+    """Convert validation errors to {field: [messages]} format."""
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -35,10 +32,6 @@ class CustomErrorMiddleware:
             return await self.get_response(request)
         except RequestValidationError as exc:
             return self._handle_validation_error(exc)
-        except HTTPException:
-            raise  # Let Django Bolt handle HTTP exceptions (BadRequest, NotFound, etc.)
-        except Exception as exc:
-            return self._handle_unexpected_error(exc)
 
     @staticmethod
     def _handle_validation_error(exc):
@@ -65,8 +58,3 @@ class CustomErrorMiddleware:
                 dpath.new(errors, path, [message])
 
         return _make_json_response(errors, status_code=422)
-
-    @staticmethod
-    def _handle_unexpected_error(exc):
-        logger.exception("Unhandled exception in API: %s", exc)
-        return _make_json_response({"detail": "Internal server error"}, status_code=500)
