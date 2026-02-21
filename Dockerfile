@@ -24,7 +24,7 @@ RUN uv sync --frozen --no-dev
 
 # Copy application code and collect static files
 COPY . .
-RUN SECRET_KEY=build-only uv run python manage.py collectstatic --noinput
+RUN SECRET_KEY=build-only uv run --no-sync python manage.py collectstatic --noinput
 
 
 # Runtime stage - minimal image
@@ -44,8 +44,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.6 /uv /usr/local/bin/uv
 
 WORKDIR /app
 
-# Copy virtual environment and app from builder
-COPY --from=builder /app/.venv /app/.venv
+# Copy app (including .venv) from builder
 COPY --from=builder /app /app
 
 # Setup cron (must be owned by root — cron service overrides USER below)

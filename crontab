@@ -2,7 +2,7 @@
 # This file should be installed in the container or server running the application
 
 # Load exchange rates every hour at minute 10
-10 * * * * cd /app && uv run python manage.py load_rates --last-90-days >> /var/log/cron.log 2>&1
+10 * * * * cd /app && uv run --no-sync python manage.py load_rates --last-90-days >> /var/log/cron.log 2>&1
 
 # Load countries once daily at 2am
-0 2 * * * cd /app && uv run python manage.py load_countries >> /var/log/cron.log 2>&1
+0 2 * * * cd /app && uv run --no-sync python manage.py load_countries >> /var/log/cron.log 2>&1
