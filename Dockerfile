@@ -10,7 +10,6 @@ ENV UV_SYSTEM_PYTHON=1
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv
@@ -53,8 +52,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Setup cron (must be owned by root — cron service overrides USER below)
 COPY crontab /etc/cron.d/vatcomply-cron
 RUN chmod 0644 /etc/cron.d/vatcomply-cron && \
-    crontab /etc/cron.d/vatcomply-cron && \
-    touch /var/log/cron.log
+    crontab /etc/cron.d/vatcomply-cron
 
 # Make startup script executable
 RUN chmod +x /app/start.sh
@@ -65,5 +63,8 @@ RUN useradd --create-home --shell /bin/bash appuser && \
 USER appuser
 
 EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/')" || exit 1
 
 CMD ["/app/start.sh"]

@@ -1,6 +1,7 @@
 services:
   web:
     build: .
+    image: vatcomply
     ports:
       - "8000:8000"
     env_file:
@@ -16,8 +17,8 @@ services:
         condition: service_completed_successfully
 
   cron:
-    build: .
-    command: cron -f
+    image: vatcomply
+    command: sh -c "env > /app/.env.docker && cron -f"
     user: root  # cron daemon requires root
     env_file:
       - .env
@@ -31,8 +32,8 @@ services:
         condition: service_completed_successfully
 
   migrate:
-    build: .
-    command: sh -c "python manage.py migrate && python manage.py load_countries && python manage.py load_rates"
+    image: vatcomply
+    command: sh -c "python manage.py migrate && python manage.py load_countries && python manage.py load_rates --last-90-days"
     user: root  # needs write access to create db in shared volume
     env_file:
       - .env

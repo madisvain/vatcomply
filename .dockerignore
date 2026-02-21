@@ -51,3 +51,9 @@ docs/
 *.bak
 .DS_Store
 Thumbs.db
+
+# Unnecessary for Docker image
+Makefile
+railway.toml
+runtime.txt
+.claude/
