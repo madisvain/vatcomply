@@ -1,6 +1,7 @@
 ---
 title: Rate Limiting & Usage
 description: Rate limits and HTTP status codes for the VATcomply API
+icon: lucide/gauge
 ---
 
 # Rate Limiting & Usage

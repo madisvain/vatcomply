@@ -1,6 +1,7 @@
 ---
 title: Foreign Exchange Rates
 description: Daily foreign exchange rates from the European Central Bank with historical data
+icon: lucide/arrow-left-right
 ---
 
 # Foreign Exchange Rates
@@ -41,7 +42,60 @@ GET /rates
 |---------|--------|------------------------------------------------|
 | `date`  | string | Date of the rates in `YYYY-MM-DD` format       |
 | `base`  | string | Base currency code                             |
-| `rates` | object | Map of currency codes to exchange rate values   |
+| `rates` | object | Exchange rates keyed by currency code (see structure below) |
+
+### `rates` object
+
+Each key is a 3-letter currency code and the value is the exchange rate as a number relative to the `base` currency.
+
+```json
+{
+  "<CURRENCY_CODE>": <number>,
+  ...
+}
+```
+
+For example, with `base=EUR`:
+
+| Key   | Value    | Meaning                    |
+|-------|----------|----------------------------|
+| `USD` | `1.0856` | 1 EUR = 1.0856 USD         |
+| `GBP` | `0.8642` | 1 EUR = 0.8642 GBP         |
+| `JPY` | `156.92` | 1 EUR = 156.92 JPY         |
+
+See the full list of [supported currencies](#supported-currencies) below.
+
+## Supported Currencies
+
+The rates are sourced from the European Central Bank and cover the following 33 currencies:
+
+| Code | Currency               | Code | Currency               |
+|------|------------------------|------|------------------------|
+| EUR  | Euro (base)            | INR  | Indian Rupee           |
+| USD  | US Dollar              | KRW  | South Korean Won       |
+| JPY  | Japanese Yen           | MXN  | Mexican Peso           |
+| BGN  | Bulgarian Lev          | MYR  | Malaysian Ringgit      |
+| CZK  | Czech Koruna           | NZD  | New Zealand Dollar     |
+| DKK  | Danish Krone           | PHP  | Philippine Peso        |
+| GBP  | British Pound          | SGD  | Singapore Dollar       |
+| HUF  | Hungarian Forint       | THB  | Thai Baht              |
+| PLN  | Polish Zloty           | ZAR  | South African Rand     |
+| RON  | Romanian Leu           | HRK  | Croatian Kuna ^1^      |
+| SEK  | Swedish Krona          | RUB  | Russian Ruble ^2^      |
+| CHF  | Swiss Franc            |      |                        |
+| ISK  | Icelandic Krona        |      |                        |
+| NOK  | Norwegian Krone        |      |                        |
+| TRY  | Turkish Lira           |      |                        |
+| AUD  | Australian Dollar      |      |                        |
+| BRL  | Brazilian Real         |      |                        |
+| CAD  | Canadian Dollar        |      |                        |
+| CNY  | Chinese Yuan           |      |                        |
+| HKD  | Hong Kong Dollar       |      |                        |
+| IDR  | Indonesian Rupiah      |      |                        |
+| ILS  | Israeli New Shekel     |      |                        |
+
+1. HRK - Historical only. Croatia joined the Eurozone in 2023.
+2. RUB - Historical only. Suspended due to sanctions in 2022.
 
 ## Base Currency Conversion
 

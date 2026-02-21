@@ -1,6 +1,7 @@
 ---
 title: IBAN Validation
 description: International Bank Account Number validation with detailed information
+icon: lucide/landmark
 ---
 
 # IBAN Validation

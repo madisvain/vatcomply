@@ -1,15 +1,16 @@
 ---
 title: IP Geolocation
 description: Automatic country detection from visitor's IP address
+icon: lucide/map-pin
 ---
 
 # Visitor IP Geolocation
 
-Automatic country detection from the visitor's IP address using CDN headers (Cloudflare or Bunny.net).
+Automatic country detection from the visitor's IP address using CDN headers ([Cloudflare](https://www.cloudflare.com/) or [Bunny.net](https://bunny.net/)).
 
 !!! info "CDN Requirement"
 
-    This endpoint relies on CDN-provided headers (`CF-IPCountry` from Cloudflare or `Cdn-RequestCountryCode` from Bunny.net) to determine the visitor's country. It will not work without a supported CDN in front of the API.
+    This endpoint relies on CDN-provided headers (`CF-IPCountry` from [Cloudflare](https://www.cloudflare.com/) or `Cdn-RequestCountryCode` from [Bunny.net](https://bunny.net/)) to determine the visitor's country. It will not work without a supported CDN in front of the API.
 
 ## Endpoint
 

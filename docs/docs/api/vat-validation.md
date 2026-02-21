@@ -1,6 +1,7 @@
 ---
 title: VAT Number Validation
 description: Validate European VAT numbers using the official VIES database
+icon: lucide/file-check
 ---
 
 # VAT Number Validation

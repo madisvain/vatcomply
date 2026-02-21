@@ -1,6 +1,7 @@
 ---
 title: API Root
 description: API discovery endpoint with status and available endpoints
+icon: lucide/route
 ---
 
 # API Root
