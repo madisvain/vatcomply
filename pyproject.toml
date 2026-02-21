@@ -18,10 +18,9 @@ dependencies = [
     "zeep",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "coverage",
-]
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "vatcomply.settings"
+pythonpath = ["."]
 
 [tool.isort]
 profile = "black"
@@ -36,5 +35,8 @@ venv = ".venv"
 
 [dependency-groups]
 dev = [
+    "coverage>=7.13.4",
+    "pytest>=9.0.2",
+    "pytest-django>=4.12.0",
     "zensical>=0.0.23",
 ]

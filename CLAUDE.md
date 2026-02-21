@@ -60,14 +60,19 @@ python manage.py load_rates --last-90-days  # Load last 90 days of rates
 
 ```shell
 # Run all tests
-make test     # or: python manage.py test --keepdb
+make test     # or: uv run pytest
 
-# Run specific test file or class
-python manage.py test vatcomply.tests.test_rates  # Run tests in file
-python manage.py test vatcomply.tests.test_rates.RatesTest  # Run specific test class
+# Run specific test file
+uv run pytest vatcomply/tests/test_rates.py
+
+# Run a specific test function
+uv run pytest vatcomply/tests/test_rates.py::test_latest_api
+
+# Verbose output
+uv run pytest -v
 
 # Test with coverage report
-make coverage  # or: coverage run manage.py test --keepdb && coverage report -m
+make coverage  # or: uv run coverage run -m pytest && uv run coverage report -m
 ```
 
 ## Project Architecture

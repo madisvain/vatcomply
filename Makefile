@@ -16,10 +16,10 @@ migrations:
 	uv run python manage.py makemigrations
 
 test:
-	uv run python manage.py test --keepdb
+	uv run pytest
 
 coverage:
-	uv run coverage run manage.py test --keepdb && uv run coverage report -m
+	uv run coverage run -m pytest && uv run coverage report -m
 
 up:
 	colima start && docker compose up --build

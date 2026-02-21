@@ -1,44 +1,40 @@
-from django.test import TransactionTestCase
-from django.conf import settings
 from urllib.parse import urljoin
 
-from django_bolt.testing import TestClient
+import pytest
+from django.conf import settings
 
-from vatcomply.api import api
 
+@pytest.mark.django_db(transaction=True)
+def test_root_endpoint(client):
+    """Test the root endpoint returns correct API information"""
+    response = client.get("/")
+    assert response.status_code == 200
 
-class RootTest(TransactionTestCase):
-    def test_root_endpoint(self):
-        """Test the root endpoint returns correct API information"""
-        with TestClient(api) as client:
-            response = client.get("/")
-            self.assertEqual(response.status_code, 200)
+    data = response.json()
 
-            data = response.json()
+    # Check all required fields are present
+    assert isinstance(data, dict)
+    assert "name" in data
+    assert "version" in data
+    assert "status" in data
+    assert "description" in data
+    assert "documentation" in data
+    assert "endpoints" in data
+    assert "contact" in data
 
-            # Check all required fields are present
-            self.assertIsInstance(data, dict)
-            self.assertIn("name", data)
-            self.assertIn("version", data)
-            self.assertIn("status", data)
-            self.assertIn("description", data)
-            self.assertIn("documentation", data)
-            self.assertIn("endpoints", data)
-            self.assertIn("contact", data)
+    # Check specific values
+    assert data["name"] == "VATComply API"
+    assert data["version"] == "1.0.0"
+    assert data["status"] == "operational"
+    assert data["description"] == "VAT validation API, geolocation tools, and ECB exchange rates"
+    assert data["documentation"] == urljoin(settings.BASE_URL, "docs")
+    assert data["contact"] == "support@vatcomply.com"
 
-            # Check specific values
-            self.assertEqual(data["name"], "VATComply API")
-            self.assertEqual(data["version"], "1.0.0")
-            self.assertEqual(data["status"], "operational")
-            self.assertEqual(data["description"], "VAT validation API, geolocation tools, and ECB exchange rates")
-            self.assertEqual(data["documentation"], urljoin(settings.BASE_URL, "docs"))
-            self.assertEqual(data["contact"], "support@vatcomply.com")
+    # Check endpoints
+    assert isinstance(data["endpoints"], dict)
+    assert len(data["endpoints"]) > 0
 
-            # Check endpoints
-            self.assertIsInstance(data["endpoints"], dict)
-            self.assertGreater(len(data["endpoints"]), 0)
-
-            # Check some known endpoints are present and properly formatted
-            expected_endpoints = ["countries", "currencies", "geolocate", "vat", "rates"]
-            for endpoint in expected_endpoints:
-                self.assertIn(endpoint, data["endpoints"])
+    # Check some known endpoints are present and properly formatted
+    expected_endpoints = ["countries", "currencies", "geolocate", "vat", "rates"]
+    for endpoint in expected_endpoints:
+        assert endpoint in data["endpoints"]
