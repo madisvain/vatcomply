@@ -48,7 +48,7 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /app /app
 
-# Setup cron
+# Setup cron (must be owned by root — cron service overrides USER below)
 COPY crontab /etc/cron.d/vatcomply-cron
 RUN chmod 0644 /etc/cron.d/vatcomply-cron && \
     crontab /etc/cron.d/vatcomply-cron && \
@@ -57,7 +57,7 @@ RUN chmod 0644 /etc/cron.d/vatcomply-cron && \
 # Make startup script executable
 RUN chmod +x /app/start.sh
 
-# Create non-root user
+# Create non-root user for the web service
 RUN useradd --create-home --shell /bin/bash appuser && \
     chown -R appuser:appuser /app
 USER appuser

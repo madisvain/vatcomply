@@ -18,6 +18,7 @@ services:
   cron:
     build: .
     command: cron -f
+    user: root  # cron daemon requires root
     env_file:
       - .env
     environment:
@@ -32,6 +33,7 @@ services:
   migrate:
     build: .
     command: sh -c "uv run python manage.py migrate && uv run python manage.py load_countries && uv run python manage.py load_rates"
+    user: root  # needs write access to create db in shared volume
     env_file:
       - .env
     environment:
