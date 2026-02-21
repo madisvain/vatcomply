@@ -1,3 +1,5 @@
+import logging
+
 import httpx
 import pendulum
 
@@ -6,6 +8,8 @@ from django.core.management.base import BaseCommand
 from xml.etree import ElementTree
 
 from vatcomply.models import Rate
+
+logger = logging.getLogger(__name__)
 
 BATCH_SIZE = 500
 REQUEST_TIMEOUT = 60
@@ -31,6 +35,7 @@ class Command(BaseCommand):
             r = httpx.get(url, timeout=REQUEST_TIMEOUT)
             r.raise_for_status()
         except httpx.HTTPError as e:
+            logger.warning("Failed to fetch rates data from ECB: %s", e)
             self.stderr.write(f"Failed to fetch rates data: {e}")
             return
 

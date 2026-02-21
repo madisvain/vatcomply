@@ -200,7 +200,7 @@ def _get_vat_client():
     """Lazy-init the zeep AsyncClient on first use."""
     global _vat_client
     if _vat_client is None:
-        transport = AsyncTransport(timeout=30)
+        transport = AsyncTransport(timeout=10)
         _vat_client = zeep.AsyncClient(wsdl=_VIES_WSDL_PATH, transport=transport)
     return _vat_client
 
@@ -245,6 +245,7 @@ async def validate_vat(
             country_code=response["countryCode"],
         )
     except zeep.exceptions.Fault as e:
+        logger.error("VIES SOAP fault for VAT %s: %s", vat_number, e.message)
         raise BadRequest(detail=e.message)
 
 
@@ -298,9 +299,9 @@ async def rates(
             raise BadRequest(detail=f"Base currency '{base}' not available in current rates data")
         base_rate = Decimal(str(rates_data[base]))
         rates_data = {
-            currency: float(Decimal(str(rate)) / base_rate) for currency, rate in rates_data.items()
+            currency: float(round(Decimal(str(rate)) / base_rate, 6)) for currency, rate in rates_data.items()
         }
-        rates_data["EUR"] = float(Decimal("1") / base_rate)
+        rates_data["EUR"] = float(round(Decimal("1") / base_rate, 6))
 
     # Filter symbols
     if symbols_list:
