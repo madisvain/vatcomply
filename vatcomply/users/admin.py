@@ -28,6 +28,5 @@ class UserAdmin(BaseUserAdmin):
             },
         ),
     ]
-    search_fields = ["email"]
     ordering = ["email"]
     readonly_fields = ["last_login"]

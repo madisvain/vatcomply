@@ -6,7 +6,6 @@ dependencies = [
     "babel",
     "django",
     "django-bolt",
-    "django-cors-headers",
     "django-environ",
     "dpath",
     "httpx<0.28",

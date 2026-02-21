@@ -62,6 +62,6 @@ class Command(BaseCommand):
         )
 
         self.stdout.write(
-            f"Loading rates finished! Processed {len(batch)} dates, "
-            f"created {len(created)} new rates."
+            f"Loading rates finished! Processed {len(batch)} dates "
+            f"({len(created)} new, {len(batch) - len(created)} already existed)."
         )

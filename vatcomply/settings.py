@@ -27,7 +27,7 @@ DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
-# CORS - Intentionally open: this is a public API service
+# CORS
 CORS_ALLOW_ALL_ORIGINS = True
 
 # Throttling
@@ -43,14 +43,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "corsheaders",
     "django_bolt",
     "vatcomply",
     "vatcomply.users",
 ]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -77,9 +75,6 @@ TEMPLATES = [
         },
     },
 ]
-
-WSGI_APPLICATION = "vatcomply.wsgi.application"
-
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -127,6 +122,7 @@ BASE_URL = env("BASE_URL", default="http://localhost:8000")
 
 # Security settings for production
 if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
@@ -144,9 +140,6 @@ COUNTRIES_URL = "https://raw.githubusercontent.com/dr5hn/countries-states-cities
 # ECB
 RATES_LAST_90_DAYS_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml"
 RATES_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml"
-
-# VIES
-VIES_WSDL = "https://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl"
 
 # Sentry
 def before_send(event, hint):
