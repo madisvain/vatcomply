@@ -32,17 +32,17 @@ class VATTest(TestCase):
             self.assertIn("detail", data)
             self.assertIn("GB", data["detail"])
 
-    @patch("vatcomply.api._vat_client")
-    def test_vat_valid_number(self, mock_client):
-        mock_service = MagicMock()
-        mock_service.checkVat = AsyncMock(return_value={
+    @patch("vatcomply.api._get_vat_client")
+    def test_vat_valid_number(self, mock_get_client):
+        mock_client = MagicMock()
+        mock_client.service.checkVat = AsyncMock(return_value={
             "valid": True,
             "vatNumber": "101600930",
             "countryCode": "EE",
             "name": "Test Company",
             "address": "Test Address",
         })
-        mock_client.service = mock_service
+        mock_get_client.return_value = mock_client
 
         with TestClient(api) as client:
             response = client.get("/vat?vat_number=EE101600930")
@@ -52,12 +52,12 @@ class VATTest(TestCase):
             self.assertEqual(data["country_code"], "EE")
             self.assertEqual(data["name"], "Test Company")
 
-    @patch("vatcomply.api._vat_client")
-    def test_vat_service_fault(self, mock_client):
+    @patch("vatcomply.api._get_vat_client")
+    def test_vat_service_fault(self, mock_get_client):
         from zeep.exceptions import Fault
-        mock_service = MagicMock()
-        mock_service.checkVat = AsyncMock(side_effect=Fault("INVALID_INPUT"))
-        mock_client.service = mock_service
+        mock_client = MagicMock()
+        mock_client.service.checkVat = AsyncMock(side_effect=Fault("INVALID_INPUT"))
+        mock_get_client.return_value = mock_client
 
         with TestClient(api) as client:
             response = client.get("/vat?vat_number=DE123456789")

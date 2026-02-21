@@ -1,14 +1,28 @@
-from django.test import TestCase
+from unittest.mock import patch, MagicMock
+
+from django.test import TransactionTestCase
 from django.core.management import call_command
 
 from django_bolt.testing import TestClient
 
 from vatcomply.api import api
+from vatcomply.tests.fixtures import MOCK_RATES_XML
 
 
-class RatesTest(TestCase):
-    def setUp(self):
+def _mock_load_rates():
+    """Load rates from fixture instead of hitting ECB."""
+    mock_response = MagicMock()
+    mock_response.content = MOCK_RATES_XML
+    mock_response.raise_for_status = MagicMock()
+    with patch("httpx.get", return_value=mock_response):
         call_command("load_rates")
+
+
+class RatesTest(TransactionTestCase):
+    # Uses TransactionTestCase because setUp calls management commands that write to DB
+
+    def setUp(self):
+        _mock_load_rates()
 
     def test_latest_api(self):
         with TestClient(api) as client:
@@ -44,6 +58,20 @@ class RatesTest(TestCase):
             data = response.json()
             self.assertIsInstance(data, dict)
             self.assertIn("detail", data)
+
+    def test_partial_date_rejected(self):
+        with TestClient(api) as client:
+            # Year-only should be rejected (not YYYY-MM-DD)
+            response = client.get("/rates?date=2024")
+            self.assertEqual(response.status_code, 400)
+            # Year-month should be rejected
+            response = client.get("/rates?date=2024-01")
+            self.assertEqual(response.status_code, 400)
+
+    def test_invalid_calendar_date(self):
+        with TestClient(api) as client:
+            response = client.get("/rates?date=2024-02-30")
+            self.assertEqual(response.status_code, 400)
 
     def test_date_weekend_api(self):
         with TestClient(api) as client:
