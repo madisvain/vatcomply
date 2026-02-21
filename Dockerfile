@@ -32,20 +32,20 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV UV_SYSTEM_PYTHON=1
 
 # Install runtime dependencies only
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cron \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv
-COPY --from=ghcr.io/astral-sh/uv:0.6 /uv /usr/local/bin/uv
-
 WORKDIR /app
 
 # Copy app (including .venv) from builder
 COPY --from=builder /app /app
+
+# Activate the virtual environment via ENV
+ENV VIRTUAL_ENV=/app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Setup cron (must be owned by root — cron service overrides USER below)
 COPY crontab /etc/cron.d/vatcomply-cron

@@ -32,7 +32,7 @@ services:
 
   migrate:
     build: .
-    command: sh -c "uv run python manage.py migrate && uv run python manage.py load_countries && uv run python manage.py load_rates"
+    command: sh -c "python manage.py migrate && python manage.py load_countries && python manage.py load_rates"
     user: root  # needs write access to create db in shared volume
     env_file:
       - .env
