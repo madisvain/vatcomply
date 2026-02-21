@@ -24,6 +24,7 @@ repo_url = "https://github.com/madisvain/vatcomply"
 repo_name = "madisvain/vatcomply"
 
 [project.theme]
+custom_dir = "overrides"
 language = "en"
 features = [
     "content.code.copy",
@@ -32,14 +33,18 @@ features = [
     "navigation.indexes",
     "navigation.instant",
     "navigation.instant.prefetch",
+    "navigation.instant.progress",
     "navigation.path",
     "navigation.sections",
     "navigation.top",
     "navigation.tracking",
     "search.highlight",
+    "search.suggest",
+    "toc.follow",
 ]
 
 [[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
 scheme = "default"
 primary = "indigo"
 accent = "blue"
@@ -47,11 +52,15 @@ toggle.icon = "lucide/sun"
 toggle.name = "Switch to dark mode"
 
 [[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
 scheme = "slate"
 primary = "indigo"
 accent = "blue"
 toggle.icon = "lucide/moon"
 toggle.name = "Switch to light mode"
+
+[project.extra.analytics]
+provider = "custom"
 
 [[project.extra.social]]
 icon = "fontawesome/brands/github"
