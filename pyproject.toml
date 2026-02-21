@@ -15,7 +15,7 @@ dependencies = [
     "pycountry",
     "schwifty",
     "sentry-sdk[django]",
-    "zeep",
+    "zeep[async]",
 ]
 
 [tool.pytest.ini_options]
