@@ -33,7 +33,7 @@ services:
 
   migrate:
     image: vatcomply
-    command: sh -c "python manage.py migrate && python manage.py load_countries && python manage.py load_rates --last-90-days"
+    command: sh -c "python manage.py migrate && python manage.py load_countries && python manage.py load_rates"
     user: root  # needs write access to create db in shared volume
     env_file:
       - .env
