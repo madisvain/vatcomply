@@ -75,6 +75,11 @@ uv run pytest -v
 make coverage  # or: uv run coverage run -m pytest && uv run coverage report -m
 ```
 
+## URLs
+
+- **API**: https://api.vatcomply.com
+- **Documentation**: https://www.vatcomply.com/api/exchange-rates
+
 ## Project Architecture
 
 ### Core Components
