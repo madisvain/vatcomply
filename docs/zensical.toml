@@ -1,6 +1,6 @@
 [project]
 site_name = "VATcomply"
-site_description = "Free API service for VAT number validation, foreign exchange rates, IP geolocation, and IBAN validation"
+site_description = "Free VAT compliance API for EU VAT number validation, ECB exchange rates, IP geolocation, and IBAN validation"
 site_author = "VATcomply"
 site_url = "https://www.vatcomply.com/"
 copyright = "Copyright &copy; VATcomply - MIT License"
@@ -10,6 +10,7 @@ nav = [
     { "API Reference" = [
         { "API Root" = "api/root.md" },
         { "VAT Validation" = "api/vat-validation.md" },
+        { "VAT Rates" = "api/vat-rates.md" },
         { "Exchange Rates" = "api/exchange-rates.md" },
         { "Geolocation" = "api/geolocation.md" },
         { "IBAN Validation" = "api/iban-validation.md" },

@@ -1,6 +1,6 @@
 ---
 title: API Root
-description: API discovery endpoint with status and available endpoints
+description: "VATcomply VAT compliance API root endpoint. Returns service status, version, and links to all endpoints — VAT validation, exchange rates, geolocation, and IBAN."
 icon: lucide/route
 ---
 

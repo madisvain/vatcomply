@@ -1,6 +1,6 @@
 ---
 title: Technology Stack
-description: Technologies powering the VATcomply API
+description: "VATcomply VAT compliance API is built with Django, Django Bolt, and msgspec for high-performance async serving, plus Zeep for VIES and lxml for ECB parsing."
 icon: lucide/layers
 ---
 

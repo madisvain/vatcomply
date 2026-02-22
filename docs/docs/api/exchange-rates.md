@@ -1,6 +1,6 @@
 ---
 title: Foreign Exchange Rates
-description: Daily foreign exchange rates from the European Central Bank with historical data
+description: "Free exchange rates API — daily and historical foreign exchange rates for 33 currencies from the ECB. Base currency conversion and symbol filtering. No API key."
 icon: lucide/arrow-left-right
 ---
 

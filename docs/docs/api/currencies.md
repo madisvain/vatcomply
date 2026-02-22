@@ -1,6 +1,6 @@
 ---
 title: Currencies
-description: Information about all supported currencies
+description: "Free currency data API — ISO codes, symbols, decimal places, and countries using each currency. Part of the VATcomply VAT compliance API. No API key required."
 icon: lucide/coins
 ---
 

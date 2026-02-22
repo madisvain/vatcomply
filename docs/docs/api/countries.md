@@ -1,6 +1,6 @@
 ---
 title: Countries
-description: Complete list of countries with detailed information
+description: "Free REST API for country data — ISO codes, capitals, phone codes, currencies, regions, and coordinates. Filter by region, subregion, or currency. No API key."
 icon: lucide/globe
 ---
 

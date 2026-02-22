@@ -1,6 +1,6 @@
 ---
 title: IP Geolocation
-description: Automatic country detection from visitor's IP address
+description: "Free IP geolocation API — detect visitor country from their IP address using Cloudflare or Bunny CDN headers. Returns country details, coordinates, and currency."
 icon: lucide/map-pin
 ---
 

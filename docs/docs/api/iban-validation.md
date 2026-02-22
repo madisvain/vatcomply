@@ -1,6 +1,6 @@
 ---
 title: IBAN Validation
-description: International Bank Account Number validation with detailed information
+description: "Free IBAN validation API — verify International Bank Account Numbers and get bank name, BIC/SWIFT code, branch code, and SEPA zone status. No API key needed."
 icon: lucide/landmark
 ---
 

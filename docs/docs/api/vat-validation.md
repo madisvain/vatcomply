@@ -1,6 +1,6 @@
 ---
 title: VAT Number Validation
-description: Validate European VAT numbers using the official VIES database
+description: "Free VAT number validation API — check EU VAT numbers in real time against the official VIES database. Supports all 27 EU member states and Northern Ireland."
 icon: lucide/file-check
 ---
 

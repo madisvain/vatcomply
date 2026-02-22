@@ -1,10 +1,10 @@
 ---
-title: VATcomply - Free VAT Validation & Exchange Rates API
-description: Free API service for VAT number validation, foreign exchange rates, IP geolocation, and IBAN validation
+title: Free VAT Compliance & Exchange Rates API
+description: "Free, open-source VAT compliance API — validate EU VAT numbers via VIES, get ECB exchange rates, geolocate by IP, and validate IBANs. No API key needed."
 icon: lucide/home
 ---
 
-# VATcomply
+# VATcomply - Free VAT Compliance & Exchange Rates API
 
 [VATcomply](https://www.vatcomply.com) is a free API service providing:
 

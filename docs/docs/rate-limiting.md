@@ -1,6 +1,6 @@
 ---
 title: Rate Limiting & Usage
-description: Rate limits and HTTP status codes for the VATcomply API
+description: "VATcomply VAT compliance API rate limits, HTTP status codes, and error formats. Free with no API key — anonymous requests limited to 2 per second per IP."
 icon: lucide/gauge
 ---
 
