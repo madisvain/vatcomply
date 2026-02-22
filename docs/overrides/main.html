@@ -15,16 +15,23 @@
   {{ super() }}
   <script>
     (function() {
+      var container = document.createElement("div");
+      container.className = "md-header__source";
       var a = document.createElement("a");
       a.href = "https://status.vatcomply.com/";
       a.target = "_blank";
       a.rel = "noopener";
       a.title = "System Status";
-      a.className = "md-header__button md-icon";
-      a.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>';
+      a.className = "md-source";
+      a.innerHTML =
+        '<div class="md-source__icon md-icon">' +
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' +
+        '</div>' +
+        '<div class="md-source__repository">Status</div>';
+      container.appendChild(a);
       var source = document.querySelector(".md-header__source");
       if (source) {
-        source.parentNode.insertBefore(a, source);
+        source.parentNode.insertBefore(container, source);
       }
     })();
   </script>
