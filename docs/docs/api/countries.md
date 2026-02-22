@@ -11,7 +11,7 @@ Retrieve a list of countries with detailed information. All parameters are optio
 ## Endpoint
 
 ```http
-GET /countries
+GET https://api.vatcomply.com/countries
 ```
 
 ## Parameters
@@ -28,11 +28,11 @@ All filters are composable with AND logic.
 ## Example Requests
 
 ```http
-GET /countries?search=Estonia
-GET /countries?region=Europe
-GET /countries?subregion=Northern Europe
-GET /countries?currency=EUR
-GET /countries?region=Europe&currency=EUR
+GET https://api.vatcomply.com/countries?search=Estonia
+GET https://api.vatcomply.com/countries?region=Europe
+GET https://api.vatcomply.com/countries?subregion=Northern Europe
+GET https://api.vatcomply.com/countries?currency=EUR
+GET https://api.vatcomply.com/countries?region=Europe&currency=EUR
 ```
 
 ## Response Fields

@@ -11,7 +11,7 @@ Get daily foreign exchange rates from the European Central Bank, including histo
 ## Latest Rates
 
 ```http
-GET /rates
+GET https://api.vatcomply.com/rates
 ```
 
 ### Response
@@ -102,7 +102,7 @@ The rates are sourced from the European Central Bank and cover the following 33 
 Return rates relative to a specific base currency.
 
 ```http
-GET /rates?base=USD
+GET https://api.vatcomply.com/rates?base=USD
 ```
 
 ## Specific Currencies
@@ -110,7 +110,7 @@ GET /rates?base=USD
 Filter the response to only include specific currencies.
 
 ```http
-GET /rates?symbols=USD,GBP
+GET https://api.vatcomply.com/rates?symbols=USD,GBP
 ```
 
 ## Historical Rates
@@ -118,7 +118,7 @@ GET /rates?symbols=USD,GBP
 Retrieve rates for a specific date.
 
 ```http
-GET /rates?date=2018-01-01
+GET https://api.vatcomply.com/rates?date=2018-01-01
 ```
 
 ## Combined Parameters
@@ -126,7 +126,7 @@ GET /rates?date=2018-01-01
 All parameters can be combined in a single request.
 
 ```http
-GET /rates?date=2018-01-01&symbols=USD,GBP&base=EUR
+GET https://api.vatcomply.com/rates?date=2018-01-01&symbols=USD,GBP&base=EUR
 ```
 
 ## Error Responses

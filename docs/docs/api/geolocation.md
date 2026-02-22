@@ -8,14 +8,14 @@ icon: lucide/map-pin
 
 Automatic country detection from the visitor's IP address using CDN headers ([Cloudflare](https://www.cloudflare.com/) or [Bunny.net](https://bunny.net/)).
 
-!!! info "CDN Requirement"
+!!! info "CDN Requirement (self-hosted only)"
 
-    This endpoint relies on CDN-provided headers (`CF-IPCountry` from [Cloudflare](https://www.cloudflare.com/) or `Cdn-RequestCountryCode` from [Bunny.net](https://bunny.net/)) to determine the visitor's country. It will not work without a supported CDN in front of the API.
+    The hosted API at `api.vatcomply.com` already runs behind a CDN, so geolocation works out of the box. If you self-host VATcomply, you need [Cloudflare](https://www.cloudflare.com/) or [Bunny.net](https://bunny.net/) in front of your instance — the endpoint reads the `CF-IPCountry` or `Cdn-RequestCountryCode` header to determine the visitor's country.
 
 ## Endpoint
 
 ```http
-GET /geolocate
+GET https://api.vatcomply.com/geolocate
 ```
 
 ## Parameters

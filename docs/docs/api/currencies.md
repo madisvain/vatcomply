@@ -11,7 +11,7 @@ Retrieve information about all supported currencies.
 ## Endpoint
 
 ```http
-GET /currencies
+GET https://api.vatcomply.com/currencies
 ```
 
 ## Parameters
@@ -42,19 +42,19 @@ The response is a JSON object keyed by currency code. Each value contains:
 Get all currencies:
 
 ```http
-GET /currencies
+GET https://api.vatcomply.com/currencies
 ```
 
 Search by currency code:
 
 ```http
-GET /currencies?search=USD
+GET https://api.vatcomply.com/currencies?search=USD
 ```
 
 Search by currency name:
 
 ```http
-GET /currencies?search=dollar
+GET https://api.vatcomply.com/currencies?search=dollar
 ```
 
 ## Example Response

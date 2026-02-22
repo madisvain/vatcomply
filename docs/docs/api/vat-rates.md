@@ -11,7 +11,7 @@ Get current VAT rates for all EU member states from the official European Commis
 ## Endpoint
 
 ```http
-GET /vat_rates
+GET https://api.vatcomply.com/vat_rates
 ```
 
 ## Parameters
@@ -23,7 +23,7 @@ GET /vat_rates
 ## Example Request
 
 ```http
-GET /vat_rates
+GET https://api.vatcomply.com/vat_rates
 ```
 
 ## Example Response
@@ -69,13 +69,13 @@ GET /vat_rates
 ## Filter by Country
 
 ```http
-GET /vat_rates?country_code=DE
+GET https://api.vatcomply.com/vat_rates?country_code=DE
 ```
 
 The `country_code` parameter is case-insensitive.
 
 ```http
-GET /vat_rates?country_code=de
+GET https://api.vatcomply.com/vat_rates?country_code=de
 ```
 
 ## Member State Codes

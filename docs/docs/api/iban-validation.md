@@ -11,7 +11,7 @@ Validate International Bank Account Numbers with detailed information.
 ## Endpoint
 
 ```http
-GET /iban?iban={iban}
+GET https://api.vatcomply.com/iban?iban={iban}
 ```
 
 ## Parameters
@@ -40,7 +40,7 @@ GET /iban?iban={iban}
 ## Example Request
 
 ```http
-GET /iban?iban=GB82WEST12345698765432
+GET https://api.vatcomply.com/iban?iban=GB82WEST12345698765432
 ```
 
 ## Example Response

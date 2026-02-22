@@ -11,7 +11,7 @@ Validate European VAT numbers using the official VIES (VAT Information Exchange 
 ## Endpoint
 
 ```http
-GET /vat?vat_number={vat_number}
+GET https://api.vatcomply.com/vat?vat_number={vat_number}
 ```
 
 ## Parameters
@@ -23,7 +23,7 @@ GET /vat?vat_number={vat_number}
 ## Example Request
 
 ```http
-GET /vat?vat_number=BE0123456789
+GET https://api.vatcomply.com/vat?vat_number=BE0123456789
 ```
 
 ## Example Response
