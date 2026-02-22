@@ -1,6 +1,6 @@
 ---
 title: Free VAT Compliance & Exchange Rates API
-description: "Free, open-source VAT compliance API — validate EU VAT numbers via VIES, get ECB exchange rates, geolocate by IP, and validate IBANs. No API key needed."
+description: "Free, open-source VAT compliance API — EU VAT validation via VIES, VAT rates from TEDB, ECB exchange rates, IP geolocation, and IBAN validation. No API key."
 icon: lucide/home
 ---
 
@@ -9,6 +9,7 @@ icon: lucide/home
 [VATcomply](https://www.vatcomply.com) is a free API service providing:
 
 - **VAT number validation** - Validate European VAT numbers using the official VIES database
+- **EU VAT rates** - Current VAT rates for all 27 EU member states from the European Commission TEDB
 - **Foreign exchange rates** - Daily rates from the European Central Bank with historical data
 - **Visitor IP geolocation** - Automatic country detection from visitor's IP address
 - **IBAN validation** - International Bank Account Number validation
@@ -21,8 +22,9 @@ icon: lucide/home
 All endpoints are available at `https://api.vatcomply.com` with no authentication required.
 
 ```http
-GET https://api.vatcomply.com/rates
 GET https://api.vatcomply.com/vat?vat_number=BE0123456789
+GET https://api.vatcomply.com/vat_rates
+GET https://api.vatcomply.com/rates
 GET https://api.vatcomply.com/geolocate
 GET https://api.vatcomply.com/iban?iban=GB82WEST12345698765432
 GET https://api.vatcomply.com/countries
