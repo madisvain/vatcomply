@@ -9,7 +9,7 @@ if [ "${SKIP_MIGRATIONS:-false}" = "false" ]; then
     echo "[start.sh] Running migrations..."
     python manage.py migrate --noinput
     echo "[start.sh] Starting background data loading..."
-    (python manage.py load_countries; python manage.py load_rates; python manage.py load_vat_rates) &
+    (python manage.py load_countries; python manage.py load_rates --last-90-days; python manage.py load_vat_rates; python manage.py load_rates) &
 fi
 
 echo "[start.sh] Starting server on port ${PORT:-8000}..."
