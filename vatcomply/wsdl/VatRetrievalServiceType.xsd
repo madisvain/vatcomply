@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="urn:ec.europa.eu:taxud:tedb:services:v1:IVatRetrievalService:types" elementFormDefault="qualified" targetNamespace="urn:ec.europa.eu:taxud:tedb:services:v1:IVatRetrievalService:types">
+
+    <xs:simpleType final="restriction" name="countryIsoCodeType">
+        <xs:restriction base="xs:token">
+            <xs:pattern value="[A-Z]{2}"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType final="restriction" name="rateTypeEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="STANDARD"/>
+            <xs:enumeration value="REDUCED"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType final="restriction" name="rateValueTypeEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="DEFAULT"/>
+            <xs:enumeration value="REDUCED_RATE"/>
+            <xs:enumeration value="SUPER_REDUCED_RATE"/>
+            <xs:enumeration value="PARKING_RATE"/>
+            <xs:enumeration value="NOT_APPLICABLE"/>
+            <xs:enumeration value="OUT_OF_SCOPE"/>
+            <xs:enumeration value="EXEMPTED"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="requestMemberStateType">
+        <xs:sequence>
+            <xs:element maxOccurs="1000" name="isoCode" type="countryIsoCodeType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="rateValueType">
+        <xs:sequence>
+            <xs:element name="type" type="rateValueTypeEnum"/>
+            <xs:element minOccurs="0" name="value" type="xs:double"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="responseCodeType">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" name="code" type="responseCodeDetailsType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="responseCodeDetailsType">
+        <xs:sequence>
+            <xs:element name="value" type="xs:string"/>
+            <xs:element name="description" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="requestCodeType">
+        <xs:sequence>
+            <xs:element maxOccurs="1000" name="value" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+    <!-- The categories are detailed in the External Interface Specification (EIS) of TEDB -->
+    <xs:complexType name="requestCategoryType">
+        <xs:sequence>
+            <xs:element maxOccurs="1000" name="identifier" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+    <!-- The categories are detailed in the External Interface Specification (EIS) of TEDB -->
+    <xs:complexType name="categoryType">
+        <xs:sequence>
+            <xs:element name="identifier" type="xs:string"/>
+            <xs:element name="description" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="retrieveVatRatesReqType">
+        <xs:annotation>
+            <xs:documentation>When 'situationOn' or 'to' is used alone the result will get same result as old behavior for retro compatibility case.
+            But when 'from' and 'to' element are used the new behavior will be used and VAT rates will be retrieved based on the range defined.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="memberStates" type="requestMemberStateType"/>
+            <xs:element minOccurs="0" name="from" type="xs:date"/>
+            <xs:choice>
+                <xs:element name="situationOn" type="xs:date"/>
+                <xs:element name="to" type="xs:date"/>
+            </xs:choice>
+            <xs:element minOccurs="0" name="categories" type="requestCategoryType"/>
+            <xs:element minOccurs="0" name="cnCodes" type="requestCodeType"/>
+            <xs:element minOccurs="0" name="cpaCodes" type="requestCodeType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="retrieveVatRatesRespType">
+        <xs:sequence>
+            <xs:element name="additionalInformation">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="countries">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element maxOccurs="unbounded" minOccurs="0" name="country">
+                                        <xs:complexType>
+                                            <xs:sequence>
+                                                <xs:element name="isoCode" type="countryIsoCodeType"/>
+                                                <xs:element name="cnCodeProvided" type="xs:boolean"/>
+                                                <xs:element name="cpaCodeProvided" type="xs:boolean"/>
+                                            </xs:sequence>
+                                        </xs:complexType>
+                                    </xs:element>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="vatRateResults">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="memberState" type="countryIsoCodeType"/>
+                        <xs:element name="type" type="rateTypeEnum"/>
+                        <xs:element name="rate" type="rateValueType"/>
+                        <xs:element name="situationOn" type="xs:date"/>
+                        <xs:element minOccurs="0" name="cnCodes" type="responseCodeType"/>
+                        <xs:element minOccurs="0" name="cpaCodes" type="responseCodeType"/>
+                        <xs:element minOccurs="0" name="category" type="categoryType"/>
+                        <xs:element minOccurs="0" name="comment" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="retrieveVatRatesFaultType">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="error" type="errorType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="errorType">
+        <xs:sequence>
+            <xs:element name="code" type="xs:string"/>
+            <xs:element name="description" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

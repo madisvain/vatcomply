@@ -47,3 +47,20 @@ class Country(models.Model):
 
     def __str__(self):
         return f"{self.iso2} - {self.name}"
+
+
+class VATRate(models.Model):
+    country_code = models.CharField(max_length=2, unique=True, primary_key=True)
+    country_name = models.CharField(max_length=200)
+    standard_rate = models.FloatField()
+    reduced_rates = models.JSONField(default=list)
+    super_reduced_rate = models.FloatField(null=True)
+    parking_rate = models.FloatField(null=True)
+    currency = models.CharField(max_length=10, default="")
+    member_state = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["country_code"]
+
+    def __str__(self):
+        return f"{self.country_code} - {self.standard_rate}%"

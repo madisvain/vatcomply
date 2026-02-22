@@ -6,3 +6,6 @@
 
 # Load countries once daily at 2am
 0 2 * * * . /app/.env.docker; cd /app && python manage.py load_countries >> /proc/1/fd/1 2>&1
+
+# Load VAT rates once daily at 3am
+0 3 * * * . /app/.env.docker; cd /app && python manage.py load_vat_rates >> /proc/1/fd/1 2>&1

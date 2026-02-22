@@ -32,7 +32,7 @@ from django.db import models
 from vatcomply.constants import CurrencySymbol
 from vatcomply.currency_metadata import get_currency_metadata
 from vatcomply.error_handler import CustomErrorMiddleware
-from vatcomply.models import Country, Rate
+from vatcomply.models import Country, Rate, VATRate
 from vatcomply.schemas import (
     CountrySchema,
     CurrencySchema,
@@ -41,6 +41,7 @@ from vatcomply.schemas import (
     RootResponseSchema,
     ValidateIBANResponseSchema,
     ValidateVATResponseSchema,
+    VATRateSchema,
 )
 
 # Validation constants
@@ -249,6 +250,22 @@ async def validate_vat(
         raise BadRequest(detail=e.message)
 
 
+@api.get("/vat_rates", summary="Get VAT rates")
+@throttle
+async def vat_rates(
+    request: Request,
+    country_code: Annotated[str | None, Query(description="Filter by EU member state code (e.g. DE, FR)")] = None,
+) -> list[VATRateSchema]:
+    """Returns EU member state VAT rates from the TEDB database."""
+    qs = VATRate.objects.order_by("country_code")
+    if country_code:
+        qs = qs.filter(country_code__iexact=country_code)
+    result = []
+    async for rate in qs:
+        result.append(VATRateSchema.from_model(rate))
+    return result
+
+
 @api.get("/rates", summary="Get exchange rates")
 @throttle
 async def rates(
@@ -325,6 +342,7 @@ async def root(request: Request) -> RootResponseSchema:
         "geolocate": urljoin(settings.BASE_URL, "/geolocate"),
         "iban": urljoin(settings.BASE_URL, "/iban"),
         "vat": urljoin(settings.BASE_URL, "/vat"),
+        "vat_rates": urljoin(settings.BASE_URL, "/vat_rates"),
         "rates": urljoin(settings.BASE_URL, "/rates"),
     }
 

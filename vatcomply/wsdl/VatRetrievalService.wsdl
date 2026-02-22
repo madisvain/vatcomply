@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="urn:ec.europa.eu:taxud:tedb:services:v1:VatRetrievalService" xmlns:serviceTypes="urn:ec.europa.eu:taxud:tedb:services:v1:IVatRetrievalService" xmlns="urn:ec.europa.eu:taxud:tedb:services:v1:VatRetrievalService" name="retrieveRatesService" targetNamespace="urn:ec.europa.eu:taxud:tedb:services:v1:VatRetrievalService">
+    <wsdl:types>
+        <xs:schema>
+            <xs:import namespace="urn:ec.europa.eu:taxud:tedb:services:v1:IVatRetrievalService" schemaLocation="VatRetrievalServiceMessage.xsd"/>
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:message name="retrieveVatRatesReqMsg">
+        <wsdl:part name="retrieveVatRatesReqMsg" element="serviceTypes:retrieveVatRatesReqMsg"/>
+    </wsdl:message>
+    <wsdl:message name="retrieveVatRatesRespMsg">
+        <wsdl:part name="retrieveVatRatesRespMsg" element="serviceTypes:retrieveVatRatesRespMsg"/>
+    </wsdl:message>
+    <wsdl:message name="retrieveVatRatesFaultMsg">
+        <wsdl:part name="retrieveVatRatesFaultMsg" element="serviceTypes:retrieveVatRatesFaultMsg"/>
+    </wsdl:message>
+    <wsdl:portType name="vatRetrievalService">
+        <wsdl:operation name="retrieveVatRates">
+            <wsdl:input message="tns:retrieveVatRatesReqMsg"/>
+            <wsdl:output message="tns:retrieveVatRatesRespMsg"/>
+            <wsdl:fault message="tns:retrieveVatRatesFaultMsg" name="retrieveVatRatesFault"/>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="vatRetrievalServiceSoapBinding" type="tns:vatRetrievalService">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <wsdl:operation name="retrieveVatRates">
+            <soap:operation soapAction="urn:ec.europa.eu:taxud:tedb:services:v1:VatRetrievalService/RetrieveVatRates" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="retrieveVatRatesFault">
+                <soap:fault name="retrieveVatRatesFault" use="literal"/>
+            </wsdl:fault>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="vatRetrievalServiceService">
+        <wsdl:port name="vatRetrievalService" binding="tns:vatRetrievalServiceSoapBinding">
+            <soap:address location="https://ec.europa.eu/taxation_customs/tedb/ws/"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

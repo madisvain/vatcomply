@@ -1,4 +1,4 @@
-"""Test fixtures for VATcomply tests. Avoids network calls to ECB and GitHub."""
+"""Test fixtures for VATcomply tests. Avoids network calls to ECB, GitHub, and TEDB."""
 
 MOCK_COUNTRIES_JSON = [
     {
@@ -107,6 +107,68 @@ MOCK_COUNTRIES_JSON = [
         "emoji": "\U0001f1ef\U0001f1f5",
     },
 ]
+
+MOCK_VAT_RATES_RESPONSE = {
+    "additionalInformation": {
+        "countries": {
+            "country": [
+                {"isoCode": "DE", "cnCodeProvided": False, "cpaCodeProvided": False},
+                {"isoCode": "FR", "cnCodeProvided": False, "cpaCodeProvided": False},
+                {"isoCode": "EE", "cnCodeProvided": False, "cpaCodeProvided": False},
+            ]
+        }
+    },
+    "vatRateResults": [
+        {
+            "memberState": "DE",
+            "type": "STANDARD",
+            "rate": {"type": "DEFAULT", "value": 19.0},
+            "situationOn": "2024-01-05",
+        },
+        {
+            "memberState": "DE",
+            "type": "REDUCED",
+            "rate": {"type": "REDUCED_RATE", "value": 7.0},
+            "situationOn": "2024-01-05",
+        },
+        {
+            "memberState": "FR",
+            "type": "STANDARD",
+            "rate": {"type": "DEFAULT", "value": 20.0},
+            "situationOn": "2024-01-05",
+        },
+        {
+            "memberState": "FR",
+            "type": "REDUCED",
+            "rate": {"type": "REDUCED_RATE", "value": 5.5},
+            "situationOn": "2024-01-05",
+        },
+        {
+            "memberState": "FR",
+            "type": "REDUCED",
+            "rate": {"type": "REDUCED_RATE", "value": 10.0},
+            "situationOn": "2024-01-05",
+        },
+        {
+            "memberState": "FR",
+            "type": "REDUCED",
+            "rate": {"type": "SUPER_REDUCED_RATE", "value": 2.1},
+            "situationOn": "2024-01-05",
+        },
+        {
+            "memberState": "EE",
+            "type": "STANDARD",
+            "rate": {"type": "DEFAULT", "value": 22.0},
+            "situationOn": "2024-01-05",
+        },
+        {
+            "memberState": "EE",
+            "type": "REDUCED",
+            "rate": {"type": "REDUCED_RATE", "value": 9.0},
+            "situationOn": "2024-01-05",
+        },
+    ],
+}
 
 MOCK_RATES_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
 <gesmes:Envelope xmlns:gesmes="http://www.gesmes.org/xml/2002-08-01"

@@ -97,6 +97,19 @@ class ValidateVATResponseSchema(Serializer):
     address: str = ""
 
 
+class VATRateSchema(Serializer):
+    """EU VAT rate response."""
+
+    country_code: str
+    country_name: str
+    standard_rate: float
+    reduced_rates: list[float]
+    super_reduced_rate: float | None = None
+    parking_rate: float | None = None
+    currency: str = ""
+    member_state: bool = True
+
+
 class RatesResponseSchema(Serializer):
     """Exchange rates response."""
 

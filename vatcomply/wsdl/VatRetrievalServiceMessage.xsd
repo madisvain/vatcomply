@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="urn:ec.europa.eu:taxud:tedb:services:v1:IVatRetrievalService" xmlns:servicesType="urn:ec.europa.eu:taxud:tedb:services:v1:IVatRetrievalService:types" elementFormDefault="qualified" targetNamespace="urn:ec.europa.eu:taxud:tedb:services:v1:IVatRetrievalService">
+
+    <xs:import namespace="urn:ec.europa.eu:taxud:tedb:services:v1:IVatRetrievalService:types" schemaLocation="VatRetrievalServiceType.xsd"/>
+    <xs:element name="retrieveVatRatesReqMsg" type="servicesType:retrieveVatRatesReqType"/>
+    <xs:element name="retrieveVatRatesRespMsg" type="servicesType:retrieveVatRatesRespType"/>
+    <xs:element name="retrieveVatRatesFaultMsg" type="servicesType:retrieveVatRatesFaultType"/>
+</xs:schema>
