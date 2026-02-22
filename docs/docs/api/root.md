@@ -11,7 +11,7 @@ Returns general information about the API, its status, and available endpoints.
 ## Endpoint
 
 ```http
-GET /
+GET https://api.vatcomply.com/
 ```
 
 ## Parameters
@@ -40,12 +40,12 @@ No parameters required.
   "description": "VAT validation API, geolocation tools, and ECB exchange rates",
   "documentation": "https://www.vatcomply.com/docs",
   "endpoints": {
-    "countries": "https://www.vatcomply.com/countries",
-    "currencies": "https://www.vatcomply.com/currencies",
-    "geolocate": "https://www.vatcomply.com/geolocate",
-    "iban": "https://www.vatcomply.com/iban",
-    "vat": "https://www.vatcomply.com/vat",
-    "rates": "https://www.vatcomply.com/rates"
+    "countries": "https://api.vatcomply.com/countries",
+    "currencies": "https://api.vatcomply.com/currencies",
+    "geolocate": "https://api.vatcomply.com/geolocate",
+    "iban": "https://api.vatcomply.com/iban",
+    "vat": "https://api.vatcomply.com/vat",
+    "rates": "https://api.vatcomply.com/rates"
   },
   "contact": "support@vatcomply.com"
 }

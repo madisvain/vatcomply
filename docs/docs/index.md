@@ -4,7 +4,7 @@ description: "Free, open-source VAT compliance API — validate EU VAT numbers v
 icon: lucide/home
 ---
 
-# VATcomply - Free VAT Compliance & Exchange Rates API
+# Free VAT Compliance & Exchange Rates API
 
 [VATcomply](https://www.vatcomply.com) is a free API service providing:
 

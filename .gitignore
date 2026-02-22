@@ -112,6 +112,9 @@ venv.bak/
 # Zensical documentation build
 docs/site/
 
+# SEO audit reports
+seo/
+
 # mypy
 .mypy_cache/
 .dmypy.json
