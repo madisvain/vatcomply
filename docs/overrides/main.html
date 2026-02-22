@@ -11,27 +11,23 @@
   <meta name="twitter:description" content="{{ page.meta.description or config.site_description }}">
 {% endblock %}
 
-{% block header %}
+{% block content %}
   {{ super() }}
   <script>
     (function() {
-      var container = document.createElement("div");
-      container.className = "md-header__source";
-      var a = document.createElement("a");
-      a.href = "https://status.vatcomply.com/";
-      a.target = "_blank";
-      a.rel = "noopener";
-      a.title = "System Status";
-      a.className = "md-source";
-      a.innerHTML =
-        '<div class="md-source__icon md-icon">' +
-          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>' +
-        '</div>' +
-        '<div class="md-source__repository">Status</div>';
-      container.appendChild(a);
-      var source = document.querySelector(".md-header__source");
-      if (source) {
-        source.parentNode.insertBefore(container, source);
+      var link = document.querySelector('a.md-nav__link[href="https://status.vatcomply.com/"]');
+      if (link) {
+        var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("fill", "none");
+        svg.setAttribute("stroke", "currentColor");
+        svg.setAttribute("stroke-width", "2");
+        svg.setAttribute("stroke-linecap", "round");
+        svg.setAttribute("stroke-linejoin", "round");
+        svg.setAttribute("class", "lucide lucide-signal");
+        svg.innerHTML = '<path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 4v16"/>';
+        link.insertBefore(svg, link.firstChild);
       }
     })();
   </script>
