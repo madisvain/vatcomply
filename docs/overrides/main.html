@@ -10,3 +10,22 @@
   <meta name="twitter:title" content="{{ page.title }}">
   <meta name="twitter:description" content="{{ page.meta.description or config.site_description }}">
 {% endblock %}
+
+{% block header %}
+  {{ super() }}
+  <script>
+    (function() {
+      var a = document.createElement("a");
+      a.href = "https://status.vatcomply.com/";
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.title = "System Status";
+      a.className = "md-header__button md-icon";
+      a.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>';
+      var source = document.querySelector(".md-header__source");
+      if (source) {
+        source.parentNode.insertBefore(a, source);
+      }
+    })();
+  </script>
+{% endblock %}
