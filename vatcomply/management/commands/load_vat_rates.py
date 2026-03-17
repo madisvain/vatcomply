@@ -93,7 +93,11 @@ class Command(BaseCommand):
             category = result.get("category")
             annotation = comment or (category.get("description", "") if category else "")
             if annotation:
-                info["rate_comments"][str(float(value))] = annotation
+                key = str(float(value))
+                if key not in info["rate_comments"]:
+                    info["rate_comments"][key] = []
+                if annotation not in info["rate_comments"][key]:
+                    info["rate_comments"][key].append(annotation)
 
         # Build country name + currency lookup
         country_lookup = {}

@@ -67,7 +67,7 @@ GET https://api.vatcomply.com/vat_rates
 | `parking_rate`       | number\|null  | Parking rate, if applicable                    |
 | `currency`           | string        | Country currency code                          |
 | `member_state`       | boolean       | Always `true` (EU member state)                |
-| `rate_comments`      | object        | Map of rate value to TEDB annotation (e.g. geographic limitation). Empty object if no comments. |
+| `rate_comments`      | object        | Map of rate value to list of TEDB annotations (e.g. geographic limitations, applicable categories). Empty object if no comments. |
 
 ## Filter by Country
 

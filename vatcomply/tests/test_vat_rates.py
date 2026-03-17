@@ -90,7 +90,7 @@ def test_vat_rates_austria_rate_comments(client, vat_rates_db):
     at = data[0]
     assert at["standard_rate"] == 20.0
     assert 19.0 in at["reduced_rates"]
-    assert at["rate_comments"]["19.0"] == "Jungholz, Mittelberg"
+    assert at["rate_comments"]["19.0"] == ["Jungholz, Mittelberg"]
     assert at["parking_rate"] == 13.0
 
 
