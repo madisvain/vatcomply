@@ -8,7 +8,7 @@ dependencies = [
     "django-bolt",
     "django-environ",
     "dpath",
-    "httpx<0.28",
+    "httpx",
     "lxml",
     "msgspec",
     "pendulum",
