@@ -58,6 +58,7 @@ class VATRate(models.Model):
     parking_rate = models.FloatField(null=True)
     currency = models.CharField(max_length=10, default="")
     member_state = models.BooleanField(default=True)
+    rate_comments = models.JSONField(default=dict)
 
     class Meta:
         ordering = ["country_code"]

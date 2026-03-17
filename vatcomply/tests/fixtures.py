@@ -2,6 +2,21 @@
 
 MOCK_COUNTRIES_JSON = [
     {
+        "iso2": "AT",
+        "iso3": "AUT",
+        "name": "Austria",
+        "numeric_code": "040",
+        "phonecode": "43",
+        "capital": "Vienna",
+        "currency": "EUR",
+        "tld": ".at",
+        "region": "Europe",
+        "subregion": "Western Europe",
+        "latitude": "47.33",
+        "longitude": "13.33",
+        "emoji": "\U0001f1e6\U0001f1f9",
+    },
+    {
         "iso2": "EE",
         "iso3": "EST",
         "name": "Estonia",
@@ -112,6 +127,7 @@ MOCK_VAT_RATES_RESPONSE = {
     "additionalInformation": {
         "countries": {
             "country": [
+                {"isoCode": "AT", "cnCodeProvided": False, "cpaCodeProvided": False},
                 {"isoCode": "DE", "cnCodeProvided": False, "cpaCodeProvided": False},
                 {"isoCode": "FR", "cnCodeProvided": False, "cpaCodeProvided": False},
                 {"isoCode": "EE", "cnCodeProvided": False, "cpaCodeProvided": False},
@@ -119,6 +135,38 @@ MOCK_VAT_RATES_RESPONSE = {
         }
     },
     "vatRateResults": [
+        {
+            "memberState": "AT",
+            "type": "STANDARD",
+            "rate": {"type": "DEFAULT", "value": 20.0},
+            "situationOn": "2024-01-05",
+        },
+        {
+            "memberState": "AT",
+            "type": "REDUCED",
+            "rate": {"type": "REDUCED_RATE", "value": 10.0},
+            "situationOn": "2024-01-05",
+        },
+        {
+            "memberState": "AT",
+            "type": "REDUCED",
+            "rate": {"type": "REDUCED_RATE", "value": 13.0},
+            "situationOn": "2024-01-05",
+        },
+        {
+            "memberState": "AT",
+            "type": "REDUCED",
+            "rate": {"type": "REDUCED_RATE", "value": 19.0},
+            "comment": "Jungholz, Mittelberg",
+            "category": {"identifier": "REGION", "description": "Special reduced rate for specific regions (including articles 104, 105 and 120 of the VAT Directive)"},
+            "situationOn": "2024-01-05",
+        },
+        {
+            "memberState": "AT",
+            "type": "REDUCED",
+            "rate": {"type": "PARKING_RATE", "value": 13.0},
+            "situationOn": "2024-01-05",
+        },
         {
             "memberState": "DE",
             "type": "STANDARD",
@@ -129,6 +177,7 @@ MOCK_VAT_RATES_RESPONSE = {
             "memberState": "DE",
             "type": "REDUCED",
             "rate": {"type": "REDUCED_RATE", "value": 7.0},
+            "comment": "Applicable to foodstuffs, books, and other items",
             "situationOn": "2024-01-05",
         },
         {

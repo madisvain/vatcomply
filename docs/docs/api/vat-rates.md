@@ -38,7 +38,8 @@ GET https://api.vatcomply.com/vat_rates
     "super_reduced_rate": null,
     "parking_rate": null,
     "currency": "EUR",
-    "member_state": true
+    "member_state": true,
+    "rate_comments": {}
   },
   {
     "country_code": "FR",
@@ -48,7 +49,8 @@ GET https://api.vatcomply.com/vat_rates
     "super_reduced_rate": 2.1,
     "parking_rate": null,
     "currency": "EUR",
-    "member_state": true
+    "member_state": true,
+    "rate_comments": {}
   }
 ]
 ```
@@ -65,6 +67,7 @@ GET https://api.vatcomply.com/vat_rates
 | `parking_rate`       | number\|null  | Parking rate, if applicable                    |
 | `currency`           | string        | Country currency code                          |
 | `member_state`       | boolean       | Always `true` (EU member state)                |
+| `rate_comments`      | object        | Map of rate value to TEDB annotation (e.g. geographic limitation). Empty object if no comments. |
 
 ## Filter by Country
 

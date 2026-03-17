@@ -108,6 +108,7 @@ class VATRateSchema(Serializer):
     parking_rate: float | None = None
     currency: str = ""
     member_state: bool = True
+    rate_comments: dict[str, str] = {}
 
 
 class RatesResponseSchema(Serializer):

@@ -64,6 +64,7 @@ class Command(BaseCommand):
             "reduced_rates": [],
             "super_reduced_rate": None,
             "parking_rate": None,
+            "rate_comments": {},
         })
 
         for result in vat_results:
@@ -86,6 +87,13 @@ class Command(BaseCommand):
                 info["super_reduced_rate"] = float(value)
             elif rate_value_type == "PARKING_RATE":
                 info["parking_rate"] = float(value)
+
+            # Extract TEDB comment/category annotation for this rate
+            comment = result.get("comment", "")
+            category = result.get("category")
+            annotation = comment or (category.get("description", "") if category else "")
+            if annotation:
+                info["rate_comments"][str(float(value))] = annotation
 
         # Build country name + currency lookup
         country_lookup = {}
@@ -116,6 +124,7 @@ class Command(BaseCommand):
                     parking_rate=info["parking_rate"],
                     currency=currency,
                     member_state=True,
+                    rate_comments=info["rate_comments"],
                 )
             )
 
@@ -126,6 +135,7 @@ class Command(BaseCommand):
             update_fields=[
                 "country_name", "standard_rate", "reduced_rates",
                 "super_reduced_rate", "parking_rate", "currency", "member_state",
+                "rate_comments",
             ],
         )
 
