@@ -27,8 +27,8 @@ DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
-# CORS — Bolt handles CORS in its Rust layer
-BOLT_CORS_ALLOW_ALL_ORIGINS = True
+# CORS
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Throttling
 THROTTLE = env.bool("THROTTLE", default=True)
