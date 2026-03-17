@@ -39,7 +39,8 @@ GET https://api.vatcomply.com/vat_rates
     "parking_rate": null,
     "currency": "EUR",
     "member_state": true,
-    "rate_comments": {}
+    "rate_comments": {},
+    "rate_categories": {}
   },
   {
     "country_code": "FR",
@@ -50,7 +51,8 @@ GET https://api.vatcomply.com/vat_rates
     "parking_rate": null,
     "currency": "EUR",
     "member_state": true,
-    "rate_comments": {}
+    "rate_comments": {},
+    "rate_categories": {}
   }
 ]
 ```
@@ -68,6 +70,7 @@ GET https://api.vatcomply.com/vat_rates
 | `currency`           | string        | Country currency code                          |
 | `member_state`       | boolean       | Always `true` (EU member state)                |
 | `rate_comments`      | object        | Map of rate value to list of TEDB annotations (e.g. geographic limitations, applicable categories). Empty object if no comments. |
+| `rate_categories`    | object        | Map of TEDB category identifier (lowercased) to list of applicable rates. E.g. `{"foodstuffs": [10.0, 13.0]}`. Empty object if no categories. |
 
 ## Filter by Country
 

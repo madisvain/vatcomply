@@ -65,6 +65,7 @@ class Command(BaseCommand):
             "super_reduced_rate": None,
             "parking_rate": None,
             "rate_comments": {},
+            "rate_categories": {},
         })
 
         for result in vat_results:
@@ -99,6 +100,16 @@ class Command(BaseCommand):
                 if annotation not in info["rate_comments"][key]:
                     info["rate_comments"][key].append(annotation)
 
+            # Extract structured category-to-rate mapping
+            if category:
+                identifier = category.get("identifier", "")
+                if identifier:
+                    key = identifier.lower()
+                    if key not in info["rate_categories"]:
+                        info["rate_categories"][key] = []
+                    if float(value) not in info["rate_categories"][key]:
+                        info["rate_categories"][key].append(float(value))
+
         # Build country name + currency lookup
         country_lookup = {}
         for country in Country.objects.all():
@@ -117,6 +128,8 @@ class Command(BaseCommand):
 
             # Sort reduced rates for consistent output
             info["reduced_rates"].sort()
+            for cat_rates in info["rate_categories"].values():
+                cat_rates.sort()
 
             batch.append(
                 VATRate(
@@ -129,6 +142,7 @@ class Command(BaseCommand):
                     currency=currency,
                     member_state=True,
                     rate_comments=info["rate_comments"],
+                    rate_categories=info["rate_categories"],
                 )
             )
 
@@ -140,6 +154,7 @@ class Command(BaseCommand):
                 "country_name", "standard_rate", "reduced_rates",
                 "super_reduced_rate", "parking_rate", "currency", "member_state",
                 "rate_comments",
+                "rate_categories",
             ],
         )
 

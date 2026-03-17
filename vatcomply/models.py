@@ -59,6 +59,7 @@ class VATRate(models.Model):
     currency = models.CharField(max_length=10, default="")
     member_state = models.BooleanField(default=True)
     rate_comments = models.JSONField(default=dict)
+    rate_categories = models.JSONField(default=dict)
 
     class Meta:
         ordering = ["country_code"]

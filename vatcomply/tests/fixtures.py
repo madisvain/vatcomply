@@ -145,12 +145,21 @@ MOCK_VAT_RATES_RESPONSE = {
             "memberState": "AT",
             "type": "REDUCED",
             "rate": {"type": "REDUCED_RATE", "value": 10.0},
+            "category": {"identifier": "FOODSTUFFS", "description": "Foodstuffs"},
+            "situationOn": "2024-01-05",
+        },
+        {
+            "memberState": "AT",
+            "type": "REDUCED",
+            "rate": {"type": "REDUCED_RATE", "value": 10.0},
+            "category": {"identifier": "ACCOMMODATION", "description": "Accommodation"},
             "situationOn": "2024-01-05",
         },
         {
             "memberState": "AT",
             "type": "REDUCED",
             "rate": {"type": "REDUCED_RATE", "value": 13.0},
+            "category": {"identifier": "FOODSTUFFS", "description": "Certain foodstuffs"},
             "situationOn": "2024-01-05",
         },
         {
@@ -178,6 +187,7 @@ MOCK_VAT_RATES_RESPONSE = {
             "type": "REDUCED",
             "rate": {"type": "REDUCED_RATE", "value": 7.0},
             "comment": "Applicable to foodstuffs, books, and other items",
+            "category": {"identifier": "FOODSTUFFS", "description": "Foodstuffs"},
             "situationOn": "2024-01-05",
         },
         {

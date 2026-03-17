@@ -68,6 +68,7 @@ def test_vat_rates_response_fields(client, vat_rates_db):
         "country_code", "country_name", "standard_rate", "reduced_rates",
         "super_reduced_rate", "parking_rate", "currency", "member_state",
         "rate_comments",
+        "rate_categories",
     }
     assert set(ee.keys()) == expected_fields
     assert ee["country_code"] == "EE"
@@ -92,6 +93,25 @@ def test_vat_rates_austria_rate_comments(client, vat_rates_db):
     assert 19.0 in at["reduced_rates"]
     assert at["rate_comments"]["19.0"] == ["Jungholz, Mittelberg"]
     assert at["parking_rate"] == 13.0
+
+
+@pytest.mark.django_db(transaction=True)
+def test_vat_rates_austria_rate_categories(client, vat_rates_db):
+    response = client.get("/vat_rates?country_code=AT")
+    assert response.status_code == 200
+    data = response.json()
+    at = data[0]
+    assert at["rate_categories"]["foodstuffs"] == [10.0, 13.0]
+    assert at["rate_categories"]["accommodation"] == [10.0]
+    assert at["rate_categories"]["region"] == [19.0]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_vat_rates_no_categories_empty_dict(client, vat_rates_db):
+    response = client.get("/vat_rates?country_code=FR")
+    assert response.status_code == 200
+    data = response.json()
+    assert data[0]["rate_categories"] == {}
 
 
 @pytest.mark.django_db(transaction=True)

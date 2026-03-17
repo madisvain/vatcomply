@@ -109,6 +109,7 @@ class VATRateSchema(Serializer):
     currency: str = ""
     member_state: bool = True
     rate_comments: dict[str, list[str]] = {}
+    rate_categories: dict[str, list[float]] = {}
 
 
 class RatesResponseSchema(Serializer):
