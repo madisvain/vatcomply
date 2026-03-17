@@ -19,6 +19,7 @@ nav = [
     ]},
     { "Rate Limiting" = "rate-limiting.md" },
     { "Technology Stack" = "technology-stack.md" },
+    { "Status" = "https://status.vatcomply.com/" },
 ]
 
 repo_url = "https://github.com/madisvain/vatcomply"
