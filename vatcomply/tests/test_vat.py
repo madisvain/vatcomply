@@ -26,9 +26,8 @@ def test_vat_brexit_api(client):
     assert "GB" in data["detail"]
 
 
-@patch("vatcomply.api._get_vat_client")
-def test_vat_valid_number(mock_get_client, client):
-    mock_client = MagicMock()
+@patch("vatcomply.api._vat_client")
+def test_vat_valid_number(mock_client, client):
     mock_client.service.checkVat = AsyncMock(return_value={
         "valid": True,
         "vatNumber": "101600930",
@@ -36,7 +35,6 @@ def test_vat_valid_number(mock_get_client, client):
         "name": "Test Company",
         "address": "Test Address",
     })
-    mock_get_client.return_value = mock_client
 
     response = client.get("/vat?vat_number=EE101600930")
     assert response.status_code == 200
@@ -46,12 +44,10 @@ def test_vat_valid_number(mock_get_client, client):
     assert data["name"] == "Test Company"
 
 
-@patch("vatcomply.api._get_vat_client")
-def test_vat_service_fault(mock_get_client, client):
+@patch("vatcomply.api._vat_client")
+def test_vat_service_fault(mock_client, client):
     from zeep.exceptions import Fault
-    mock_client = MagicMock()
     mock_client.service.checkVat = AsyncMock(side_effect=Fault("INVALID_INPUT"))
-    mock_get_client.return_value = mock_client
 
     response = client.get("/vat?vat_number=DE123456789")
     assert response.status_code == 400

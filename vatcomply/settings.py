@@ -82,6 +82,15 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": env("DATABASE_PATH", default="db.sqlite3"),
+        "OPTIONS": {
+            "transaction_mode": "IMMEDIATE",
+            "init_command": (
+                "PRAGMA journal_mode=WAL;"
+                "PRAGMA synchronous=NORMAL;"
+                "PRAGMA busy_timeout=5000;"
+                "PRAGMA cache_size=-20000;"
+            ),
+        },
     }
 }
 
@@ -143,6 +152,7 @@ LOGGING = {
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
+            "stream": "ext://sys.stdout",
             "formatter": "verbose",
         },
     },

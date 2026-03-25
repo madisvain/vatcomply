@@ -100,7 +100,7 @@ async def countries(
 
 @api.get("/currencies", summary="Get list of supported currencies")
 @throttle
-def get_currencies(
+async def get_currencies(
     request: Request,
     search: Annotated[str | None, Query(description="Search by currency code or name")] = None,
 ) -> dict[str, CurrencySchema]:
@@ -164,7 +164,7 @@ async def geolocate(request: Request) -> GeolocateResponse:
 
 @api.get("/iban", summary="Validate IBAN")
 @throttle
-def validate_iban(
+async def validate_iban(
     request: Request,
     iban: Annotated[str, Query(description="IBAN to validate")],
 ) -> ValidateIBANResponseSchema:
@@ -192,24 +192,15 @@ def validate_iban(
     )
 
 
-# Lazy-initialized WSDL client to avoid crash at import if WSDL file is missing
 _VIES_WSDL_PATH = os.path.join(os.path.dirname(__file__), "wsdl", "checkVatService.wsdl")
-_vat_client = None
-
-
-def _get_vat_client():
-    """Lazy-init the zeep AsyncClient on first use."""
-    global _vat_client
-    if _vat_client is None:
-        transport = AsyncTransport(timeout=10)
-        _vat_client = zeep.AsyncClient(wsdl=_VIES_WSDL_PATH, transport=transport)
-    return _vat_client
+_vat_client = zeep.AsyncClient(
+    wsdl=_VIES_WSDL_PATH, transport=AsyncTransport(timeout=10)
+)
 
 
 async def _vat_check(vat_number: str):
     """Run VAT check and return serialized response."""
-    client = _get_vat_client()
-    result = await client.service.checkVat(
+    result = await _vat_client.service.checkVat(
         countryCode=vat_number[:2], vatNumber=vat_number[2:]
     )
     return zeep.helpers.serialize_object(result)
