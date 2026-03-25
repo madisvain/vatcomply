@@ -13,4 +13,4 @@ if [ "${SKIP_MIGRATIONS:-false}" = "false" ]; then
 fi
 
 echo "[start.sh] Starting server on port ${PORT:-8000}..."
-exec python manage.py runbolt --host 0.0.0.0 --port ${PORT:-8000} --processes ${PROCESSES:-2}
+exec python manage.py runbolt --host 0.0.0.0 --port ${PORT:-8000} --processes ${PROCESSES:-2} 2>&1
