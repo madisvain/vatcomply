@@ -15,6 +15,7 @@ class RootResponseSchema(Serializer):
     status: str
     description: str
     documentation: str
+    openapi: str
     endpoints: dict[str, str]
     contact: str
 

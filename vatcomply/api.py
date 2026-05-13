@@ -409,6 +409,7 @@ async def root(request: Request) -> RootResponseSchema:
         status="operational",
         description="VAT validation API, geolocation tools, and ECB exchange rates",
         documentation=urljoin(settings.BASE_URL, "docs"),
+        openapi=urljoin(settings.BASE_URL, "/docs/openapi.json"),
         endpoints=endpoints,
         contact="support@vatcomply.com",
     )

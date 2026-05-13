@@ -27,6 +27,7 @@ No parameters required.
 | `status`        | string | Current API status                       |
 | `description`   | string | Brief description of the API             |
 | `documentation` | string | URL to the API documentation             |
+| `openapi`       | string | URL to the machine-readable OpenAPI schema (JSON) |
 | `endpoints`     | object | Map of endpoint names to their URLs      |
 | `contact`       | string | Support contact email                    |
 
@@ -39,6 +40,7 @@ No parameters required.
   "status": "operational",
   "description": "VAT validation API, geolocation tools, and ECB exchange rates",
   "documentation": "https://www.vatcomply.com/docs",
+  "openapi": "https://api.vatcomply.com/docs/openapi.json",
   "endpoints": {
     "countries": "https://api.vatcomply.com/countries",
     "currencies": "https://api.vatcomply.com/currencies",

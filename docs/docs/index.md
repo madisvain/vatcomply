@@ -15,7 +15,7 @@ icon: lucide/home
 - **IBAN validation** - International Bank Account Number validation
 - **Country & currency data** - Comprehensive country and currency information
 
-[Interactive API Documentation](https://api.vatcomply.com/docs){ .md-button .md-button--primary } [View on GitHub](https://github.com/madisvain/vatcomply){ .md-button }
+[Interactive API Documentation](https://api.vatcomply.com/docs){ .md-button .md-button--primary } [OpenAPI Schema (JSON)](https://api.vatcomply.com/docs/openapi.json){ .md-button } [View on GitHub](https://github.com/madisvain/vatcomply){ .md-button }
 
 ## Quick Start
 

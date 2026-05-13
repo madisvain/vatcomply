@@ -19,6 +19,7 @@ def test_root_endpoint(client):
     assert "status" in data
     assert "description" in data
     assert "documentation" in data
+    assert "openapi" in data
     assert "endpoints" in data
     assert "contact" in data
 
@@ -28,6 +29,7 @@ def test_root_endpoint(client):
     assert data["status"] == "operational"
     assert data["description"] == "VAT validation API, geolocation tools, and ECB exchange rates"
     assert data["documentation"] == urljoin(settings.BASE_URL, "docs")
+    assert data["openapi"] == urljoin(settings.BASE_URL, "/docs/openapi.json")
     assert data["contact"] == "support@vatcomply.com"
 
     # Check endpoints
