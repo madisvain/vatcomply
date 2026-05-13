@@ -7,13 +7,17 @@ Provides VAT validation, currency rates, geolocation, and IBAN validation endpoi
 import logging
 import os
 import re
+from contextlib import asynccontextmanager
 from decimal import Decimal
 from typing import Annotated
 
 import pendulum
 import zeep
 import zeep.helpers
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from django.conf import settings
+from django.core.management import call_command
 from django_bolt import BoltAPI, Request
 from django_bolt.exceptions import BadRequest, NotFound
 from django_bolt.health import register_health_checks
@@ -55,9 +59,63 @@ else:
     def throttle(f):
         return f
 
+@asynccontextmanager
+async def lifespan(app):
+    """Run an in-process APScheduler in the primary worker only.
+
+    Gated by settings.BACKGROUND_SCHEDULER. Only the worker with
+    DJANGO_BOLT_PROCESS_ID="0" (or unset) starts the scheduler so we
+    don't fan out duplicate ECB fetches across runbolt workers.
+    """
+    scheduler = None
+    should_run = (
+        settings.BACKGROUND_SCHEDULER
+        and os.environ.get("DJANGO_BOLT_PROCESS_ID", "0") == "0"
+    )
+    if should_run:
+        try:
+            scheduler = AsyncIOScheduler()
+            scheduler.add_job(
+                call_command,
+                CronTrigger(minute=10),
+                args=["load_rates"],
+                kwargs={"last_90_days": True},
+                id="load_rates_90d",
+                max_instances=1,
+                coalesce=True,
+            )
+            scheduler.add_job(
+                call_command,
+                CronTrigger(hour=2, minute=0),
+                args=["load_countries"],
+                id="load_countries",
+                max_instances=1,
+                coalesce=True,
+            )
+            scheduler.add_job(
+                call_command,
+                CronTrigger(hour=3, minute=0),
+                args=["load_vat_rates"],
+                id="load_vat_rates",
+                max_instances=1,
+                coalesce=True,
+            )
+            scheduler.start()
+            logger.info("Background scheduler started with %d jobs", len(scheduler.get_jobs()))
+        except Exception:
+            logger.exception("Failed to start background scheduler")
+            scheduler = None
+    try:
+        yield
+    finally:
+        if scheduler is not None:
+            scheduler.shutdown(wait=False)
+
+
 # Create the API instance
 api = BoltAPI(
     middleware=[CustomErrorMiddleware],
+    lifespan=lifespan,
     openapi_config=OpenAPIConfig(
         title="Vatcomply API",
         version="1.0.0",

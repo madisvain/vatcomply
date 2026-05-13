@@ -34,6 +34,9 @@ CORS_ALLOW_ALL_ORIGINS = True
 THROTTLE = env.bool("THROTTLE", default=True)
 NUM_PROXIES = env.int("NUM_PROXIES", default=0)
 
+# Background scheduler (in-process APScheduler in vatcomply/api.py lifespan)
+BACKGROUND_SCHEDULER = env.bool("BACKGROUND_SCHEDULER", default=False)
+
 
 # Application definition
 INSTALLED_APPS = [
