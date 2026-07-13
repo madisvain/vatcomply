@@ -112,8 +112,9 @@ make coverage  # or: uv run coverage run -m pytest && uv run coverage report -m
 1. Exchange rate data:
    - Fetched from ECB XML endpoints
    - Stored in the `Rate` model with date as primary key
-   - Updated hourly by the background scheduler
-   - Served through the `/rates` API endpoint with options for base currency, symbols, and dates
+   - Updated hourly by `start.sh` loop, optional in-process APScheduler (`BACKGROUND_SCHEDULER`), and compose `cron`
+   - `/ready` fails when latest rates are older than `RATES_MAX_AGE_DAYS` (default 4)
+   - Served through the `/rates` API endpoint with options for base currency, symbols, dates, and optional `strict`
 
 2. Country data:
    - Imported from JSON source
@@ -126,6 +127,7 @@ Key environment variables used:
 - `DEBUG`: Enable debug mode (default: False)
 - `SECRET_KEY`: Django secret key
 - `ALLOWED_HOSTS`: Comma-separated list of allowed hosts
-- `BACKGROUND_SCHEDULER`: Enable background scheduler (default: False)
+- `BACKGROUND_SCHEDULER`: Enable in-process APScheduler (default: False; recommend True in prod as belt-and-suspenders)
+- `RATES_MAX_AGE_DAYS`: Max age of latest rate date before `/ready` is unhealthy (default: 4)
 - `THROTTLE`: Enable request throttling (default: True)
 - `BASE_URL`: Base URL for the application (default: "http://localhost:8000")

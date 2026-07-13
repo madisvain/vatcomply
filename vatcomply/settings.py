@@ -37,6 +37,10 @@ NUM_PROXIES = env.int("NUM_PROXIES", default=0)
 # Background scheduler (in-process APScheduler in vatcomply/api.py lifespan)
 BACKGROUND_SCHEDULER = env.bool("BACKGROUND_SCHEDULER", default=False)
 
+# Max age of the latest Rate.date before /ready reports rates as stale.
+# 4 calendar days covers weekends + a public holiday without false failures.
+RATES_MAX_AGE_DAYS = env.int("RATES_MAX_AGE_DAYS", default=4)
+
 
 # Application definition
 INSTALLED_APPS = [

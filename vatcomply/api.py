@@ -4,6 +4,7 @@ VATcomply API
 Provides VAT validation, currency rates, geolocation, and IBAN validation endpoints.
 """
 
+import asyncio
 import logging
 import os
 import re
@@ -12,6 +13,7 @@ from decimal import Decimal
 from typing import Annotated
 
 import pendulum
+import sentry_sdk
 import zeep
 import zeep.helpers
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -19,8 +21,8 @@ from apscheduler.triggers.cron import CronTrigger
 from django.conf import settings
 from django.core.management import call_command
 from django_bolt import BoltAPI, Request
-from django_bolt.exceptions import BadRequest, NotFound
-from django_bolt.health import register_health_checks
+from django_bolt.exceptions import BadRequest, NotFound, ServiceUnavailable
+from django_bolt.health import add_health_check, check_database, register_health_checks
 from django_bolt.middleware import rate_limit
 from django_bolt.openapi import OpenAPIConfig
 from django_bolt.params import Query
@@ -37,6 +39,7 @@ from vatcomply.constants import CurrencySymbol
 from vatcomply.currency_metadata import get_currency_metadata
 from vatcomply.error_handler import CustomErrorMiddleware
 from vatcomply.models import Country, Rate, VATRate
+from vatcomply.rates_freshness import check_rates_freshness, is_rates_stale
 from vatcomply.schemas import (
     CountrySchema,
     CurrencySchema,
@@ -59,6 +62,15 @@ else:
     def throttle(f):
         return f
 
+async def _run_management_command(name: str, **kwargs) -> None:
+    """Run a Django management command off the event loop; report failures."""
+    try:
+        await asyncio.to_thread(call_command, name, **kwargs)
+    except Exception as exc:
+        logger.exception("Scheduled command %s failed", name)
+        sentry_sdk.capture_exception(exc)
+
+
 @asynccontextmanager
 async def lifespan(app):
     """Run an in-process APScheduler in the primary worker only.
@@ -72,11 +84,22 @@ async def lifespan(app):
         settings.BACKGROUND_SCHEDULER
         and os.environ.get("DJANGO_BOLT_PROCESS_ID", "0") == "0"
     )
+    if not settings.BACKGROUND_SCHEDULER:
+        logger.warning(
+            "BACKGROUND_SCHEDULER is disabled; relying on start.sh hourly loop "
+            "/ external cron for rate updates"
+        )
+    elif not should_run:
+        logger.info(
+            "BACKGROUND_SCHEDULER enabled but this worker is not primary "
+            "(DJANGO_BOLT_PROCESS_ID=%s); skipping scheduler",
+            os.environ.get("DJANGO_BOLT_PROCESS_ID"),
+        )
     if should_run:
         try:
             scheduler = AsyncIOScheduler()
             scheduler.add_job(
-                call_command,
+                _run_management_command,
                 CronTrigger(minute=10),
                 args=["load_rates"],
                 kwargs={"last_90_days": True},
@@ -85,7 +108,7 @@ async def lifespan(app):
                 coalesce=True,
             )
             scheduler.add_job(
-                call_command,
+                _run_management_command,
                 CronTrigger(hour=2, minute=0),
                 args=["load_countries"],
                 id="load_countries",
@@ -93,15 +116,26 @@ async def lifespan(app):
                 coalesce=True,
             )
             scheduler.add_job(
-                call_command,
+                _run_management_command,
                 CronTrigger(hour=3, minute=0),
                 args=["load_vat_rates"],
                 id="load_vat_rates",
                 max_instances=1,
                 coalesce=True,
             )
+            # Backfill immediately on boot so we do not wait until :10.
+            scheduler.add_job(
+                _run_management_command,
+                args=["load_rates"],
+                kwargs={"last_90_days": True},
+                id="load_rates_startup",
+                max_instances=1,
+                coalesce=True,
+            )
             scheduler.start()
-            logger.info("Background scheduler started with %d jobs", len(scheduler.get_jobs()))
+            logger.info(
+                "Background scheduler started with %d jobs", len(scheduler.get_jobs())
+            )
         except Exception:
             logger.exception("Failed to start background scheduler")
             scheduler = None
@@ -123,8 +157,11 @@ api = BoltAPI(
     ),
 )
 
-# Register health check endpoints (/health, /ready)
+# Register health check endpoints (/health, /ready).
+# Custom checks replace the auto DB-only default — register both explicitly.
 register_health_checks(api)
+add_health_check(check_database)
+add_health_check(check_rates_freshness)
 
 
 @api.get("/countries", summary="Get list of countries")
@@ -335,6 +372,15 @@ async def rates(
         str | None,
         Query(description="Date for historical rates (YYYY-MM-DD)"),
     ] = None,
+    strict: Annotated[
+        bool,
+        Query(
+            description=(
+                "If true, require an exact date match (no weekend/holiday fallback). "
+                "For latest rates (no date), return 503 when stored data is stale."
+            )
+        ),
+    ] = False,
 ) -> RatesResponseSchema:
     """Returns exchange rates from the European Central Bank."""
     # Validate base currency
@@ -351,6 +397,7 @@ async def rates(
 
     # Parse and validate date (enforce YYYY-MM-DD format)
     query_date = pendulum.now().date()
+    date_requested = date is not None
     if date:
         if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
             raise BadRequest(detail=f"Invalid date format: '{date}'. Expected format: YYYY-MM-DD")
@@ -360,9 +407,34 @@ async def rates(
             raise BadRequest(detail=f"Invalid date: '{date}'. Expected a valid date in YYYY-MM-DD format.")
 
     # Get the rates data
-    record = await Rate.objects.filter(date__lte=query_date).order_by("-date").afirst()
-    if not record:
-        raise NotFound(detail="No rate data available for the specified date.")
+    if strict and date_requested:
+        record = await Rate.objects.filter(date=query_date).afirst()
+        if not record:
+            raise NotFound(
+                detail=f"No exchange rate data for exact date {query_date.isoformat()}."
+            )
+    else:
+        record = await Rate.objects.filter(date__lte=query_date).order_by("-date").afirst()
+        if not record:
+            raise NotFound(detail="No rate data available for the specified date.")
+
+    # Latest (no date) + strict: refuse stale data instead of silently serving it
+    if strict and not date_requested and is_rates_stale(record.date):
+        raise ServiceUnavailable(
+            detail=(
+                f"Latest exchange rates are stale (latest={record.date.isoformat()}, "
+                f"max age={settings.RATES_MAX_AGE_DAYS} days)."
+            )
+        )
+
+    # Non-strict latest: still serve, but surface pipeline stalls in logs/Sentry
+    if not date_requested and is_rates_stale(record.date):
+        message = (
+            f"Serving stale latest exchange rates: latest={record.date.isoformat()} "
+            f"(max age={settings.RATES_MAX_AGE_DAYS} days)"
+        )
+        logger.warning(message)
+        sentry_sdk.capture_message(message, level="warning")
 
     # Base re-calculation - only include currencies defined in CURRENCY_SYMBOLS
     rates_data = {"EUR": 1.0}

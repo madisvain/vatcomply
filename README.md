@@ -60,6 +60,19 @@ uv run python manage.py load_rates --last-90-days
 make run      # or: DEBUG=True uv run python manage.py runbolt --dev
 ```
 
+### Exchange rate updates
+
+Rates are stored in the database and refreshed from the ECB (not fetched per request):
+
+- **Boot**: `start.sh` loads recent rates on deploy (when migrations run).
+- **Hourly shell loop**: `start.sh` runs `load_rates --last-90-days` every hour (covers single-container deploys such as Railway).
+- **In-process scheduler** (optional): set `BACKGROUND_SCHEDULER=true` so APScheduler also loads rates (hourly + immediately on worker start).
+- **docker-compose**: a dedicated `cron` service runs the same jobs via `crontab`.
+
+`/ready` includes a **rates freshness** check (fails if the latest `Rate.date` is older than `RATES_MAX_AGE_DAYS`, default 4). Monitor `/ready` in production.
+
+Optional query flag: `GET /rates?strict=true` requires an exact date (no weekend fallback) and returns **503** for stale latest data.
+
 ### Testing
 
 ```shell

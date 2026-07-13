@@ -12,5 +12,16 @@ if [ "${SKIP_MIGRATIONS:-false}" = "false" ]; then
     (python manage.py load_countries; python manage.py load_rates --last-90-days; python manage.py load_vat_rates; python manage.py load_rates) &
 fi
 
+# Keep rates fresh even if in-process APScheduler is disabled or the ASGI
+# worker lifecycle does not run scheduled jobs (e.g. multi-process deploys).
+# Idempotent with BACKGROUND_SCHEDULER / compose cron (bulk_create ignore_conflicts).
+(
+  while true; do
+    sleep 3600
+    echo "[start.sh] Hourly load_rates..."
+    python manage.py load_rates --last-90-days || echo "[start.sh] load_rates failed (exit $?)"
+  done
+) &
+
 echo "[start.sh] Starting server on port ${PORT:-8000}..."
 exec python manage.py runbolt --host 0.0.0.0 --port ${PORT:-8000} --processes ${PROCESSES:-2} 2>&1
