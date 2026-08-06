@@ -179,12 +179,41 @@ RATES_LAST_90_DAYS_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hi
 RATES_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.xml"
 
 # Sentry
+# Expected VIES capacity/availability fault codes — not application bugs.
+# Drop these so Member State rate limits (esp. FR MS_MAX_CONCURRENT_REQ) never open issues.
+_SENTRY_DROP_VIES_FAULTS = (
+    "MS_MAX_CONCURRENT_REQ",
+    "MS_MAX_CONCURRENT_REQ_TIME",
+    "MS_UNAVAILABLE",
+    "GLOBAL_MAX_CONCURRENT_REQ",
+)
+
+
+def _event_text(event) -> str:
+    """Flatten message/logentry/exception text from a Sentry event for filtering."""
+    parts = [event.get("message") or ""]
+    logentry = event.get("logentry") or {}
+    parts.append(logentry.get("message") or "")
+    if logentry.get("params"):
+        parts.append(" ".join(str(p) for p in logentry["params"]))
+    for exc in (event.get("exception") or {}).get("values") or []:
+        parts.append(exc.get("type") or "")
+        parts.append(exc.get("value") or "")
+    return " ".join(parts)
+
+
 def before_send(event, hint):
     # Filter out OpenTelemetry context detach errors (known issue with async Django)
     if "exc_info" in hint:
         exc_value = hint["exc_info"][1]
         if isinstance(exc_value, ValueError) and "was created in a different Context" in str(exc_value):
             return None
+
+    # Drop expected VIES transient capacity/availability noise (VATCOMPLY-6S).
+    text = _event_text(event)
+    if any(code in text for code in _SENTRY_DROP_VIES_FAULTS):
+        return None
+
     return event
 
 
