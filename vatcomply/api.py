@@ -4,6 +4,7 @@ VATcomply API
 Provides VAT validation, currency rates, geolocation, and IBAN validation endpoints.
 """
 
+import asyncio
 import logging
 import os
 import re
@@ -19,7 +20,7 @@ from apscheduler.triggers.cron import CronTrigger
 from django.conf import settings
 from django.core.management import call_command
 from django_bolt import BoltAPI, Request
-from django_bolt.exceptions import BadRequest, NotFound
+from django_bolt.exceptions import BadRequest, NotFound, ServiceUnavailable
 from django_bolt.health import register_health_checks
 from django_bolt.middleware import rate_limit
 from django_bolt.openapi import OpenAPIConfig
@@ -253,6 +254,25 @@ async def validate_iban(
 _VIES_WSDL_PATH = os.path.join(os.path.dirname(__file__), "wsdl", "checkVatService.wsdl")
 _vat_client = None
 
+# VIES capacity / availability faults from the EC service (not client errors, not our bugs).
+# See checkVatService.wsdl fault codes — MS_* are per Member State (FR/DE are common).
+_VIES_TRANSIENT_FAULTS = frozenset(
+    {
+        "MS_MAX_CONCURRENT_REQ",
+        "MS_MAX_CONCURRENT_REQ_TIME",
+        "MS_UNAVAILABLE",
+        "SERVICE_UNAVAILABLE",
+        "TIMEOUT",
+        "GLOBAL_MAX_CONCURRENT_REQ",
+    }
+)
+
+# Cap concurrent outbound VIES calls per process to reduce MS_MAX_CONCURRENT_REQ.
+_VIES_CONCURRENCY = 4
+_vies_semaphore = asyncio.Semaphore(_VIES_CONCURRENCY)
+_VIES_MAX_ATTEMPTS = 3
+_VIES_RETRY_BASE_DELAY = 0.4  # seconds; exponential backoff between attempts
+
 
 def _get_vat_client():
     """Lazy-init the zeep AsyncClient on first use."""
@@ -263,13 +283,47 @@ def _get_vat_client():
     return _vat_client
 
 
+def _vies_fault_code(fault: zeep.exceptions.Fault) -> str:
+    """Normalize SOAP fault message to a VIES fault code string."""
+    return (fault.message or str(fault) or "").strip()
+
+
 async def _vat_check(vat_number: str):
-    """Run VAT check and return serialized response."""
+    """Run VAT check against VIES with concurrency limit and transient retries.
+
+    Retries only capacity/availability faults (e.g. MS_MAX_CONCURRENT_REQ).
+    Client faults such as INVALID_INPUT propagate immediately.
+    """
     client = _get_vat_client()
-    result = await client.service.checkVat(
-        countryCode=vat_number[:2], vatNumber=vat_number[2:]
-    )
-    return zeep.helpers.serialize_object(result)
+    country_code = vat_number[:2]
+    number = vat_number[2:]
+    last_fault: zeep.exceptions.Fault | None = None
+
+    for attempt in range(_VIES_MAX_ATTEMPTS):
+        try:
+            async with _vies_semaphore:
+                result = await client.service.checkVat(
+                    countryCode=country_code, vatNumber=number
+                )
+            return zeep.helpers.serialize_object(result)
+        except zeep.exceptions.Fault as exc:
+            last_fault = exc
+            code = _vies_fault_code(exc)
+            if code not in _VIES_TRANSIENT_FAULTS or attempt + 1 >= _VIES_MAX_ATTEMPTS:
+                raise
+            delay = _VIES_RETRY_BASE_DELAY * (2**attempt)
+            logger.warning(
+                "VIES transient fault %s for country %s (attempt %s/%s); retrying in %.1fs",
+                code,
+                country_code,
+                attempt + 1,
+                _VIES_MAX_ATTEMPTS,
+                delay,
+            )
+            await asyncio.sleep(delay)
+
+    assert last_fault is not None
+    raise last_fault
 
 
 @api.get("/vat", summary="Validate VAT number")
@@ -303,8 +357,21 @@ async def validate_vat(
             country_code=response["countryCode"],
         )
     except zeep.exceptions.Fault as e:
-        logger.error("VIES SOAP fault for VAT %s: %s", vat_number, e.message)
-        raise BadRequest(detail=e.message)
+        fault = _vies_fault_code(e)
+        country_code = vat_number[:2]
+        if fault in _VIES_TRANSIENT_FAULTS:
+            # Expected when a Member State (esp. FR/DE) is at capacity — not our bug.
+            # warning avoids Sentry error noise from logger.error + LoggingIntegration.
+            logger.warning(
+                "VIES temporarily unavailable for country %s: %s", country_code, fault
+            )
+            raise ServiceUnavailable(
+                detail=fault,
+                headers={"Retry-After": "5"},
+            )
+        # Client / permanent faults (INVALID_INPUT, etc.)
+        logger.info("VIES SOAP fault for country %s: %s", country_code, fault)
+        raise BadRequest(detail=fault)
 
 
 @api.get("/vat_rates", summary="Get VAT rates")

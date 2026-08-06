@@ -56,13 +56,23 @@ GET https://api.vatcomply.com/vat?vat_number=BE0123456789
 }
 ```
 
-**400 - VIES service fault:**
+**400 - VIES client fault:**
 
 ```json
 {
-  "error": "{ MS_UNAVAILABLE | INVALID_INPUT | SERVICE_UNAVAILABLE | ... }"
+  "detail": "INVALID_INPUT"
 }
 ```
+
+**503 - VIES temporarily unavailable** (Member State capacity or downtime; retry later):
+
+```json
+{
+  "detail": "MS_MAX_CONCURRENT_REQ"
+}
+```
+
+Common transient codes: `MS_MAX_CONCURRENT_REQ`, `MS_MAX_CONCURRENT_REQ_TIME`, `MS_UNAVAILABLE`, `SERVICE_UNAVAILABLE`, `TIMEOUT`, `GLOBAL_MAX_CONCURRENT_REQ`. Response includes `Retry-After: 5`.
 
 ## Supported Countries
 
