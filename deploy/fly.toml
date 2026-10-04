@@ -1,5 +1,5 @@
-# Fly.io alternative origin. Deploy from the v2 directory:
-#   fly deploy --config ../deploy/fly.toml
+# Fly.io alternative origin. Deploy from the repository root:
+#   fly deploy --config deploy/fly.toml
 # Create one small volume per machine. See deploy/PRODUCTION.md.
 # Behind Cloudflare, set TRUSTED_IP_HEADER=CF-Connecting-IP instead.
 

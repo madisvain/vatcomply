@@ -18,14 +18,12 @@ jobs:
       - name: Install cargo-dist 0.33.0
         run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.33.0/cargo-dist-installer.sh | sh
       - name: Build release artifacts
-        working-directory: v2
         run: dist build
       - name: Attest artifacts
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: "v2/target/distrib/**/*"
+          subject-path: "target/distrib/**/*"
       - name: Publish the GitHub release
-        working-directory: v2
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: dist host
@@ -43,8 +41,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v6
         with:
-          context: v2
-          file: v2/Dockerfile
+          context: .
+          file: Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           sbom: true

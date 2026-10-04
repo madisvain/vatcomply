@@ -1,7 +1,0 @@
-target
-fuzz
-.git
-*.md
-tests
-tools
-bench

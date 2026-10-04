@@ -13,9 +13,6 @@ permissions:
 jobs:
   rust:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: v2
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,7 +29,7 @@ jobs:
       - name: cargo deny
         uses: EmbarkStudios/cargo-deny-action@v2
         with:
-          manifest-path: v2/Cargo.toml
+          manifest-path: Cargo.toml
           command: check
 
       - name: OpenAPI breaking changes
@@ -46,13 +43,13 @@ jobs:
             exit 0
           fi
           git fetch origin master
-          if ! git cat-file -e origin/master:v2/openapi.json 2>/dev/null; then
-            echo "origin/master has no v2/openapi.json; this PR is the baseline"
+          if ! git cat-file -e origin/master:openapi.json 2>/dev/null; then
+            echo "origin/master has no openapi.json; this PR is the baseline"
             exit 0
           fi
           curl -fsSL -L https://github.com/oasdiff/oasdiff/releases/download/v1.33.0/oasdiff_1.33.0_linux_amd64.tar.gz \
             | tar -xz -C /tmp oasdiff
-          git show origin/master:v2/openapi.json > /tmp/base-openapi.json
-          /tmp/oasdiff breaking /tmp/base-openapi.json v2/openapi.json
+          git show origin/master:openapi.json > /tmp/base-openapi.json
+          /tmp/oasdiff breaking /tmp/base-openapi.json openapi.json
         env:
           GH_TOKEN: ${{ github.token }}

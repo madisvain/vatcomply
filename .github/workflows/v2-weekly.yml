@@ -12,9 +12,6 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: v2
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.91.1
@@ -31,7 +28,6 @@ jobs:
       - name: Install cargo-fuzz
         run: cargo install cargo-fuzz --locked
       - name: Short fuzz
-        working-directory: v2
         run: |
           cargo +nightly fuzz run ecb_xml -- -max_total_time=60
           cargo +nightly fuzz run vies_soap -- -max_total_time=60
@@ -45,7 +41,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Refresh embedded ECB snapshot
-        run: python3 v2/tools/refresh_snapshot.py
+        run: python3 tools/refresh_snapshot.py
       - name: Open a PR when the snapshot changed
         uses: peter-evans/create-pull-request@v7
         with:
@@ -56,5 +52,5 @@ jobs:
             Weekly refresh of the embedded ECB history snapshot and the pyfloat oracle.
             VAT rate JSON is updated by a separate data pull request.
           add-paths: |
-            v2/data/rates-snapshot.json.gz
-            v2/tests/fixtures/pyfloat_oracle.json
+            data/rates-snapshot.json.gz
+            tests/fixtures/pyfloat_oracle.json

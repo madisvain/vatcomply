@@ -64,10 +64,9 @@ The image runs as UID 65532. A root-owned volume logs a snapshot write error and
 Fly.io, two or more machines in EU regions, each with a small volume. Config: `deploy/fly.toml` (`TRUSTED_IP_HEADER=Fly-Client-IP`).
 
 ```shell
-cd v2
 fly volumes create vatcomply_data --region ams --size 1
 fly volumes create vatcomply_data --region fra --size 1
-fly deploy --config ../deploy/fly.toml
+fly deploy --config deploy/fly.toml
 fly scale count 2 --region ams,fra
 ```
 
@@ -79,10 +78,16 @@ External uptime checks hit `/readyz`. Alert when the check fails or `rates_age_s
 
 ## Cut-over
 
-1. Deploy v2 beside v1. Leave v1 serving production traffic.
-2. Mirror a slice of production traffic at v2 and shadow-compare status, path, and JSON body against v1. Historical `/rates` that disagree with the ECB-derived body stop the cut-over until a `vatcomply_rate` dump explains them.
-3. Shift traffic gradually at Cloudflare (tunnel weight or a staged DNS move).
-4. Keep v1 running and ready for an instant rollback for the whole bake period.
-5. After the bake, leave v1 in place until a rollback is no longer required. The Python service in this repository is unchanged until that point.
+The live process is the Railway service. It builds the root `Dockerfile` on push to `master`. GitHub Actions no longer publishes a Python image.
 
-Known behaviour that shadow-compare will flag on purpose is listed in `PLAN.md` section 7 (new health paths, cache headers, CORS without `Origin`, breaker short-circuit, VIES cache, rate limit off unless the deploy files set it).
+1. On the Railway service, while the current deployment is still serving, set `RATE_LIMIT_RPS=2`, `RATE_LIMIT_BURST=4`, `TRUSTED_IP_HEADER=CF-Connecting-IP`, `DATA_DIR=/data`, `LOG_FORMAT=json`, and mount a volume at `/data`.
+2. Note the current Railway deployment id. That deployment is the rollback.
+3. Merge the rewrite. Railway builds the Rust image and replaces the service. The SQLite volume is unused. Leave it until `/rates` and `/vat` have answered.
+4. The volume must be writable by UID 65532. If it is not, the log shows a snapshot write error and the process still serves the embedded rates.
+5. Check `https://api.vatcomply.com/rates`, `/countries`, `/vat_rates`, and one `/vat`.
+
+If the musl link fails, the build fails and Railway keeps the previous deployment.
+
+Confirm the API zone is not Cache Everything before the merge. `/vat` and `/geolocate` send `Cache-Control: private, no-store`. Undated `/rates` sends `max-age=300`.
+
+Behaviour that differs from v1 on purpose is in `PLAN.md` section 7.

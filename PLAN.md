@@ -1,8 +1,8 @@
 # VATComply v2 — Rust rewrite plan
 
-Status: approved. Implemented on `feat/v2-rust` from `origin/master`.
+Status: approved. The crate lives at the repository root on `feat/v2-rust`. Python is deleted on that branch and remains only in git history.
 
-The decisions in the table below were accepted with the plan. The Python service stays in place until the cut-over in M6.
+The decisions in the table below were accepted with the plan. Decision 1 first placed the crate in `v2/` beside Python. The hard cut moved it to the repository root and removed the Python service.
 
 Evidence for the contracts below is the code in `vatcomply/api.py` plus live responses from `https://api.vatcomply.com` captured on 2026-10-04 (User-Agent required; Cloudflare returns 1010 otherwise). Samples that matter are quoted. A polite recorder in M0 freezes the rest as golden files.
 
@@ -204,7 +204,7 @@ The handover matches the service in outline and differs from it in these facts:
 - v1's scheduler is cron: rates at minute 10 (90-day file, insert-only), countries 02:00, VAT rates 03:00. The handover's hourly `tokio::time::interval` with `MissedTickBehavior::Skip` replaces that. First tick at startup. Full `eurofxref-hist.xml` when no valid disk snapshot exists; `eurofxref-hist-90d.xml` otherwise.
 - Countries source is `dr5hn/countries-states-cities-database` `countries.json` (`phonecode` → `phone_code`). VAT rates source is TEDB SOAP `retrieveVatRates` (`VatRetrievalService.wsdl`), Greece mapped `EL`. v2 does not call those on the request path. It embeds a snapshot taken from production.
 - Geolocation is two headers, not one: `CF-IPCountry` then Bunny `Cdn-RequestCountryCode`. There is no MaxMind database today.
-- Client IP for the `ip` field is specifically `CF-Connecting-IP`. Rate limiting in production is 2 rps, burst 4. The handover's only knob is `RATE_LIMIT_PER_MIN`. Decision 3 adds the rps/burst knobs so the header `x-ratelimit-limit: 2` can stay true in production.
+- Client IP for the `ip` field is specifically `CF-Connecting-IP`. Rate limiting in production is 2 rps, burst 4. The handover knob was per minute. v2 keeps only `RATE_LIMIT_RPS` and `RATE_LIMIT_BURST`, so the header `x-ratelimit-limit: 2` stays true in production.
 - `/health` and `/ready` exist and monitors use them. `/healthz` and `/readyz` are new names from the handover. Keep the old ones.
 - Root and OpenAPI URLs are on `api.vatcomply.com`, including `documentation` → `https://api.vatcomply.com/docs`.
 - Local `db.sqlite3` has 62 rate rows (2025-10-20 through 2026-01-16), 0 countries, and 27 VAT-rate rows. It is not the golden source. Production HTTP is.
@@ -327,7 +327,8 @@ Runtime, each earned:
 | `arc-swap` | Published rate book. Locked. |
 | `moka` | VIES success cache. Locked. |
 | `mimalloc` | Global allocator. Locked. If musl link fails, stop and ask before swapping it out. |
-| `serde` + `serde_json` | Config and JSON bodies. |
+| `indexmap` | Keep currency key order while parsing the embedded JSON object. |
+| `serde` + `serde_json` | Config and JSON bodies. `raw_value` keeps the embedded slices. |
 | `bytes` | Precomputed latest-rates body. |
 | `rust_decimal` | Scale-6 HALF_EVEN division in the cross-rate. |
 | `sha2` | Snapshot checksum. |
@@ -339,7 +340,7 @@ Runtime, each earned:
 | `maxminddb` | GeoIP only when `GEOIP_DB_PATH` is set. Locked. |
 | `prometheus` | `/metrics` text when `METRICS=1`. |
 
-Dev: `wiremock`, `insta`, `proptest`. Fuzzing uses `cargo-fuzz` and `libfuzzer-sys` in `v2/fuzz`, not in the server's dependency tree.
+Dev: `wiremock`, `proptest`. Fuzzing uses `cargo-fuzz` and `libfuzzer-sys` in `fuzz/`, not in the server's dependency tree. The committed `openapi.json` is the oasdiff baseline.
 
 Not used, on purpose: `clap` (hand-rolled `--help` and the `healthcheck` argv), `thiserror`, `anyhow`, `chrono`, `regex`, `openssl`.
 
@@ -353,8 +354,7 @@ Env:
 | `RATES_REFRESH_SECS` | `3600` | |
 | `VIES_TIMEOUT_SECS` | `10` | Per attempt |
 | `VIES_CACHE_TTL_SECS` | `300` | |
-| `RATE_LIMIT_PER_MIN` | `0` | 0 = off. Minute window when set and `RATE_LIMIT_RPS` is 0. |
-| `RATE_LIMIT_RPS` | `0` | 0 = off. Production sets `2`. Wins over the minute window. |
+| `RATE_LIMIT_RPS` | `0` | 0 = off. Production sets `2`. |
 | `RATE_LIMIT_BURST` | `4` | Used with RPS. |
 | `TRUSTED_IP_HEADER` | empty | Empty = socket peer only. Production: `CF-Connecting-IP`. Never `X-Forwarded-For` unless this var names it. |
 | `GEO_COUNTRY_HEADERS` | `CF-IPCountry,Cdn-RequestCountryCode` | First hit wins. |
