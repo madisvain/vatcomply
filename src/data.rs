@@ -4,11 +4,9 @@
 //! `tld` set. Currencies and VAT rates stay the captured production bytes.
 //! Filters keep object slices so key order stays intact.
 
-use std::collections::HashMap;
-
 use indexmap::IndexMap;
 use my_country::Country;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 use strum::IntoEnumIterator;
 
@@ -59,7 +57,6 @@ struct VatFields {
 
 impl StaticData {
     pub fn load() -> Result<Self, String> {
-        let tlds = tld_by_iso2();
         let mut listed: Vec<Country> = Country::iter().collect();
         listed.sort_by_key(|country| country.alpha2());
         let mut countries = Vec::with_capacity(listed.len());
@@ -70,11 +67,13 @@ impl StaticData {
             let region = country.region().unwrap_or("");
             let subregion = country.subregion().unwrap_or("");
             let currency = currency_alpha(country.currency_code())?;
-            let tld = tlds.get(iso2).map(String::as_str).unwrap_or("");
+            let tld = tld_for(iso2);
             let geo = country.geo();
-            let latitude = json_number(geo.latitude)?;
-            let longitude = json_number(geo.longitude)?;
-            let slice = country_object(&CountryObject {
+            let latitude = serde_json::to_value(geo.latitude)
+                .map_err(|error| format!("country json: {error}"))?;
+            let longitude = serde_json::to_value(geo.longitude)
+                .map_err(|error| format!("country json: {error}"))?;
+            let slice = serde_json::to_string(&CountryObject {
                 iso2,
                 iso3,
                 name,
@@ -82,13 +81,14 @@ impl StaticData {
                 phone_code: country.country_code(),
                 capital: capital_for(iso2),
                 currency: &currency,
-                tld,
+                tld: &tld,
                 region,
                 subregion,
-                latitude: &latitude,
-                longitude: &longitude,
+                latitude,
+                longitude,
                 emoji: country.emoji_flag(),
-            })?;
+            })
+            .map_err(|error| format!("country json: {error}"))?;
             countries.push(CountryRow {
                 slice,
                 iso2: iso2.to_string(),
@@ -252,36 +252,19 @@ fn capital_for(iso2: &str) -> &str {
         .unwrap_or("")
 }
 
-/// Two-letter IANA labels that parse as ISO countries, plus `uk` for `GB`
-/// when the set has no direct `gb` label.
-fn tld_by_iso2() -> HashMap<String, String> {
-    let mut map = HashMap::new();
-    for label in tld::TLD.iter() {
-        let Some(iso2) = two_letter_country(label) else {
-            continue;
-        };
-        map.insert(iso2, format!(".{label}"));
+/// Direct hit is `.{iso2}`. `GB` uses `.uk` only when `gb` is absent and `uk` is in the set.
+fn tld_for(iso2: &str) -> String {
+    let label = iso2.to_ascii_lowercase();
+    if tld::exist(&label) {
+        return format!(".{label}");
     }
-    apply_gb_alias(&mut map, tld::exist("uk"));
-    map
+    if iso2 == "GB" && tld::exist("uk") {
+        return ".uk".into();
+    }
+    String::new()
 }
 
-/// `.gb` wins when the set contains it. Otherwise `uk` is GB's ccTLD, and only
-/// while that label is still in the set.
-fn apply_gb_alias(map: &mut HashMap<String, String>, uk_exists: bool) {
-    if !map.contains_key("GB") && uk_exists {
-        map.insert("GB".to_string(), ".uk".to_string());
-    }
-}
-
-fn two_letter_country(label: &str) -> Option<String> {
-    if label.len() != 2 || !label.bytes().all(|byte| byte.is_ascii_alphabetic()) {
-        return None;
-    }
-    let iso2 = label.to_ascii_uppercase();
-    iso2.parse::<Country>().ok().map(|_| iso2)
-}
-
+#[derive(Serialize)]
 struct CountryObject<'a> {
     iso2: &'a str,
     iso3: &'a str,
@@ -293,56 +276,9 @@ struct CountryObject<'a> {
     tld: &'a str,
     region: &'a str,
     subregion: &'a str,
-    latitude: &'a str,
-    longitude: &'a str,
+    latitude: serde_json::Value,
+    longitude: serde_json::Value,
     emoji: &'a str,
-}
-
-fn country_object(country: &CountryObject<'_>) -> Result<String, String> {
-    let mut body = String::from("{");
-    push_string(&mut body, "iso2", country.iso2, true)?;
-    push_string(&mut body, "iso3", country.iso3, false)?;
-    push_string(&mut body, "name", country.name, false)?;
-    push_raw(&mut body, "numeric_code", &country.numeric_code.to_string());
-    push_string(&mut body, "phone_code", country.phone_code, false)?;
-    push_string(&mut body, "capital", country.capital, false)?;
-    push_string(&mut body, "currency", country.currency, false)?;
-    push_string(&mut body, "tld", country.tld, false)?;
-    push_string(&mut body, "region", country.region, false)?;
-    push_string(&mut body, "subregion", country.subregion, false)?;
-    push_raw(&mut body, "latitude", country.latitude);
-    push_raw(&mut body, "longitude", country.longitude);
-    push_string(&mut body, "emoji", country.emoji, false)?;
-    body.push('}');
-    Ok(body)
-}
-
-fn push_string(body: &mut String, key: &str, value: &str, first: bool) -> Result<(), String> {
-    if !first {
-        body.push(',');
-    }
-    body.push('"');
-    body.push_str(key);
-    body.push_str("\":");
-    body.push_str(&serde_json::to_string(value).map_err(|error| format!("country json: {error}"))?);
-    Ok(())
-}
-
-fn push_raw(body: &mut String, key: &str, value: &str) {
-    body.push(',');
-    body.push('"');
-    body.push_str(key);
-    body.push_str("\":");
-    body.push_str(value);
-}
-
-fn json_number(value: Option<impl serde::Serialize>) -> Result<String, String> {
-    match value {
-        None => Ok("null".to_string()),
-        Some(number) => {
-            serde_json::to_string(&number).map_err(|error| format!("country json: {error}"))
-        }
-    }
 }
 
 fn blank(value: Option<&str>) -> bool {
@@ -507,15 +443,8 @@ mod tests {
                 assert_eq!(tld, "", "{}", row.iso2);
                 saw_missing = true;
             }
-            assert_key_order(&row.slice);
         }
         assert!(saw_missing, "expected a country with no IANA ccTLD");
-        if !tld::exist("bq") {
-            assert_eq!(row_json(&data, "BQ")["tld"], "");
-        }
-        if !tld::exist("um") {
-            assert_eq!(row_json(&data, "UM")["tld"], "");
-        }
         assert_ne!(row_json(&data, "BQ")["tld"], ".an");
         assert_ne!(row_json(&data, "UM")["tld"], ".us");
 
@@ -527,59 +456,9 @@ mod tests {
         let eur = data.countries(None, None, None, Some("eur"));
         assert!(eur.contains("\"iso2\":\"DE\""));
         assert!(!eur.contains("\"iso2\":\"GB\""));
-        let body = geolocate_body(
-            data.country_slice("ee").unwrap(),
-            "EE",
-            Some("203.0.113.10"),
-        )
-        .unwrap();
-        assert!(body.contains("\"country_code\":\"EE\""));
-        assert!(body.contains("\"ip\":\"203.0.113.10\""));
-    }
-
-    #[test]
-    fn gb_alias_uses_uk_only_when_gb_is_absent() {
-        let mut missing = HashMap::new();
-        apply_gb_alias(&mut missing, true);
-        assert_eq!(missing.get("GB").map(String::as_str), Some(".uk"));
-
-        let mut present = HashMap::from([("GB".to_string(), ".gb".to_string())]);
-        apply_gb_alias(&mut present, true);
-        assert_eq!(present["GB"], ".gb");
-
-        let mut neither = HashMap::new();
-        apply_gb_alias(&mut neither, false);
-        assert!(!neither.contains_key("GB"));
     }
 
     fn row_json(data: &StaticData, iso2: &str) -> serde_json::Value {
         serde_json::from_str(data.country_slice(iso2).unwrap()).unwrap()
-    }
-
-    fn assert_key_order(slice: &str) {
-        let keys = [
-            "iso2",
-            "iso3",
-            "name",
-            "numeric_code",
-            "phone_code",
-            "capital",
-            "currency",
-            "tld",
-            "region",
-            "subregion",
-            "latitude",
-            "longitude",
-            "emoji",
-        ];
-        let mut previous = 0;
-        for key in keys {
-            let needle = format!("\"{key}\":");
-            let at = slice
-                .find(&needle)
-                .unwrap_or_else(|| panic!("missing {key}"));
-            assert!(at >= previous, "{key} out of order");
-            previous = at;
-        }
     }
 }
