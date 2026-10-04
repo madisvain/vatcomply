@@ -27,6 +27,12 @@ impl ApiError {
             ratelimit_limit: None,
         }
     }
+
+    /// Client body stays `Internal Server Error`. `reason` is the Sentry message.
+    pub fn internal(reason: impl std::fmt::Display) -> Self {
+        tracing::error!("{reason}");
+        Self::new(StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error")
+    }
 }
 
 impl IntoResponse for ApiError {

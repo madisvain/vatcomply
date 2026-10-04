@@ -168,6 +168,7 @@ ENVIRONMENT:
     PUBLIC_BASE_URL         Absolute origin for links on GET / (default http://localhost:8000)
     LOG_FORMAT              json or pretty (default pretty)
     LOG_LEVEL               tracing filter (default info)
+    SENTRY_DSN              Sentry DSN. Empty or unset disables error reporting.
     METRICS                 1 mounts GET /metrics (default 0)
     ECB_HIST_URL            Full ECB history URL (advanced, has a default)
     ECB_HIST_90D_URL        90-day ECB URL (advanced, has a default)
