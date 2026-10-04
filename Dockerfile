@@ -47,7 +47,7 @@ ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
     BIND=0.0.0.0
 USER 65532:65532
 EXPOSE 8000
-VOLUME ["/data"]
+# No VOLUME instruction. Railway rejects it. Mount /data in the platform.
 HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 \
     CMD ["/vatcomply", "healthcheck"]
 ENTRYPOINT ["/vatcomply"]
