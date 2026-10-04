@@ -500,6 +500,6 @@ API-visible, and only these:
 - Binary ships with rate limiting off. The public deploy files turn on 2 rps, burst 4, and then the 429 body matches v1.
 - A VIES country whose breaker is open returns `MS_UNAVAILABLE` without calling the Commission. Successful validations may be up to `VIES_CACHE_TTL_SECS` old.
 - Countries, currencies, and VAT rates update when a snapshot PR is merged and the binary is rebuilt, not on a daily cron inside the process.
-- No database, no Django admin, no Sentry. Logs are `tracing`. Uptime watches `/readyz`.
+- No database, no Django admin. `tracing` logs always. When `SENTRY_DSN` is set, panics and `ERROR` logs (including HTTP 500s) go to Sentry. VIES faults stay warnings and HTTP 503. Uptime watches `/readyz`.
 
 Anything else that cannot match section 1 is a stop-and-ask, not a quiet difference.

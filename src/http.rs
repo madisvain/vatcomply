@@ -21,6 +21,7 @@ use axum::routing::get;
 use axum::Router;
 use bytes::Bytes;
 use prometheus::Encoder;
+use sentry::integrations::tower::{NewSentryLayer, SentryHttpLayer};
 use tower::Service;
 use tower_governor::governor::GovernorConfigBuilder;
 use tower_governor::key_extractor::KeyExtractor;
@@ -133,6 +134,8 @@ pub fn router(state: AppState) -> AppService {
                     },
                 ),
         )
+        .layer(SentryHttpLayer::new())
+        .layer(NewSentryLayer::<Request>::new_from_top())
         .with_state(state);
     AppService { inner }
 }
@@ -223,7 +226,7 @@ fn rate_limited(error: GovernorError, limit_header: HeaderValue) -> ApiError {
             retry_after_header: Some(HeaderValue::from_static("1")),
             ratelimit_limit: Some(limit_header),
         },
-        _ => ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error"),
+        _ => ApiError::internal("rate limiter failed"),
     }
 }
 
@@ -360,9 +363,8 @@ async fn apply_cache(
     let (mut parts, body) = response.into_parts();
     let bytes = match axum::body::to_bytes(body, 8 * 1024 * 1024).await {
         Ok(bytes) => bytes,
-        Err(_) => {
-            return ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error")
-                .into_response();
+        Err(error) => {
+            return ApiError::internal(format!("response body: {error}")).into_response();
         }
     };
     let policy = cache_control(path, query, parts.status);
@@ -703,7 +705,7 @@ async fn geolocate(State(state): State<AppState>, request: Request) -> Result<Re
     };
     let ip = header_text(headers, "CF-Connecting-IP");
     let body = data::geolocate_body(slice, &code, ip.as_deref())
-        .map_err(|_| ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error"))?;
+        .map_err(|()| ApiError::internal("geolocate body"))?;
     Ok(json_response(StatusCode::OK, body))
 }
 
@@ -797,9 +799,8 @@ async fn metrics(State(state): State<AppState>) -> Response {
     let families = metrics.registry.gather();
     let mut buffer = Vec::new();
     let encoder = prometheus::TextEncoder::new();
-    if encoder.encode(&families, &mut buffer).is_err() {
-        return ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error")
-            .into_response();
+    if let Err(error) = encoder.encode(&families, &mut buffer) {
+        return ApiError::internal(format!("metrics encode failed: {error}")).into_response();
     }
     let mut response = Response::new(Body::from(buffer));
     response.headers_mut().insert(
@@ -838,4 +839,43 @@ async fn openapi_vnd(State(state): State<AppState>) -> Response {
         HeaderValue::from_static("application/vnd.oai.openapi+json"),
     );
     response
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::response::IntoResponse;
+    use tracing_subscriber::prelude::*;
+
+    #[test]
+    fn internal_error_is_captured_and_vies_503_is_not() {
+        let options = sentry::ClientOptions::new()
+            .dsn("https://public@sentry.invalid/1")
+            .before_send(crate::scrub_event);
+        let events = sentry::test::with_captured_events_options(
+            || {
+                tracing::subscriber::with_default(
+                    tracing_subscriber::registry().with(crate::error_tracing_layer()),
+                    || {
+                        let unavailable = vies_unavailable("MS_UNAVAILABLE".to_string());
+                        assert_eq!(unavailable.status, StatusCode::SERVICE_UNAVAILABLE);
+                        let response = ApiError::internal("geolocate body").into_response();
+                        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+                        let body = tokio::runtime::Builder::new_current_thread()
+                            .enable_all()
+                            .build()
+                            .unwrap()
+                            .block_on(axum::body::to_bytes(response.into_body(), 1024))
+                            .unwrap();
+                        assert_eq!(body.as_ref(), br#"{"detail":"Internal Server Error"}"#);
+                    },
+                );
+            },
+            options,
+        );
+        assert_eq!(events.len(), 1, "{events:?}");
+        let message = events[0].message.as_deref().unwrap_or_default();
+        assert!(message.contains("geolocate body"), "{message}");
+        assert!(!message.contains("MS_UNAVAILABLE"), "{message}");
+    }
 }

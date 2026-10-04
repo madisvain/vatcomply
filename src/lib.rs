@@ -6,6 +6,7 @@ use std::time::Duration;
 use axum::ServiceExt;
 use tokio::net::TcpListener;
 use tokio_util::sync::CancellationToken;
+use tracing_subscriber::prelude::*;
 use tracing_subscriber::EnvFilter;
 
 use crate::config::{help_text, Config, LogFormat};
@@ -35,6 +36,7 @@ pub fn run() -> Result<i32, String> {
         Some("healthcheck") => healthcheck(),
         Some("serve") | None => {
             let config = Config::from_env()?;
+            let _sentry = init_sentry();
             init_tracing(&config)?;
             let runtime = tokio::runtime::Builder::new_multi_thread()
                 .enable_all()
@@ -123,23 +125,100 @@ fn healthcheck() -> Result<i32, String> {
     }
 }
 
+fn init_sentry() -> sentry::ClientInitGuard {
+    let mut options = sentry::ClientOptions::new().before_send(scrub_event);
+    if std::env::var("SENTRY_RELEASE")
+        .ok()
+        .is_none_or(|value| value.trim().is_empty())
+    {
+        options = options.maybe_release(sentry::release_name!());
+    }
+    sentry::init(options)
+}
+
+/// `ERROR` logs become Sentry events. Warnings, including VIES faults, do not.
+pub(crate) fn error_tracing_layer<S>() -> sentry::integrations::tracing::SentryLayer<S>
+where
+    S: tracing::Subscriber + for<'lookup> tracing_subscriber::registry::LookupSpan<'lookup>,
+{
+    sentry::integrations::tracing::layer()
+        .event_filter(|metadata: &tracing::Metadata<'_>| {
+            if *metadata.level() == tracing::Level::ERROR {
+                sentry::integrations::tracing::EventFilter::Event
+            } else {
+                sentry::integrations::tracing::EventFilter::Ignore
+            }
+        })
+        .span_filter(|_| false)
+}
+
+pub(crate) fn scrub_event(
+    mut event: sentry::protocol::Event<'static>,
+) -> Option<sentry::protocol::Event<'static>> {
+    if let Some(request) = event.request.as_mut() {
+        if let Some(url) = request.url.as_mut() {
+            if let Some(query) = url.query().map(str::to_owned) {
+                let redacted = crate::query::redact(&query);
+                url.set_query(Some(&redacted));
+            }
+        }
+        if let Some(query) = request.query_string.as_mut() {
+            *query = crate::query::redact(query);
+        }
+    }
+    Some(event)
+}
+
 fn init_tracing(config: &Config) -> Result<(), String> {
     let filter =
         EnvFilter::try_new(&config.log_level).map_err(|error| format!("LOG_LEVEL: {error}"))?;
     match config.log_format {
         LogFormat::Json => {
-            tracing_subscriber::fmt()
-                .json()
-                .with_env_filter(filter)
+            tracing_subscriber::registry()
+                .with(tracing_subscriber::fmt::layer().json().with_filter(filter))
+                .with(error_tracing_layer())
                 .try_init()
                 .ok();
         }
         LogFormat::Pretty => {
-            tracing_subscriber::fmt()
-                .with_env_filter(filter)
+            tracing_subscriber::registry()
+                .with(tracing_subscriber::fmt::layer().with_filter(filter))
+                .with(error_tracing_layer())
                 .try_init()
                 .ok();
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn scrub_redacts_vat_and_iban() {
+        let mut event = sentry::protocol::Event::new();
+        event.request = Some(sentry::protocol::Request {
+            url: Some(
+                "https://api.vatcomply.com/vat?vat_number=DE123456789&iban=DE89370400440532013000&base=EUR"
+                    .parse()
+                    .unwrap(),
+            ),
+            query_string: Some(
+                "vat_number=DE123456789&iban=DE89370400440532013000&base=EUR".to_string(),
+            ),
+            ..Default::default()
+        });
+        let event = scrub_event(event).unwrap();
+        let request = event.request.unwrap();
+        let query = request.url.unwrap().query().unwrap().to_string();
+        let query_string = request.query_string.unwrap();
+        for value in [&query, &query_string] {
+            assert!(!value.contains("DE123456789"), "{value}");
+            assert!(!value.contains("DE89370400440532013000"), "{value}");
+            assert!(value.contains("vat_number=DE***"), "{value}");
+            assert!(value.contains("iban=***"), "{value}");
+            assert!(value.contains("base=EUR"), "{value}");
+        }
+    }
 }

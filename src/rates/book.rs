@@ -228,8 +228,7 @@ fn render_row(row: &RateRow, base: &str, symbols: Option<&[&str]>) -> Result<Str
 }
 
 fn internal(message: &str) -> ApiError {
-    tracing::error!(message, "rate render failed");
-    ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error")
+    ApiError::internal(format!("rate render failed: {message}"))
 }
 
 #[cfg(test)]
