@@ -38,7 +38,7 @@ SLEEP = 0.7
 # (name, method, path, extra headers, body_file or None)
 REQUESTS: list[tuple[str, str, str, dict[str, str], str | None]] = [
     ("root", "GET", "/", {}, None),
-    ("countries", "GET", "/countries", {}, "data/countries.json"),
+    ("countries", "GET", "/countries", {}, "tests/fixtures/countries_body.json"),
     ("currencies", "GET", "/currencies", {}, "data/currencies.json"),
     ("vat_rates", "GET", "/vat_rates", {}, "data/vat_rates.json"),
     ("countries_estonia", "GET", "/countries?search=Estonia", {}, None),
@@ -340,7 +340,7 @@ def write_vies_fixtures() -> None:
 
 def write_geolocate_fixture() -> None:
     """Success body is built from the captured countries row, not from the edge."""
-    raw = (ROOT / "data" / "countries.json").read_text(encoding="utf-8")
+    raw = (ROOT / "tests" / "fixtures" / "countries_body.json").read_text(encoding="utf-8")
     countries = json.loads(raw)
     ee = next(row for row in countries if row["iso2"] == "EE")
     # Preserve the production number tokens for coordinates.

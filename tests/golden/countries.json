@@ -10,5 +10,5 @@
     "content-type": "application/json"
   },
   "body": null,
-  "body_file": "data/countries.json"
+  "body_file": "tests/fixtures/countries_body.json"
 }

@@ -19,9 +19,13 @@ axum = { version = "0.8", features = ["macros"] }
 bytes = "1"
 flate2 = "1"
 indexmap = { version = "2", features = ["serde"] }
+iso-rs = { version = "0.2.0", default-features = false, features = ["from_alpha_2"] }
 maxminddb = "0.27"
 mimalloc = "0.1"
 moka = { version = "0.12", features = ["future"] }
+# `currency_code_kpw` and `currency_code_lak` are required. 0.1.21 drops those
+# variants unless the feature is enabled, while KP and LA still name them.
+my_country = { version = "0.1.21", default-features = false, features = ["all_countries", "iterator", "alpha2", "alpha3", "numeric_code", "iso_short_name", "country_code", "currency_code", "currency_code_kpw", "currency_code_lak", "region", "subregion", "geo", "emoji_flag"] }
 prometheus = "0.14"
 quick-xml = "0.41"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls-webpki-roots", "gzip"] }
@@ -30,6 +34,8 @@ sentry = { version = "0.49.3", default-features = false, features = ["backtrace"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value"] }
 sha2 = "0.10"
+strum = { version = "0.28", default-features = false }
+tld = "2"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "time", "sync", "net", "io-util"] }
 tokio-util = { version = "0.7", features = ["rt"] }
 tower = "0.5"

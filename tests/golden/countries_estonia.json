@@ -9,6 +9,6 @@
   "headers": {
     "content-type": "application/json"
   },
-  "body": "[{\"iso2\":\"EE\",\"iso3\":\"EST\",\"name\":\"Estonia\",\"numeric_code\":233,\"phone_code\":\"372\",\"capital\":\"Tallinn\",\"currency\":\"EUR\",\"tld\":\".ee\",\"region\":\"Europe\",\"subregion\":\"Northern Europe\",\"latitude\":59.0,\"longitude\":26.0,\"emoji\":\"🇪🇪\"}]",
+  "body": "[{\"iso2\":\"EE\",\"iso3\":\"EST\",\"name\":\"Estonia\",\"numeric_code\":233,\"phone_code\":\"372\",\"capital\":\"Tallinn\",\"currency\":\"EUR\",\"tld\":\".ee\",\"region\":\"Europe\",\"subregion\":\"Northern Europe\",\"latitude\":58.595272,\"longitude\":25.0136071,\"emoji\":\"🇪🇪\"}]",
   "body_file": null
 }

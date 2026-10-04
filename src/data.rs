@@ -1,20 +1,24 @@
-//! Embedded countries, currencies, and VAT rates.
+//! Countries, currencies, and VAT rates.
 //!
-//! Unfiltered responses are the captured production bytes. Filters keep those
-//! object slices so key order and number text stay intact.
+//! Countries are built at startup from `my_country`, `iso-rs`, and the IANA
+//! `tld` set. Currencies and VAT rates stay the captured production bytes.
+//! Filters keep object slices so key order stays intact.
+
+use std::collections::HashMap;
 
 use indexmap::IndexMap;
+use my_country::Country;
 use serde::Deserialize;
 use serde_json::value::RawValue;
+use strum::IntoEnumIterator;
 
 use crate::codes;
 
-const COUNTRIES_RAW: &str = include_str!("../data/countries.json");
 const CURRENCIES_RAW: &str = include_str!("../data/currencies.json");
 const VAT_RATES_RAW: &str = include_str!("../data/vat_rates.json");
 
 pub struct StaticData {
-    pub countries_raw: &'static str,
+    countries_body: String,
     countries: Vec<CountryRow>,
     pub currencies_raw: &'static str,
     currencies: Vec<CurrencyRow>,
@@ -23,7 +27,7 @@ pub struct StaticData {
 }
 
 struct CountryRow {
-    slice: &'static str,
+    slice: String,
     iso2: String,
     iso3: String,
     name: String,
@@ -44,16 +48,6 @@ struct VatRow {
 }
 
 #[derive(Deserialize)]
-struct CountryFields {
-    iso2: String,
-    iso3: String,
-    name: String,
-    region: String,
-    subregion: String,
-    currency: String,
-}
-
-#[derive(Deserialize)]
 struct CurrencyFields {
     name: String,
 }
@@ -65,25 +59,55 @@ struct VatFields {
 
 impl StaticData {
     pub fn load() -> Result<Self, String> {
-        let country_slices: Vec<&RawValue> = serde_json::from_str(COUNTRIES_RAW)
-            .map_err(|error| format!("countries.json: {error}"))?;
-        let mut countries = Vec::with_capacity(country_slices.len());
-        for raw in country_slices {
-            let fields: CountryFields = serde_json::from_str(raw.get())
-                .map_err(|error| format!("countries.json object: {error}"))?;
+        let tlds = tld_by_iso2();
+        let mut listed: Vec<Country> = Country::iter().collect();
+        listed.sort_by_key(|country| country.alpha2());
+        let mut countries = Vec::with_capacity(listed.len());
+        for country in listed {
+            let iso2 = country.alpha2();
+            let iso3 = country.alpha3();
+            let name = country.iso_short_name();
+            let region = country.region().unwrap_or("");
+            let subregion = country.subregion().unwrap_or("");
+            let currency = currency_alpha(country.currency_code())?;
+            let tld = tlds.get(iso2).map(String::as_str).unwrap_or("");
+            let geo = country.geo();
+            let latitude = json_number(geo.latitude)?;
+            let longitude = json_number(geo.longitude)?;
+            let slice = country_object(&CountryObject {
+                iso2,
+                iso3,
+                name,
+                numeric_code: country.numeric_code(),
+                phone_code: country.country_code(),
+                capital: capital_for(iso2),
+                currency: &currency,
+                tld,
+                region,
+                subregion,
+                latitude: &latitude,
+                longitude: &longitude,
+                emoji: country.emoji_flag(),
+            })?;
             countries.push(CountryRow {
-                slice: static_slice(COUNTRIES_RAW, raw)?,
-                iso2: fields.iso2,
-                iso3: fields.iso3,
-                name: fields.name,
-                region: fields.region,
-                subregion: fields.subregion,
-                currency: fields.currency,
+                slice,
+                iso2: iso2.to_string(),
+                iso3: iso3.to_string(),
+                name: name.to_string(),
+                region: region.to_string(),
+                subregion: subregion.to_string(),
+                currency,
             });
         }
         if !countries.iter().any(|row| row.iso2 == "GR") {
-            return Err("countries.json is missing GR".to_string());
+            return Err("country list is missing GR".to_string());
         }
+        let countries_body = join_array(
+            &countries
+                .iter()
+                .map(|row| row.slice.as_str())
+                .collect::<Vec<_>>(),
+        );
 
         let currency_fields: IndexMap<String, &RawValue> = serde_json::from_str(CURRENCIES_RAW)
             .map_err(|error| format!("currencies.json: {error}"))?;
@@ -116,7 +140,7 @@ impl StaticData {
         }
 
         Ok(Self {
-            countries_raw: COUNTRIES_RAW,
+            countries_body,
             countries,
             currencies_raw: CURRENCIES_RAW,
             currencies,
@@ -133,7 +157,7 @@ impl StaticData {
         currency: Option<&str>,
     ) -> String {
         if blank(search) && blank(region) && blank(subregion) && blank(currency) {
-            return self.countries_raw.to_string();
+            return self.countries_body.clone();
         }
         let search_l = search.unwrap_or("").to_lowercase();
         let mut slices = Vec::new();
@@ -158,16 +182,16 @@ impl StaticData {
             if !blank(currency) && !eq_ignore(currency.unwrap_or(""), &row.currency) {
                 continue;
             }
-            slices.push(row.slice);
+            slices.push(row.slice.as_str());
         }
         join_array(&slices)
     }
 
-    pub fn country_slice(&self, iso2: &str) -> Option<&'static str> {
+    pub fn country_slice(&self, iso2: &str) -> Option<&str> {
         self.countries
             .iter()
             .find(|row| row.iso2.eq_ignore_ascii_case(iso2))
-            .map(|row| row.slice)
+            .map(|row| row.slice.as_str())
     }
 
     pub fn currencies(&self, search: Option<&str>) -> String {
@@ -206,6 +230,118 @@ impl StaticData {
             .map(|row| row.slice)
             .collect();
         join_array(&slices)
+    }
+}
+
+/// ISO 4217 alphabetic code. `Currency` exposes that code as its variant name.
+fn currency_alpha(currency: my_country::Currency) -> Result<String, String> {
+    let code = format!("{currency:?}");
+    if code.len() == 3 && code.bytes().all(|byte| byte.is_ascii_uppercase()) {
+        Ok(code)
+    } else {
+        Err(format!(
+            "currency variant {code} is not an alphabetic ISO 4217 code"
+        ))
+    }
+}
+
+fn capital_for(iso2: &str) -> &str {
+    iso_rs::Country::from_alpha_2(iso2)
+        .and_then(|rows| rows.first())
+        .and_then(|country| country.capital)
+        .unwrap_or("")
+}
+
+/// Two-letter IANA labels that parse as ISO countries, plus `uk` for `GB`
+/// when the set has no direct `gb` label.
+fn tld_by_iso2() -> HashMap<String, String> {
+    let mut map = HashMap::new();
+    for label in tld::TLD.iter() {
+        let Some(iso2) = two_letter_country(label) else {
+            continue;
+        };
+        map.insert(iso2, format!(".{label}"));
+    }
+    apply_gb_alias(&mut map, tld::exist("uk"));
+    map
+}
+
+/// `.gb` wins when the set contains it. Otherwise `uk` is GB's ccTLD, and only
+/// while that label is still in the set.
+fn apply_gb_alias(map: &mut HashMap<String, String>, uk_exists: bool) {
+    if !map.contains_key("GB") && uk_exists {
+        map.insert("GB".to_string(), ".uk".to_string());
+    }
+}
+
+fn two_letter_country(label: &str) -> Option<String> {
+    if label.len() != 2 || !label.bytes().all(|byte| byte.is_ascii_alphabetic()) {
+        return None;
+    }
+    let iso2 = label.to_ascii_uppercase();
+    iso2.parse::<Country>().ok().map(|_| iso2)
+}
+
+struct CountryObject<'a> {
+    iso2: &'a str,
+    iso3: &'a str,
+    name: &'a str,
+    numeric_code: u16,
+    phone_code: &'a str,
+    capital: &'a str,
+    currency: &'a str,
+    tld: &'a str,
+    region: &'a str,
+    subregion: &'a str,
+    latitude: &'a str,
+    longitude: &'a str,
+    emoji: &'a str,
+}
+
+fn country_object(country: &CountryObject<'_>) -> Result<String, String> {
+    let mut body = String::from("{");
+    push_string(&mut body, "iso2", country.iso2, true)?;
+    push_string(&mut body, "iso3", country.iso3, false)?;
+    push_string(&mut body, "name", country.name, false)?;
+    push_raw(&mut body, "numeric_code", &country.numeric_code.to_string());
+    push_string(&mut body, "phone_code", country.phone_code, false)?;
+    push_string(&mut body, "capital", country.capital, false)?;
+    push_string(&mut body, "currency", country.currency, false)?;
+    push_string(&mut body, "tld", country.tld, false)?;
+    push_string(&mut body, "region", country.region, false)?;
+    push_string(&mut body, "subregion", country.subregion, false)?;
+    push_raw(&mut body, "latitude", country.latitude);
+    push_raw(&mut body, "longitude", country.longitude);
+    push_string(&mut body, "emoji", country.emoji, false)?;
+    body.push('}');
+    Ok(body)
+}
+
+fn push_string(body: &mut String, key: &str, value: &str, first: bool) -> Result<(), String> {
+    if !first {
+        body.push(',');
+    }
+    body.push('"');
+    body.push_str(key);
+    body.push_str("\":");
+    body.push_str(&serde_json::to_string(value).map_err(|error| format!("country json: {error}"))?);
+    Ok(())
+}
+
+fn push_raw(body: &mut String, key: &str, value: &str) {
+    body.push(',');
+    body.push('"');
+    body.push_str(key);
+    body.push_str("\":");
+    body.push_str(value);
+}
+
+fn json_number(value: Option<impl serde::Serialize>) -> Result<String, String> {
+    match value {
+        None => Ok("null".to_string()),
+        Some(number) => {
+            serde_json::to_string(&number).map_err(|error| format!("country json: {error}"))
+        }
     }
 }
 
@@ -332,5 +468,118 @@ mod tests {
         assert_eq!(data.vat_rates(Some("GR")), "[]");
         assert_eq!(data.countries(Some("zzzzzzz"), None, None, None), "[]");
         assert!(data.currencies(Some("us")).contains("\"RUB\""));
+    }
+
+    #[test]
+    fn countries_follow_the_libraries() {
+        let data = StaticData::load().unwrap();
+        let iso2s: Vec<&str> = data.countries.iter().map(|row| row.iso2.as_str()).collect();
+        let mut sorted = iso2s.clone();
+        sorted.sort_unstable();
+        assert_eq!(iso2s, sorted);
+        assert!(!iso2s.contains(&"EL"));
+        assert!(!iso2s.contains(&"XK"));
+        assert!(iso2s.contains(&"GR"));
+
+        let de = row_json(&data, "DE");
+        assert_eq!(de["currency"], "EUR");
+        assert_eq!(de["tld"], ".de");
+        assert_eq!(
+            de["capital"],
+            iso_rs::Country::from_alpha_2("DE").unwrap()[0]
+                .capital
+                .unwrap()
+        );
+        let gb = row_json(&data, "GB");
+        assert_eq!(gb["currency"], "GBP");
+        assert!(tld::exist("uk"));
+        // tld 2.41 includes the reserved `gb` label, so the direct hit wins.
+        assert!(tld::exist("gb"));
+        assert_eq!(gb["tld"], ".gb");
+
+        let mut saw_missing = false;
+        for row in &data.countries {
+            let value: serde_json::Value = serde_json::from_str(&row.slice).unwrap();
+            let tld = value["tld"].as_str().unwrap();
+            if let Some(label) = tld.strip_prefix('.') {
+                assert!(tld::TLD.contains(label), "{label} for {}", row.iso2);
+            } else {
+                assert_eq!(tld, "", "{}", row.iso2);
+                saw_missing = true;
+            }
+            assert_key_order(&row.slice);
+        }
+        assert!(saw_missing, "expected a country with no IANA ccTLD");
+        if !tld::exist("bq") {
+            assert_eq!(row_json(&data, "BQ")["tld"], "");
+        }
+        if !tld::exist("um") {
+            assert_eq!(row_json(&data, "UM")["tld"], "");
+        }
+        assert_ne!(row_json(&data, "BQ")["tld"], ".an");
+        assert_ne!(row_json(&data, "UM")["tld"], ".us");
+
+        let aq_capital = iso_rs::Country::from_alpha_2("AQ").unwrap()[0]
+            .capital
+            .unwrap_or("");
+        assert_eq!(row_json(&data, "AQ")["capital"], aq_capital);
+
+        let eur = data.countries(None, None, None, Some("eur"));
+        assert!(eur.contains("\"iso2\":\"DE\""));
+        assert!(!eur.contains("\"iso2\":\"GB\""));
+        let body = geolocate_body(
+            data.country_slice("ee").unwrap(),
+            "EE",
+            Some("203.0.113.10"),
+        )
+        .unwrap();
+        assert!(body.contains("\"country_code\":\"EE\""));
+        assert!(body.contains("\"ip\":\"203.0.113.10\""));
+    }
+
+    #[test]
+    fn gb_alias_uses_uk_only_when_gb_is_absent() {
+        let mut missing = HashMap::new();
+        apply_gb_alias(&mut missing, true);
+        assert_eq!(missing.get("GB").map(String::as_str), Some(".uk"));
+
+        let mut present = HashMap::from([("GB".to_string(), ".gb".to_string())]);
+        apply_gb_alias(&mut present, true);
+        assert_eq!(present["GB"], ".gb");
+
+        let mut neither = HashMap::new();
+        apply_gb_alias(&mut neither, false);
+        assert!(!neither.contains_key("GB"));
+    }
+
+    fn row_json(data: &StaticData, iso2: &str) -> serde_json::Value {
+        serde_json::from_str(data.country_slice(iso2).unwrap()).unwrap()
+    }
+
+    fn assert_key_order(slice: &str) {
+        let keys = [
+            "iso2",
+            "iso3",
+            "name",
+            "numeric_code",
+            "phone_code",
+            "capital",
+            "currency",
+            "tld",
+            "region",
+            "subregion",
+            "latitude",
+            "longitude",
+            "emoji",
+        ];
+        let mut previous = 0;
+        for key in keys {
+            let needle = format!("\"{key}\":");
+            let at = slice
+                .find(&needle)
+                .unwrap_or_else(|| panic!("missing {key}"));
+            assert!(at >= previous, "{key} out of order");
+            previous = at;
+        }
     }
 }

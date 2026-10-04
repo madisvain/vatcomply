@@ -32,6 +32,10 @@ allow = [
     "CDLA-Permissive-2.0",
 ]
 confidence-threshold = 0.8
+exceptions = [
+    # Build-only dependency of my_country. It is not linked into the binary.
+    { crate = "colored", allow = ["MPL-2.0"] },
+]
 
 [bans]
 multiple-versions = "warn"
