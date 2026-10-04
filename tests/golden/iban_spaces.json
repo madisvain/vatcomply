@@ -1,0 +1,14 @@
+{
+  "name": "iban_spaces",
+  "request": {
+    "method": "GET",
+    "path": "/iban?iban=DE89%203704%200044%200532%200130%2000",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"valid\":true,\"iban\":\"DE89 3704 0044 0532 0130 00\",\"bank_name\":\"Commerzbank\",\"bic\":\"COBADEFFXXX\",\"country_code\":\"DE\",\"country_name\":\"Germany\",\"checksum_digits\":\"89\",\"bank_code\":\"37040044\",\"branch_code\":\"\",\"account_number\":\"0532013000\",\"bban\":\"370400440532013000\",\"in_sepa_zone\":true}",
+  "body_file": null
+}

@@ -1,0 +1,14 @@
+{
+  "name": "rates_2022_02_28",
+  "request": {
+    "method": "GET",
+    "path": "/rates?date=2022-02-28&symbols=RUB,USD",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"date\":\"2022-02-28\",\"base\":\"EUR\",\"rates\":{\"USD\":1.1199,\"RUB\":115.4842}}",
+  "body_file": null
+}

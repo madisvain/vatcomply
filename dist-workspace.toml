@@ -1,0 +1,24 @@
+[workspace]
+members = ["cargo:."]
+
+# cargo-dist 0.33. Installers are shell and PowerShell only.
+# The release workflow calls `dist build` and `dist host` directly.
+# `dist generate` can replace that job with the upstream template if the CLI flags change.
+[dist]
+cargo-dist-version = "0.33.0"
+ci = "github"
+installers = ["shell", "powershell"]
+targets = [
+    "x86_64-unknown-linux-musl",
+    "aarch64-unknown-linux-musl",
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+    "x86_64-pc-windows-msvc",
+]
+pr-run-mode = "skip"
+hosting = "github"
+install-updater = false
+github-attestations = true
+install-path = "CARGO_HOME"
+unix-archive = ".tar.gz"
+windows-archive = ".zip"

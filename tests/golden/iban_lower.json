@@ -1,0 +1,14 @@
+{
+  "name": "iban_lower",
+  "request": {
+    "method": "GET",
+    "path": "/iban?iban=de89370400440532013000",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"valid\":true,\"iban\":\"de89370400440532013000\",\"bank_name\":\"Commerzbank\",\"bic\":\"COBADEFFXXX\",\"country_code\":\"DE\",\"country_name\":\"Germany\",\"checksum_digits\":\"89\",\"bank_code\":\"37040044\",\"branch_code\":\"\",\"account_number\":\"0532013000\",\"bban\":\"370400440532013000\",\"in_sepa_zone\":true}",
+  "body_file": null
+}

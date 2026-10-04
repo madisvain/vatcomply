@@ -1,0 +1,14 @@
+{
+  "name": "rates_2018_01_01",
+  "request": {
+    "method": "GET",
+    "path": "/rates?date=2018-01-01&symbols=USD",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"date\":\"2017-12-29\",\"base\":\"EUR\",\"rates\":{\"USD\":1.1993}}",
+  "body_file": null
+}

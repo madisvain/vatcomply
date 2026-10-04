@@ -1,0 +1,14 @@
+{
+  "name": "rates_symbols_usd_jpy",
+  "request": {
+    "method": "GET",
+    "path": "/rates?symbols=USD,JPY",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"date\":\"2026-10-02\",\"base\":\"EUR\",\"rates\":{\"USD\":1.1225,\"JPY\":176.99}}",
+  "body_file": null
+}

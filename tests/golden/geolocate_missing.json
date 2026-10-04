@@ -1,0 +1,14 @@
+{
+  "name": "geolocate_missing",
+  "request": {
+    "method": "GET",
+    "path": "/geolocate",
+    "headers": {}
+  },
+  "status": 404,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Country code not received from CDN headers (CF-IPCountry or Cdn-RequestCountryCode).\"}",
+  "body_file": null
+}

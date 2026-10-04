@@ -1,0 +1,14 @@
+{
+  "name": "rates_bgn_latest",
+  "request": {
+    "method": "GET",
+    "path": "/rates?base=BGN",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Base currency 'BGN' not available in current rates data\"}",
+  "body_file": null
+}

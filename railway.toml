@@ -1,3 +1,4 @@
+# Railway builds this Dockerfile from the repository root and replaces the service.
 [build]
 builder = "dockerfile"
 dockerfilePath = "Dockerfile"

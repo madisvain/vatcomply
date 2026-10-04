@@ -1,0 +1,21 @@
+services:
+  vatcomply:
+    image: ghcr.io/madisvain/vatcomply:latest
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATA_DIR: /data
+      PORT: "8000"
+      BIND: "0.0.0.0"
+      LOG_FORMAT: json
+      RATE_LIMIT_RPS: "2"
+      RATE_LIMIT_BURST: "4"
+    volumes:
+      - vatcomply-data:/data
+    restart: unless-stopped
+
+volumes:
+  vatcomply-data:

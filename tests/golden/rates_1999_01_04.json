@@ -1,0 +1,14 @@
+{
+  "name": "rates_1999_01_04",
+  "request": {
+    "method": "GET",
+    "path": "/rates?date=1999-01-04&symbols=USD,JPY",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"date\":\"1999-01-04\",\"base\":\"EUR\",\"rates\":{\"USD\":1.1789,\"JPY\":133.73}}",
+  "body_file": null
+}

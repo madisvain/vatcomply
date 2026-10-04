@@ -1,0 +1,14 @@
+{
+  "name": "rates_symbol_unknown",
+  "request": {
+    "method": "GET",
+    "path": "/rates?symbols=NOPE",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Currency 'NOPE' is not supported.\"}",
+  "body_file": null
+}

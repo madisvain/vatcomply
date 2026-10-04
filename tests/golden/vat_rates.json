@@ -1,0 +1,14 @@
+{
+  "name": "vat_rates",
+  "request": {
+    "method": "GET",
+    "path": "/vat_rates",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": null,
+  "body_file": "data/vat_rates.json"
+}

@@ -1,0 +1,14 @@
+{
+  "name": "rates_bgn_present",
+  "request": {
+    "method": "GET",
+    "path": "/rates?date=2025-12-31&symbols=BGN,USD,EUR",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"date\":\"2025-12-31\",\"base\":\"EUR\",\"rates\":{\"EUR\":1.0,\"USD\":1.175,\"BGN\":1.9558}}",
+  "body_file": null
+}

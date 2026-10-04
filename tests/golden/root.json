@@ -1,0 +1,14 @@
+{
+  "name": "root",
+  "request": {
+    "method": "GET",
+    "path": "/",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"name\":\"VATComply API\",\"version\":\"1.0.0\",\"status\":\"operational\",\"description\":\"VAT validation API, geolocation tools, and ECB exchange rates\",\"documentation\":\"https://api.vatcomply.com/docs\",\"openapi\":\"https://api.vatcomply.com/docs/openapi.json\",\"endpoints\":{\"countries\":\"https://api.vatcomply.com/countries\",\"currencies\":\"https://api.vatcomply.com/currencies\",\"geolocate\":\"https://api.vatcomply.com/geolocate\",\"iban\":\"https://api.vatcomply.com/iban\",\"vat\":\"https://api.vatcomply.com/vat\",\"vat_rates\":\"https://api.vatcomply.com/vat_rates\",\"rates\":\"https://api.vatcomply.com/rates\"},\"contact\":\"support@vatcomply.com\"}",
+  "body_file": null
+}

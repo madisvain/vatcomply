@@ -1,0 +1,14 @@
+{
+  "name": "rates_hrk_gone",
+  "request": {
+    "method": "GET",
+    "path": "/rates?base=HRK&date=2023-01-03",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Base currency 'HRK' not available in current rates data\"}",
+  "body_file": null
+}

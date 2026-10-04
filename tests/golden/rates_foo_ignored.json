@@ -1,0 +1,14 @@
+{
+  "name": "rates_foo_ignored",
+  "request": {
+    "method": "GET",
+    "path": "/rates?foo=1",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"date\":\"2026-10-02\",\"base\":\"EUR\",\"rates\":{\"EUR\":1.0,\"USD\":1.1225,\"JPY\":176.99,\"CZK\":24.47,\"DKK\":7.4736,\"GBP\":0.85033,\"HUF\":369.18,\"PLN\":4.3775,\"RON\":5.3488,\"SEK\":11.29,\"CHF\":0.9279,\"ISK\":137.0,\"NOK\":10.8315,\"TRY\":55.165,\"AUD\":1.6176,\"BRL\":5.861,\"CAD\":1.5984,\"CNY\":7.5259,\"HKD\":8.8084,\"IDR\":20149.32,\"ILS\":3.4408,\"INR\":108.1245,\"KRW\":1513.44,\"MXN\":20.5806,\"MYR\":4.5849,\"NZD\":2.0002,\"PHP\":70.265,\"SGD\":1.4366,\"THB\":37.71,\"ZAR\":18.7839}}",
+  "body_file": null
+}

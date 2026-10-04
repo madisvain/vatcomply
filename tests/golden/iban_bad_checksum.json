@@ -1,0 +1,14 @@
+{
+  "name": "iban_bad_checksum",
+  "request": {
+    "method": "GET",
+    "path": "/iban?iban=DE89370400440532013001",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Invalid checksum digits\"}",
+  "body_file": null
+}

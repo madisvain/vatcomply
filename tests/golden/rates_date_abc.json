@@ -1,0 +1,14 @@
+{
+  "name": "rates_date_abc",
+  "request": {
+    "method": "GET",
+    "path": "/rates?date=abc",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Invalid date format: 'abc'. Expected format: YYYY-MM-DD\"}",
+  "body_file": null
+}

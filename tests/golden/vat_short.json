@@ -1,0 +1,14 @@
+{
+  "name": "vat_short",
+  "request": {
+    "method": "GET",
+    "path": "/vat?vat_number=123",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Invalid VAT number format. Expected format: Two-letter country code followed by 8-12 digits or letters.\"}",
+  "body_file": null
+}

@@ -1,0 +1,14 @@
+{
+  "name": "currencies_empty",
+  "request": {
+    "method": "GET",
+    "path": "/currencies?search=zzzzzzz",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{}",
+  "body_file": null
+}

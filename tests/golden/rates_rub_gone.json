@@ -1,0 +1,14 @@
+{
+  "name": "rates_rub_gone",
+  "request": {
+    "method": "GET",
+    "path": "/rates?base=RUB&date=2022-03-02",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Base currency 'RUB' not available in current rates data\"}",
+  "body_file": null
+}

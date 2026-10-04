@@ -1,0 +1,14 @@
+{
+  "name": "iban_no",
+  "request": {
+    "method": "GET",
+    "path": "/iban?iban=NO9386011117947",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"valid\":true,\"iban\":\"NO9386011117947\",\"bank_name\":\"Danske Bank\",\"bic\":\"DABANO22\",\"country_code\":\"NO\",\"country_name\":\"Norway\",\"checksum_digits\":\"93\",\"bank_code\":\"8601\",\"branch_code\":\"\",\"account_number\":\"111794\",\"bban\":\"86011117947\",\"in_sepa_zone\":true}",
+  "body_file": null
+}

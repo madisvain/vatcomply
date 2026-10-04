@@ -1,0 +1,55 @@
+name: v2
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@1.91.1
+        with:
+          components: rustfmt, clippy
+      - name: fmt
+        run: cargo fmt --all -- --check
+      - name: clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: test
+        run: cargo test
+      - name: cargo deny
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          manifest-path: Cargo.toml
+          command: check
+
+      - name: OpenAPI breaking changes
+        if: github.event_name == 'pull_request'
+        working-directory: ${{ github.workspace }}
+        run: |
+          set -eu
+          labels=$(gh pr view "${{ github.event.pull_request.number }}" --json labels --jq '.labels[].name')
+          if printf '%s\n' "$labels" | grep -qx breaking-ok; then
+            echo "labelled breaking-ok; skipping oasdiff"
+            exit 0
+          fi
+          git fetch origin master
+          if ! git cat-file -e origin/master:openapi.json 2>/dev/null; then
+            echo "origin/master has no openapi.json; this PR is the baseline"
+            exit 0
+          fi
+          curl -fsSL -L https://github.com/oasdiff/oasdiff/releases/download/v1.33.0/oasdiff_1.33.0_linux_amd64.tar.gz \
+            | tar -xz -C /tmp oasdiff
+          git show origin/master:openapi.json > /tmp/base-openapi.json
+          /tmp/oasdiff breaking /tmp/base-openapi.json openapi.json
+        env:
+          GH_TOKEN: ${{ github.token }}

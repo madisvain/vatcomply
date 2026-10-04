@@ -1,0 +1,14 @@
+{
+  "name": "rates_2018_10_13",
+  "request": {
+    "method": "GET",
+    "path": "/rates?date=2018-10-13&symbols=USD,GBP,EUR",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"date\":\"2018-10-12\",\"base\":\"EUR\",\"rates\":{\"EUR\":1.0,\"USD\":1.1574,\"GBP\":0.8764}}",
+  "body_file": null
+}

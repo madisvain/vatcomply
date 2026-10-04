@@ -1,0 +1,14 @@
+{
+  "name": "rates_hrk_base",
+  "request": {
+    "method": "GET",
+    "path": "/rates?base=HRK&date=2022-12-30&symbols=EUR,USD",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"date\":\"2022-12-30\",\"base\":\"HRK\",\"rates\":{\"EUR\":0.132688,\"USD\":0.141525}}",
+  "body_file": null
+}

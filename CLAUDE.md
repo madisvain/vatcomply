@@ -1,131 +1,34 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+VATComply is a Rust HTTP service: EU VAT validation (VIES), VAT rates, ECB exchange rates, IBAN checks, and IP/country geolocation.
 
-## Project Overview
+The crate is at the repository root. `docs/` is the public website and is published by `.github/workflows/docs.yml`. Python sources for the previous API exist only in git history.
 
-VATcomply is a free API service that provides:
-- VAT number validation
-- User IP geolocation
-- Foreign exchange rates from the European Central Bank
-
-The project consists of a Django backend API service and a Next.js frontend website.
-
-## Technology Stack
-
-### Backend
-- **Django**: Core web framework with async views and ORM
-- **Django Ninja**: REST API framework built on top of Django
-- **Pydantic**: Data validation
-- **APScheduler**: Background task scheduler for fetching currency rates
-- **Httpx**: Async HTTP client for external API calls
-- **Uvicorn**: ASGI server
-
-### Frontend
-- **Next.js**: React-based frontend framework
-- **SCSS**: For styling components
-
-## Key Commands
-
-### Setup & Installation
+## Commands
 
 ```shell
-# Set up Python environment
-pyenv shell 3.11.x
-virtualenv env
-. env/bin/activate
-
-# Install dependencies
-make pip      # or: uv pip install -r requirements.in --upgrade
-make freeze   # or: uv pip compile requirements.in -o requirements.txt
+cargo fmt --all -- --check
+cargo clippy --all-targets -- -D warnings
+cargo test
+cargo deny check
 ```
 
-### Development
+Rust 1.91.1 is pinned in `rust-toolchain.toml`. Tests use wiremock and do not call ECB or VIES.
 
 ```shell
-# Run development server
-make run      # or: export DEBUG=True; uvicorn vatcomply.asgi:application --reload
-
-# Database migrations
-make migrations  # Create new migrations
-make migrate     # Apply migrations
-
-# Data loading
-python manage.py load_countries  # Load country data
-python manage.py load_rates      # Load exchange rates (historical)
-python manage.py load_rates --last-90-days  # Load last 90 days of rates
+cargo build --release
 ```
 
-### Testing
+The release profile is `lto = "fat"`, `codegen-units = 1`, `opt-level = 3`, `strip = true`. The binary listens on `PORT` (default 8000). `vatcomply --help` lists the environment variables. `vatcomply healthcheck` is the Docker health check.
 
-```shell
-# Run all tests
-make test     # or: uv run pytest
+## Layout
 
-# Run specific test file
-uv run pytest vatcomply/tests/test_rates.py
+- `src/` — axum service. Rates stay decimal strings. `src/rates/pyfloat.rs` is the only module that formats ECB cross-rates the way the previous API did.
+- `data/` — embedded countries, currencies, VAT rates, IBAN registry, and the compressed ECB snapshot.
+- `tests/golden/` — production response fixtures.
+- `deploy/` — compose, systemd, Fly, and `PRODUCTION.md`.
+- `tools/` — snapshot and fixture scripts. They are not the API.
 
-# Run a specific test function
-uv run pytest vatcomply/tests/test_rates.py::test_latest_api
+## Runtime
 
-# Verbose output
-uv run pytest -v
-
-# Test with coverage report
-make coverage  # or: uv run coverage run -m pytest && uv run coverage report -m
-```
-
-## URLs
-
-- **API**: https://api.vatcomply.com
-- **Documentation**: https://www.vatcomply.com/api/exchange-rates
-
-## Project Architecture
-
-### Core Components
-
-1. **API Endpoints** (`vatcomply/api.py`)
-   - `/rates`: Foreign exchange rates from ECB
-   - `/vat`: VAT number validation
-   - `/countries`: List of countries and their details
-   - `/currencies`: Supported currency information
-   - `/geolocate`: IP-based geolocation
-   - `/iban`: IBAN validation
-
-2. **Data Models** (`vatcomply/models.py`)
-   - `Rate`: Exchange rate data by date
-   - `Country`: Country information and metadata
-
-3. **Schemas** (`vatcomply/schemas.py`)
-   - Pydantic models for request/response validation
-
-4. **Background Tasks** (`vatcomply/middleware.py`)
-   - `BackgroundTasksMiddleware`: ASGI middleware that runs periodic tasks
-   - Scheduler that fetches currency rates from ECB
-
-5. **Management Commands** (`vatcomply/management/commands/`)
-   - `load_countries.py`: Imports country data 
-   - `load_rates.py`: Imports exchange rates from ECB
-
-### Data Flow
-
-1. Exchange rate data:
-   - Fetched from ECB XML endpoints
-   - Stored in the `Rate` model with date as primary key
-   - Updated hourly by the background scheduler
-   - Served through the `/rates` API endpoint with options for base currency, symbols, and dates
-
-2. Country data:
-   - Imported from JSON source
-   - Stored in the `Country` model
-   - Used for VAT validation and geolocation features
-
-## Environment Variables
-
-Key environment variables used:
-- `DEBUG`: Enable debug mode (default: False)
-- `SECRET_KEY`: Django secret key
-- `ALLOWED_HOSTS`: Comma-separated list of allowed hosts
-- `BACKGROUND_SCHEDULER`: Enable background scheduler (default: False)
-- `THROTTLE`: Enable request throttling (default: True)
-- `BASE_URL`: Base URL for the application (default: "http://localhost:8000")
+No database. Rates sit in memory behind `arc_swap`. A snapshot in `$DATA_DIR` is written atomically. The embedded snapshot starts the process when disk and network are both unavailable. Config is environment variables only. `TRUSTED_IP_HEADER` is the only forwarding header that is trusted.

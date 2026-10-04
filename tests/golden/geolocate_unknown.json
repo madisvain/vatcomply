@@ -1,0 +1,16 @@
+{
+  "name": "geolocate_unknown",
+  "request": {
+    "method": "GET",
+    "path": "/geolocate",
+    "headers": {
+      "CF-IPCountry": "XX"
+    }
+  },
+  "status": 404,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Data for country code `XX` not found.\"}",
+  "body_file": null
+}

@@ -1,0 +1,14 @@
+{
+  "name": "rates_date_feb30",
+  "request": {
+    "method": "GET",
+    "path": "/rates?date=2024-02-30",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Invalid date: '2024-02-30'. Expected a valid date in YYYY-MM-DD format.\"}",
+  "body_file": null
+}

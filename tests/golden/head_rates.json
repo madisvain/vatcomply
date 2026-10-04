@@ -1,0 +1,14 @@
+{
+  "name": "head_rates",
+  "request": {
+    "method": "HEAD",
+    "path": "/rates",
+    "headers": {}
+  },
+  "status": 404,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "",
+  "body_file": null
+}
