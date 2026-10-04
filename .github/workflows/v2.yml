@@ -14,25 +14,27 @@ jobs:
   rust:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: dtolnay/rust-toolchain@1.91.1
+      - name: Install the Rust toolchain
+        uses: dtolnay/rust-toolchain@1.91.1
         with:
           components: rustfmt, clippy
-      - name: fmt
+      - name: Check formatting
         run: cargo fmt --all -- --check
-      - name: clippy
+      - name: Run Clippy
         run: cargo clippy --all-targets -- -D warnings
-      - name: test
+      - name: Run tests
         run: cargo test
-      - name: cargo deny
+      - name: Run cargo deny
         uses: EmbarkStudios/cargo-deny-action@v2
         with:
           manifest-path: Cargo.toml
           command: check
 
-      - name: OpenAPI breaking changes
+      - name: Check OpenAPI breaking changes
         if: github.event_name == 'pull_request'
         working-directory: ${{ github.workspace }}
         run: |
@@ -53,3 +55,33 @@ jobs:
           /tmp/oasdiff breaking /tmp/base-openapi.json openapi.json
         env:
           GH_TOKEN: ${{ github.token }}
+
+  image:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/madisvain/vatcomply:${{ github.sha }}
+            ghcr.io/madisvain/vatcomply:master
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
