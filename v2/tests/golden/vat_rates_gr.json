@@ -1,0 +1,14 @@
+{
+  "name": "vat_rates_gr",
+  "request": {
+    "method": "GET",
+    "path": "/vat_rates?country_code=GR",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "[]",
+  "body_file": null
+}

@@ -1,0 +1,14 @@
+{
+  "name": "rates_symbols_gap",
+  "request": {
+    "method": "GET",
+    "path": "/rates?symbols=USD,,GBP",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Currency '' is not supported.\"}",
+  "body_file": null
+}

@@ -1,0 +1,14 @@
+{
+  "name": "readyz_absent",
+  "request": {
+    "method": "GET",
+    "path": "/readyz",
+    "headers": {}
+  },
+  "status": 404,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Not Found\"}",
+  "body_file": null
+}

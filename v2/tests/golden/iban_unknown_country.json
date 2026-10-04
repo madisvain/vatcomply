@@ -1,0 +1,14 @@
+{
+  "name": "iban_unknown_country",
+  "request": {
+    "method": "GET",
+    "path": "/iban?iban=XX89370400440532013000",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Unknown country-code 'XX'\"}",
+  "body_file": null
+}

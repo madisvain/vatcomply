@@ -1,0 +1,14 @@
+{
+  "name": "post_rates",
+  "request": {
+    "method": "POST",
+    "path": "/rates",
+    "headers": {}
+  },
+  "status": 404,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Not Found\"}",
+  "body_file": null
+}

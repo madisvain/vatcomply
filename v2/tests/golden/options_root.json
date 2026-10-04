@@ -1,0 +1,21 @@
+{
+  "name": "options_root",
+  "request": {
+    "method": "OPTIONS",
+    "path": "/",
+    "headers": {
+      "Origin": "https://example.com",
+      "Access-Control-Request-Method": "GET"
+    }
+  },
+  "status": 204,
+  "headers": {
+    "access-control-allow-headers": "Content-Type, Authorization",
+    "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    "access-control-allow-origin": "*",
+    "allow": "GET, OPTIONS",
+    "content-type": "application/json"
+  },
+  "body": "",
+  "body_file": null
+}

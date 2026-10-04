@@ -1,0 +1,14 @@
+{
+  "name": "iban_empty",
+  "request": {
+    "method": "GET",
+    "path": "/iban?iban=",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Invalid characters in IBAN \"}",
+  "body_file": null
+}

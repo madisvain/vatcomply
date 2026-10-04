@@ -1,0 +1,14 @@
+{
+  "name": "rates_base_lower",
+  "request": {
+    "method": "GET",
+    "path": "/rates?base=usd",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Base currency 'usd' is not supported.\"}",
+  "body_file": null
+}

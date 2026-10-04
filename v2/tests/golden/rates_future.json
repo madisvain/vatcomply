@@ -1,0 +1,14 @@
+{
+  "name": "rates_future",
+  "request": {
+    "method": "GET",
+    "path": "/rates?date=2099-01-04&symbols=USD",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"date\":\"2026-10-02\",\"base\":\"EUR\",\"rates\":{\"USD\":1.1225}}",
+  "body_file": null
+}

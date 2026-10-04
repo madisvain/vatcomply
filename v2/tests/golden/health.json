@@ -1,0 +1,14 @@
+{
+  "name": "health",
+  "request": {
+    "method": "GET",
+    "path": "/health",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"status\":\"ok\"}",
+  "body_file": null
+}

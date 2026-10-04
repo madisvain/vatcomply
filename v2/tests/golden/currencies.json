@@ -1,0 +1,14 @@
+{
+  "name": "currencies",
+  "request": {
+    "method": "GET",
+    "path": "/currencies",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": null,
+  "body_file": "data/currencies.json"
+}

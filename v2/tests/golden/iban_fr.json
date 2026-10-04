@@ -1,0 +1,14 @@
+{
+  "name": "iban_fr",
+  "request": {
+    "method": "GET",
+    "path": "/iban?iban=FR1420041010050500013M02606",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"valid\":true,\"iban\":\"FR1420041010050500013M02606\",\"bank_name\":\"LA BANQUE POSTALE\",\"bic\":\"PSSTFRPP\",\"country_code\":\"FR\",\"country_name\":\"France\",\"checksum_digits\":\"14\",\"bank_code\":\"20041\",\"branch_code\":\"01005\",\"account_number\":\"0500013M026\",\"bban\":\"20041010050500013M02606\",\"in_sepa_zone\":true}",
+  "body_file": null
+}

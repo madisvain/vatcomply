@@ -1,0 +1,17 @@
+{
+  "name": "get_with_origin",
+  "request": {
+    "method": "GET",
+    "path": "/health",
+    "headers": {
+      "Origin": "https://example.com"
+    }
+  },
+  "status": 200,
+  "headers": {
+    "access-control-allow-origin": "*",
+    "content-type": "application/json"
+  },
+  "body": "{\"status\":\"ok\"}",
+  "body_file": null
+}

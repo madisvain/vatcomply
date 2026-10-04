@@ -1,0 +1,14 @@
+{
+  "name": "rates_base_empty",
+  "request": {
+    "method": "GET",
+    "path": "/rates?base=",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Base currency '' is not supported.\"}",
+  "body_file": null
+}

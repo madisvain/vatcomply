@@ -1,0 +1,14 @@
+{
+  "name": "iban_digits",
+  "request": {
+    "method": "GET",
+    "path": "/iban?iban=123",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Invalid characters in IBAN 123\"}",
+  "body_file": null
+}

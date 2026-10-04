@@ -1,0 +1,14 @@
+{
+  "name": "rates_symbols_space",
+  "request": {
+    "method": "GET",
+    "path": "/rates?symbols=USD,%20JPY",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Currency ' JPY' is not supported.\"}",
+  "body_file": null
+}

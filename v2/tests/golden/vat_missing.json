@@ -1,0 +1,14 @@
+{
+  "name": "vat_missing",
+  "request": {
+    "method": "GET",
+    "path": "/vat",
+    "headers": {}
+  },
+  "status": 422,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Missing required query parameter: vat_number\"}",
+  "body_file": null
+}

@@ -1,0 +1,14 @@
+{
+  "name": "not_found",
+  "request": {
+    "method": "GET",
+    "path": "/nope",
+    "headers": {}
+  },
+  "status": 404,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Not Found\"}",
+  "body_file": null
+}

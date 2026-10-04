@@ -1,0 +1,14 @@
+{
+  "name": "rates_before_ecb",
+  "request": {
+    "method": "GET",
+    "path": "/rates?date=1998-12-31",
+    "headers": {}
+  },
+  "status": 404,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"No rate data available for the specified date.\"}",
+  "body_file": null
+}

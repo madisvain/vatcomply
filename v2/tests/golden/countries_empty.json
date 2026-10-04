@@ -1,0 +1,14 @@
+{
+  "name": "countries_empty",
+  "request": {
+    "method": "GET",
+    "path": "/countries?search=zzzzzzz",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "[]",
+  "body_file": null
+}

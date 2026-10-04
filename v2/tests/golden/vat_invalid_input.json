@@ -1,0 +1,14 @@
+{
+  "name": "vat_invalid_input",
+  "request": {
+    "method": "GET",
+    "path": "/vat?vat_number=XX12345678",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"INVALID_INPUT\"}",
+  "body_file": null
+}

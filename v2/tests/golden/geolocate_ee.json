@@ -1,0 +1,18 @@
+{
+  "name": "geolocate_ee",
+  "request": {
+    "method": "GET",
+    "path": "/geolocate",
+    "headers": {
+      "CF-IPCountry": "EE",
+      "CF-Connecting-IP": "203.0.113.10"
+    }
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"iso2\":\"EE\",\"iso3\":\"EST\",\"country_code\":\"EE\",\"name\":\"Estonia\",\"numeric_code\":233,\"phone_code\":\"372\",\"capital\":\"Tallinn\",\"currency\":\"EUR\",\"tld\":\".ee\",\"region\":\"Europe\",\"subregion\":\"Northern Europe\",\"latitude\":59.0,\"longitude\":26.0,\"emoji\":\"🇪🇪\",\"ip\":\"203.0.113.10\"}",
+  "body_file": null,
+  "note": "Synthesised from the production countries row. Not requested from the edge."
+}

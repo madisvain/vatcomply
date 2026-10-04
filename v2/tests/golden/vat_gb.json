@@ -1,0 +1,14 @@
+{
+  "name": "vat_gb",
+  "request": {
+    "method": "GET",
+    "path": "/vat?vat_number=GB123456789",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"As of 01/01/2021, the VoW service to validate UK (GB) VAT numbers ceased to exist while a new service to validate VAT numbers of businesses operating under the Protocol on Ireland and Northern Ireland appeared. These VAT numbers are starting with the \\\"XI\\\" prefix.\"}",
+  "body_file": null
+}

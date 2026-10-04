@@ -1,0 +1,17 @@
+{
+  "name": "geolocate_bunny",
+  "request": {
+    "method": "GET",
+    "path": "/geolocate",
+    "headers": {
+      "Cdn-RequestCountryCode": "EE"
+    }
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"iso2\":\"EE\",\"iso3\":\"EST\",\"country_code\":\"EE\",\"name\":\"Estonia\",\"numeric_code\":233,\"phone_code\":\"372\",\"capital\":\"Tallinn\",\"currency\":\"EUR\",\"tld\":\".ee\",\"region\":\"Europe\",\"subregion\":\"Northern Europe\",\"latitude\":59.0,\"longitude\":26.0,\"emoji\":\"🇪🇪\",\"ip\":null}",
+  "body_file": null,
+  "note": "Bunny header only. ip is null because CF-Connecting-IP is absent."
+}

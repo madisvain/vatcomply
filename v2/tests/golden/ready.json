@@ -1,0 +1,14 @@
+{
+  "name": "ready",
+  "request": {
+    "method": "GET",
+    "path": "/ready",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"status\":\"healthy\",\"checks\":{\"check_database\":{\"healthy\":true,\"message\":\"Database connection OK\"}}}",
+  "body_file": null
+}

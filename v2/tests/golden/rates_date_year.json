@@ -1,0 +1,14 @@
+{
+  "name": "rates_date_year",
+  "request": {
+    "method": "GET",
+    "path": "/rates?date=2024",
+    "headers": {}
+  },
+  "status": 400,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"detail\":\"Invalid date format: '2024'. Expected format: YYYY-MM-DD\"}",
+  "body_file": null
+}

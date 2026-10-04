@@ -1,0 +1,14 @@
+{
+  "name": "iban_gb",
+  "request": {
+    "method": "GET",
+    "path": "/iban?iban=GB82WEST12345698765432",
+    "headers": {}
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"valid\":true,\"iban\":\"GB82WEST12345698765432\",\"bank_name\":\"\",\"bic\":\"\",\"country_code\":\"GB\",\"country_name\":\"United Kingdom\",\"checksum_digits\":\"82\",\"bank_code\":\"WEST\",\"branch_code\":\"123456\",\"account_number\":\"98765432\",\"bban\":\"WEST12345698765432\",\"in_sepa_zone\":true}",
+  "body_file": null
+}
