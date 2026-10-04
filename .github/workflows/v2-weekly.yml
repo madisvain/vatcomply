@@ -1,0 +1,60 @@
+name: v2 weekly
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.91.1
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+      - name: Audit
+        run: cargo audit
+
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+      - name: Short fuzz
+        working-directory: v2
+        run: |
+          cargo +nightly fuzz run ecb_xml -- -max_total_time=60
+          cargo +nightly fuzz run vies_soap -- -max_total_time=60
+          cargo +nightly fuzz run query -- -max_total_time=60
+
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Refresh embedded ECB snapshot
+        run: python3 v2/tools/refresh_snapshot.py
+      - name: Open a PR when the snapshot changed
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/refresh-rates-snapshot
+          commit-message: "Refresh embedded ECB rates snapshot"
+          title: "Refresh embedded ECB rates snapshot"
+          body: |
+            Weekly refresh of the embedded ECB history snapshot and the pyfloat oracle.
+            VAT rate JSON is updated by a separate data pull request.
+          add-paths: |
+            v2/data/rates-snapshot.json.gz
+            v2/tests/fixtures/pyfloat_oracle.json

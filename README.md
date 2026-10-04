@@ -13,6 +13,8 @@
 
 **[Documentation](https://www.vatcomply.com)** | **[Interactive API Docs](https://api.vatcomply.com/docs)**
 
+The Rust rewrite lives in [`v2/`](v2/README.md). This Python service stays in production until the cut-over in [`deploy/PRODUCTION.md`](deploy/PRODUCTION.md).
+
 ## Quick Start
 
 Base URL: `https://api.vatcomply.com`

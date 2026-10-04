@@ -1,0 +1,32 @@
+[Unit]
+Description=VATComply API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+DynamicUser=yes
+StateDirectory=vatcomply
+WorkingDirectory=/var/lib/vatcomply
+Environment=DATA_DIR=/var/lib/vatcomply
+Environment=BIND=127.0.0.1
+Environment=PORT=8000
+Environment=LOG_FORMAT=json
+Environment=RATE_LIMIT_RPS=2
+Environment=RATE_LIMIT_BURST=4
+ExecStart=/usr/local/bin/vatcomply serve
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6
+LockPersonality=yes
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

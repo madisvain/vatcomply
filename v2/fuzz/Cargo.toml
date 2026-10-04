@@ -1,0 +1,39 @@
+[package]
+name = "vatcomply-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+vatcomply = { path = ".." }
+
+[[bin]]
+name = "ecb_xml"
+path = "fuzz_targets/ecb_xml.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "vies_soap"
+path = "fuzz_targets/vies_soap.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "query"
+path = "fuzz_targets/query.rs"
+test = false
+doc = false
+bench = false
+
+[profile.release]
+debug = 1
+
+[workspace]
+members = ["."]

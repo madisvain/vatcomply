@@ -1,0 +1,41 @@
+# Fly.io alternative origin. Deploy from the v2 directory:
+#   fly deploy --config ../deploy/fly.toml
+# Create one small volume per machine. See deploy/PRODUCTION.md.
+# Behind Cloudflare, set TRUSTED_IP_HEADER=CF-Connecting-IP instead.
+
+app = "vatcomply"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8000"
+  BIND = "0.0.0.0"
+  DATA_DIR = "/data"
+  LOG_FORMAT = "json"
+  RATE_LIMIT_RPS = "2"
+  RATE_LIMIT_BURST = "4"
+  TRUSTED_IP_HEADER = "Fly-Client-IP"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 2
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "20s"
+    method = "GET"
+    path = "/healthz"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
+
+[mounts]
+  source = "vatcomply_data"
+  destination = "/data"
