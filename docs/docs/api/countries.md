@@ -70,8 +70,8 @@ The response is a JSON array of country objects.
     "tld": ".ee",
     "region": "Europe",
     "subregion": "Northern Europe",
-    "latitude": 59.0,
-    "longitude": 26.0,
+    "latitude": 58.595272,
+    "longitude": 25.0136071,
     "emoji": "\ud83c\uddea\ud83c\uddea"
   },
   {
@@ -85,8 +85,8 @@ The response is a JSON array of country objects.
     "tld": ".fi",
     "region": "Europe",
     "subregion": "Northern Europe",
-    "latitude": 64.0,
-    "longitude": 26.0,
+    "latitude": 61.92410999999999,
+    "longitude": 25.7481511,
     "emoji": "\ud83c\uddeb\ud83c\uddee"
   }
 ]
