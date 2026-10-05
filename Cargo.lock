@@ -1027,6 +1027,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "iban_validation_rs"
+version = "0.1.30"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5efc313d6bd64c154f488388b61d3992b8dc81e787b0fb7ebed3536ba4daf97b"
+
+[[package]]
 name = "icu_collections"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3368,6 +3374,7 @@ dependencies = [
  "axum",
  "bytes",
  "flate2",
+ "iban_validation_rs",
  "indexmap",
  "iso-rs",
  "maxminddb",

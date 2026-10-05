@@ -1,11 +1,15 @@
 //! IBAN checks that follow schwifty 2026.3.0.
 //!
-//! The registry in `data/iban_registry.json` is exported from that release.
-//! `validate_bban` stays off, so national checksums are not checked.
-//! The JSON `iban` field is the raw query. Error text uses the cleaned string.
+//! The registry in `data/iban_registry.json` is exported from that release
+//! and drives the country checks, field extraction, and the bank catalog
+//! (bank names and BICs). Structure and checksum validation are delegated to
+//! `iban_validation_rs`, which embeds the official SWIFT IBAN registry plus
+//! the same non-registry countries schwifty carries. The JSON `iban` field
+//! is the raw query. Error text uses the cleaned string.
 
 use std::collections::BTreeMap;
 
+use iban_validation_rs::{CountrySet, Iban, ValidationError};
 use serde::Deserialize;
 
 use crate::error::ApiError;
@@ -34,20 +38,8 @@ struct CountrySpec {
     in_sepa_zone: bool,
     iban_length: usize,
     bban_spec: String,
-    tokens: Vec<BbanToken>,
     positions: BTreeMap<String, (usize, usize)>,
     bic_lookup: Vec<String>,
-}
-
-struct BbanToken {
-    count: usize,
-    class: CharClass,
-}
-
-enum CharClass {
-    Digit,
-    Upper,
-    AlphaNum,
 }
 
 pub struct IbanRegistry {
@@ -61,8 +53,6 @@ impl IbanRegistry {
             .map_err(|error| format!("iban registry: {error}"))?;
         let mut countries = BTreeMap::new();
         for (code, country) in raw.countries {
-            let tokens = parse_spec(&country.bban_spec)
-                .map_err(|error| format!("iban spec {code}: {error}"))?;
             countries.insert(
                 code,
                 CountrySpec {
@@ -70,7 +60,6 @@ impl IbanRegistry {
                     in_sepa_zone: country.in_sepa_zone,
                     iban_length: country.iban_length,
                     bban_spec: country.bban_spec,
-                    tokens,
                     positions: country.positions,
                     bic_lookup: country.bic_lookup,
                 },
@@ -97,17 +86,11 @@ impl IbanRegistry {
         if spec.iban_length != cleaned.len() {
             return Err(bad("Invalid IBAN length"));
         }
-        let bban = &cleaned[4..];
-        if !spec_matches(&spec.tokens, bban.as_bytes()) {
-            return Err(bad(format!(
-                "Invalid BBAN structure: '{bban}' doesn't match '{}'",
-                spec.bban_spec
-            )));
+        if let Err(error) = Iban::new_with(&cleaned, CountrySet::WithNonRegistry) {
+            return Err(map_error(&cleaned, &spec.bban_spec, error));
         }
         let checksum = &cleaned[2..4];
-        if !checksum_ok(bban, country, checksum) {
-            return Err(bad("Invalid checksum digits"));
-        }
+        let bban = &cleaned[4..];
         let bank_code = component(bban, &spec.positions, "bank_code");
         let branch_code = component(bban, &spec.positions, "branch_code");
         let account = component(bban, &spec.positions, "account_code");
@@ -140,6 +123,27 @@ impl IbanRegistry {
 
 fn bad(detail: impl Into<String>) -> ApiError {
     ApiError::new(StatusCode::BAD_REQUEST, detail)
+}
+
+/// The crate reports structure and checksum faults in its own terms; the texts
+/// stay the schwifty ones so responses do not change.
+fn map_error(cleaned: &str, bban_spec: &str, error: ValidationError) -> ApiError {
+    let detail = match error {
+        ValidationError::StructureIncorrectForCountry => format!(
+            "Invalid BBAN structure: '{}' doesn't match '{bban_spec}'",
+            &cleaned[4..]
+        ),
+        ValidationError::ModuloIncorrect | ValidationError::InvalidChecksum => {
+            "Invalid checksum digits".to_string()
+        }
+        ValidationError::InvalidSizeForCountry | ValidationError::TooShort(_) => {
+            "Invalid IBAN length".to_string()
+        }
+        ValidationError::MissingCountry | ValidationError::InvalidCountry => {
+            format!("Unknown country-code '{}'", &cleaned[..2])
+        }
+    };
+    bad(detail)
 }
 
 fn json_string(value: &str) -> String {
@@ -179,101 +183,6 @@ fn component<'a>(
     }
 }
 
-fn checksum_ok(bban: &str, country: &str, checksum: &str) -> bool {
-    let mut rearranged = String::with_capacity(bban.len() + 4);
-    rearranged.push_str(bban);
-    rearranged.push_str(country);
-    rearranged.push_str(checksum);
-    mod97(&numerify(&rearranged)) == 1
-}
-
-fn numerify(value: &str) -> String {
-    let mut out = String::with_capacity(value.len() * 2);
-    for char in value.chars() {
-        let digit = match char {
-            '0'..='9' => (char as u8 - b'0') as u32,
-            'A'..='Z' => (char as u8 - b'A') as u32 + 10,
-            _ => return String::new(),
-        };
-        out.push_str(&digit.to_string());
-    }
-    out
-}
-
-fn mod97(digits: &str) -> u32 {
-    let mut acc: u32 = 0;
-    for byte in digits.bytes() {
-        if !byte.is_ascii_digit() {
-            return 0;
-        }
-        acc = (acc * 10 + (byte - b'0') as u32) % 97;
-    }
-    acc
-}
-
-fn parse_spec(spec: &str) -> Result<Vec<BbanToken>, String> {
-    let bytes = spec.as_bytes();
-    let mut index = 0;
-    let mut tokens = Vec::new();
-    while index < bytes.len() {
-        let start = index;
-        while index < bytes.len() && bytes[index].is_ascii_digit() {
-            index += 1;
-        }
-        if start == index {
-            return Err(format!("bad spec {spec}"));
-        }
-        let count: usize = spec[start..index]
-            .parse()
-            .map_err(|_| format!("bad spec count {spec}"))?;
-        if index >= bytes.len() || bytes[index] != b'!' {
-            return Err(format!("bad spec {spec}"));
-        }
-        index += 1;
-        if index >= bytes.len() {
-            return Err(format!("bad spec {spec}"));
-        }
-        let class = match bytes[index] {
-            b'n' => CharClass::Digit,
-            b'a' => CharClass::Upper,
-            b'c' => CharClass::AlphaNum,
-            _ => return Err(format!("bad spec class in {spec}")),
-        };
-        index += 1;
-        tokens.push(BbanToken { count, class });
-    }
-    if tokens.is_empty() {
-        return Err(format!("empty spec {spec}"));
-    }
-    Ok(tokens)
-}
-
-fn spec_matches(tokens: &[BbanToken], bban: &[u8]) -> bool {
-    let mut pos: usize = 0;
-    for token in tokens {
-        let Some(end) = pos.checked_add(token.count) else {
-            return false;
-        };
-        if end > bban.len() || !class_span(&token.class, &bban[pos..end]) {
-            return false;
-        }
-        pos = end;
-    }
-    pos == bban.len()
-}
-
-fn class_span(class: &CharClass, bytes: &[u8]) -> bool {
-    bytes.iter().all(|byte| class_ok(class, *byte))
-}
-
-fn class_ok(class: &CharClass, byte: u8) -> bool {
-    match class {
-        CharClass::Digit => byte.is_ascii_digit(),
-        CharClass::Upper => byte.is_ascii_uppercase(),
-        CharClass::AlphaNum => byte.is_ascii_digit() || byte.is_ascii_alphabetic(),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -306,5 +215,29 @@ mod tests {
         assert!(gb.contains("\"bank_name\":\"\""));
         assert!(gb.contains("\"branch_code\":\"123456\""));
         assert!(gb.contains("\"country_name\":\"United Kingdom\""));
+    }
+
+    #[test]
+    fn structure_error_keeps_the_schwifty_text() {
+        let registry = registry();
+        let error = registry.answer("DE8937040044053201300X").unwrap_err();
+        assert_eq!(
+            error.detail,
+            "Invalid BBAN structure: '37040044053201300X' doesn't match '8!n10!n'"
+        );
+    }
+
+    #[test]
+    fn extraction_matches_the_registry_positions() {
+        let registry = registry();
+        let fr = registry.answer("FR1420041010050500013M02606").unwrap();
+        assert!(fr.contains("\"bank_name\":\"LA BANQUE POSTALE\""));
+        assert!(fr.contains("\"bic\":\"PSSTFRPP\""));
+        assert!(fr.contains("\"branch_code\":\"01005\""));
+        assert!(fr.contains("\"account_number\":\"0500013M026\""));
+        let no = registry.answer("NO9386011117947").unwrap();
+        assert!(no.contains("\"bank_name\":\"Danske Bank\""));
+        assert!(no.contains("\"bic\":\"DABANO22\""));
+        assert!(no.contains("\"account_number\":\"111794\""));
     }
 }
