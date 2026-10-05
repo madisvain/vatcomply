@@ -1,10 +1,10 @@
 //! Countries, currencies, and VAT rates.
 //!
 //! Countries are built at startup from `my_country`, `iso-rs`, and the IANA
-//! `tld` set. Currencies and VAT rates stay the captured production bytes.
+//! `tld` set. Currencies are built from `iso_currency` for the ECB code list.
+//! VAT rates stay the captured production bytes.
 //! Filters keep object slices so key order stays intact.
 
-use indexmap::IndexMap;
 use my_country::Country;
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
@@ -12,13 +12,12 @@ use strum::IntoEnumIterator;
 
 use crate::codes;
 
-const CURRENCIES_RAW: &str = include_str!("../data/currencies.json");
 const VAT_RATES_RAW: &str = include_str!("../data/vat_rates.json");
 
 pub struct StaticData {
     countries_body: String,
     countries: Vec<CountryRow>,
-    pub currencies_raw: &'static str,
+    currencies_body: String,
     currencies: Vec<CurrencyRow>,
     pub vat_raw: &'static str,
     vat: Vec<VatRow>,
@@ -36,18 +35,13 @@ struct CountryRow {
 
 struct CurrencyRow {
     key: String,
-    slice: &'static str,
+    slice: String,
     name: String,
 }
 
 struct VatRow {
     slice: &'static str,
     country_code: String,
-}
-
-#[derive(Deserialize)]
-struct CurrencyFields {
-    name: String,
 }
 
 #[derive(Deserialize)]
@@ -109,18 +103,8 @@ impl StaticData {
                 .collect::<Vec<_>>(),
         );
 
-        let currency_fields: IndexMap<String, &RawValue> = serde_json::from_str(CURRENCIES_RAW)
-            .map_err(|error| format!("currencies.json: {error}"))?;
-        let mut currencies = Vec::with_capacity(currency_fields.len());
-        for (key, raw) in currency_fields {
-            let fields: CurrencyFields = serde_json::from_str(raw.get())
-                .map_err(|error| format!("currencies.json {key}: {error}"))?;
-            currencies.push(CurrencyRow {
-                key,
-                slice: static_slice(CURRENCIES_RAW, raw)?,
-                name: fields.name,
-            });
-        }
+        let currencies = currency_rows()?;
+        let currencies_body = join_object(&currencies);
 
         let vat_slices: Vec<&RawValue> = serde_json::from_str(VAT_RATES_RAW)
             .map_err(|error| format!("vat_rates.json: {error}"))?;
@@ -142,7 +126,7 @@ impl StaticData {
         Ok(Self {
             countries_body,
             countries,
-            currencies_raw: CURRENCIES_RAW,
+            currencies_body,
             currencies,
             vat_raw: VAT_RATES_RAW,
             vat,
@@ -196,7 +180,7 @@ impl StaticData {
 
     pub fn currencies(&self, search: Option<&str>) -> String {
         if blank(search) {
-            return self.currencies_raw.to_string();
+            return self.currencies_body.clone();
         }
         let term = search.unwrap_or("").to_lowercase();
         let mut body = String::from("{");
@@ -212,7 +196,7 @@ impl StaticData {
             body.push('"');
             body.push_str(&row.key);
             body.push_str("\":");
-            body.push_str(row.slice);
+            body.push_str(&row.slice);
         }
         body.push('}');
         body
@@ -279,6 +263,65 @@ struct CountryObject<'a> {
     latitude: serde_json::Value,
     longitude: serde_json::Value,
     emoji: &'a str,
+}
+
+fn currency_rows() -> Result<Vec<CurrencyRow>, String> {
+    let mut rows = Vec::with_capacity(codes::CODES.len());
+    for code in codes::CODES {
+        let currency = iso_currency::Currency::from_code(code)
+            .ok_or_else(|| format!("currency list is missing {code}"))?;
+        let decimal_places = currency
+            .exponent()
+            .ok_or_else(|| format!("currency {code} has no decimal places"))?;
+        let numeric_code = format!("{:03}", currency.numeric());
+        let currency_symbol = currency.symbol().to_string();
+        let countries: Vec<String> = currency.used_by().iter().map(ToString::to_string).collect();
+        let name = currency.name();
+        let slice = serde_json::to_string(&CurrencyObject {
+            name,
+            symbol: code,
+            numeric_code: &numeric_code,
+            currency_symbol: &currency_symbol,
+            currency_symbol_narrow: None::<&str>,
+            decimal_places,
+            rounding: 0,
+            countries: &countries,
+        })
+        .map_err(|error| format!("currency json: {error}"))?;
+        rows.push(CurrencyRow {
+            key: (*code).to_string(),
+            slice,
+            name: name.to_string(),
+        });
+    }
+    Ok(rows)
+}
+
+#[derive(Serialize)]
+struct CurrencyObject<'a> {
+    name: &'a str,
+    symbol: &'a str,
+    numeric_code: &'a str,
+    currency_symbol: &'a str,
+    currency_symbol_narrow: Option<&'a str>,
+    decimal_places: u16,
+    rounding: u8,
+    countries: &'a [String],
+}
+
+fn join_object(rows: &[CurrencyRow]) -> String {
+    let mut body = String::from("{");
+    for (index, row) in rows.iter().enumerate() {
+        if index > 0 {
+            body.push(',');
+        }
+        body.push('"');
+        body.push_str(&row.key);
+        body.push_str("\":");
+        body.push_str(&row.slice);
+    }
+    body.push('}');
+    body
 }
 
 fn blank(value: Option<&str>) -> bool {
@@ -404,6 +447,54 @@ mod tests {
         assert_eq!(data.vat_rates(Some("GR")), "[]");
         assert_eq!(data.countries(Some("zzzzzzz"), None, None, None), "[]");
         assert!(data.currencies(Some("us")).contains("\"RUB\""));
+    }
+
+    #[test]
+    fn currencies_follow_iso_currency() {
+        let data = StaticData::load().unwrap();
+        let body = data.currencies(None);
+        let mut previous = 0;
+        for code in codes::CODES {
+            let at = body
+                .find(&format!("\"{code}\":"))
+                .unwrap_or_else(|| panic!("missing {code}"));
+            assert!(at >= previous, "{code} out of order");
+            previous = at;
+        }
+        let value: serde_json::Value = serde_json::from_str(&body).unwrap();
+        assert_eq!(value.as_object().unwrap().len(), codes::CODES.len());
+        let eur = &value["EUR"];
+        assert_eq!(eur["symbol"], "EUR");
+        assert_eq!(eur["numeric_code"], "978");
+        assert_eq!(eur["currency_symbol"], "€");
+        assert!(eur["currency_symbol_narrow"].is_null());
+        assert_eq!(eur["decimal_places"], 2);
+        assert_eq!(eur["rounding"], 0);
+        let eur_countries = country_codes(&eur["countries"]);
+        assert!(eur_countries.contains(&"BG"));
+        assert!(!eur_countries.contains(&"EA"));
+        assert!(!eur_countries.contains(&"EU"));
+        assert!(!eur_countries.contains(&"IC"));
+        assert!(!eur_countries.contains(&"XK"));
+        assert_eq!(value["JPY"]["decimal_places"], 0);
+        assert_eq!(value["BGN"]["numeric_code"], "975");
+        assert_eq!(country_codes(&value["HRK"]["countries"]), ["HR"]);
+        assert!(!country_codes(&value["USD"]["countries"]).contains(&"ZW"));
+        assert!(data.currencies(Some("dollar")).contains("\"USD\""));
+        for row in &data.currencies {
+            let row_value: serde_json::Value = serde_json::from_str(&row.slice).unwrap();
+            assert!(row_value["currency_symbol_narrow"].is_null(), "{}", row.key);
+            assert_eq!(row_value["rounding"], 0, "{}", row.key);
+        }
+    }
+
+    fn country_codes(value: &serde_json::Value) -> Vec<&str> {
+        value
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|code| code.as_str().unwrap())
+            .collect()
     }
 
     #[test]

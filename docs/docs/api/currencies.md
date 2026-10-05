@@ -69,27 +69,27 @@ GET https://api.vatcomply.com/currencies?search=dollar
     "currency_symbol_narrow": null,
     "decimal_places": 2,
     "rounding": 0,
-    "countries": ["AD", "AT", "AX", "BE", "BL", "CY", "DE", "EA", "EE", "ES", "FI", "FR", "GF", "GP", "GR", "HR", "IC", "IE", "IT", "LT", "LU", "LV", "MC", "ME", "MF", "MQ", "MT", "NL", "PM", "PT", "RE", "SI", "SK", "SM", "VA", "XK", "YT"]
+    "countries": ["AD", "AT", "BE", "BG", "YT", "HR", "CY", "EE", "FI", "AX", "FR", "GF", "TF", "DE", "GR", "GP", "VA", "IE", "IT", "LV", "LT", "LU", "MT", "MQ", "MC", "ME", "NL", "PT", "RE", "BL", "MF", "PM", "SM", "SK", "SI", "ES"]
   },
   "USD": {
-    "name": "US Dollar",
+    "name": "United States dollar",
     "symbol": "USD",
     "numeric_code": "840",
     "currency_symbol": "$",
     "currency_symbol_narrow": null,
     "decimal_places": 2,
     "rounding": 0,
-    "countries": ["AS", "BQ", "DG", "EC", "FM", "GU", "HT", "IO", "MH", "MP", "PA", "PR", "PW", "SV", "TC", "TL", "UM", "US", "VG", "VI", "ZW"]
+    "countries": ["AS", "BB", "BM", "IO", "VG", "KH", "EC", "SV", "GU", "HT", "BQ", "MP", "UM", "FM", "MH", "PW", "PA", "TL", "PR", "TC", "US", "VI"]
   },
   "GBP": {
-    "name": "British Pound",
+    "name": "Pound sterling",
     "symbol": "GBP",
     "numeric_code": "826",
     "currency_symbol": "£",
     "currency_symbol_narrow": null,
     "decimal_places": 2,
     "rounding": 0,
-    "countries": ["GB", "GG", "GS", "IM", "JE", "TA"]
+    "countries": ["IO", "GB", "GG", "JE", "IM"]
   }
 }
 ```

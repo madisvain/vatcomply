@@ -39,7 +39,7 @@ SLEEP = 0.7
 REQUESTS: list[tuple[str, str, str, dict[str, str], str | None]] = [
     ("root", "GET", "/", {}, None),
     ("countries", "GET", "/countries", {}, "tests/fixtures/countries_body.json"),
-    ("currencies", "GET", "/currencies", {}, "data/currencies.json"),
+    ("currencies", "GET", "/currencies", {}, "tests/fixtures/currencies_body.json"),
     ("vat_rates", "GET", "/vat_rates", {}, "data/vat_rates.json"),
     ("countries_estonia", "GET", "/countries?search=Estonia", {}, None),
     ("countries_empty", "GET", "/countries?search=zzzzzzz", {}, None),
