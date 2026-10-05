@@ -9,6 +9,6 @@
   "headers": {
     "content-type": "application/json"
   },
-  "body": "{\"USD\":{\"name\":\"US Dollar\",\"symbol\":\"USD\",\"numeric_code\":\"840\",\"currency_symbol\":\"$\",\"currency_symbol_narrow\":null,\"decimal_places\":2,\"rounding\":0,\"countries\":[\"AS\",\"BQ\",\"DG\",\"EC\",\"FM\",\"GU\",\"HT\",\"IO\",\"MH\",\"MP\",\"PA\",\"PR\",\"PW\",\"SV\",\"TC\",\"TL\",\"UM\",\"US\",\"VG\",\"VI\",\"ZW\"]}}",
+  "body": "{\"USD\":{\"name\":\"United States dollar\",\"symbol\":\"USD\",\"numeric_code\":\"840\",\"currency_symbol\":\"$\",\"currency_symbol_narrow\":null,\"decimal_places\":2,\"rounding\":0,\"countries\":[\"AS\",\"BB\",\"BM\",\"IO\",\"VG\",\"KH\",\"EC\",\"SV\",\"GU\",\"HT\",\"BQ\",\"MP\",\"UM\",\"FM\",\"MH\",\"PW\",\"PA\",\"TL\",\"PR\",\"TC\",\"US\",\"VI\"]}}",
   "body_file": null
 }
