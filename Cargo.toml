@@ -18,6 +18,7 @@ arc-swap = "1"
 axum = { version = "0.8", features = ["macros"] }
 bytes = "1"
 flate2 = "1"
+iban_validation_rs = { version = "0.1.30", features = ["non_registry"] }
 indexmap = { version = "2", features = ["serde"] }
 iso-rs = { version = "0.2.0", default-features = false, features = ["from_alpha_2"] }
 maxminddb = "0.27"
