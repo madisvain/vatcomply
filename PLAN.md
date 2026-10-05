@@ -17,7 +17,7 @@ These are the choices that change the build. Approving the plan approves the rec
 | 3 | Extra env vars beyond the locked list | Add `PUBLIC_BASE_URL`, `RATE_LIMIT_RPS`, `RATE_LIMIT_BURST`, `GEO_COUNTRY_HEADERS`, `METRICS`. Details in section 4. |
 | 4 | Legacy `/ready` body mentions a database | Keep the current JSON as a shim while rates are loaded. Real status goes on `/readyz`. |
 | 5 | Open circuit breaker | `503` with `{"detail":"MS_UNAVAILABLE"}` and `Retry-After: 5`. |
-| 6 | VIES cache | Default TTL 300s. Cache only `valid: true`. Do not cache faults or `valid: false`. |
+| 6 | VIES cache | Default TTL 300s. Cache `valid: true` and `valid: false` alike. Do not cache faults. |
 | 7 | 90-day refresh vs v1 `ignore_conflicts` | Overwrite dates present in the feed so an ECB correction lands. |
 | 8 | `f64` | Store ECB strings. One module, `rates/pyfloat.rs`, may use `f64` only to copy CPython's JSON float tokens and the 6-decimal cross-rate. It is oracle-tested. This is the only way to match production bytes. |
 | 9 | Rate limit default | Binary default off (`RATE_LIMIT_RPS=0`), so `docker run` is quiet. Production compose and Fly set `RATE_LIMIT_RPS=2` and `RATE_LIMIT_BURST=4`. |
