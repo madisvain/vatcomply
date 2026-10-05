@@ -29,7 +29,7 @@ use tower_governor::{GovernorError, GovernorLayer};
 use tower_http::catch_panic::CatchPanicLayer;
 use tower_http::compression::CompressionLayer;
 use tower_http::timeout::TimeoutLayer;
-use tower_http::trace::TraceLayer;
+use tower_http::trace::{DefaultOnFailure, TraceLayer};
 use utoipa::openapi::{Info, OpenApi, Paths};
 use utoipa::IntoParams;
 use utoipa_axum::router::OpenApiRouter;
@@ -132,7 +132,9 @@ pub fn router(state: AppState) -> AppService {
                             "request"
                         );
                     },
-                ),
+                )
+                // WARN, not ERROR: every ERROR becomes a Sentry issue, and a VIES 503 is not one.
+                .on_failure(DefaultOnFailure::new().level(tracing::Level::WARN)),
         )
         .layer(SentryHttpLayer::new())
         .layer(NewSentryLayer::<Request>::new_from_top())
@@ -877,5 +879,62 @@ mod tests {
         let message = events[0].message.as_deref().unwrap_or_default();
         assert!(message.contains("geolocate body"), "{message}");
         assert!(!message.contains("MS_UNAVAILABLE"), "{message}");
+    }
+
+    #[test]
+    fn vies_503_through_the_router_is_not_a_sentry_event() {
+        let server = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let server = wiremock::MockServer::start().await;
+                wiremock::Mock::given(wiremock::matchers::method("POST"))
+                    .respond_with(wiremock::ResponseTemplate::new(500).set_body_raw(
+                        include_bytes!("../tests/fixtures/vies/synthetic_fault_MS_UNAVAILABLE.xml"),
+                        "text/xml",
+                    ))
+                    .mount(&server)
+                    .await;
+                server
+            });
+        let mut config = Config::test_default();
+        config.vies_url = server.uri();
+        let (state, _) = crate::state::AppState::load(config).expect("state");
+        let options = sentry::ClientOptions::new()
+            .dsn("https://public@sentry.invalid/1")
+            .before_send(crate::scrub_event);
+        let events = sentry::test::with_captured_events_options(
+            || {
+                tracing::subscriber::with_default(
+                    tracing_subscriber::registry().with(crate::error_tracing_layer()),
+                    || {
+                        tokio::runtime::Builder::new_current_thread()
+                            .enable_all()
+                            .build()
+                            .unwrap()
+                            .block_on(async {
+                                let request = Request::builder()
+                                    .uri("/vat?vat_number=DE666666661")
+                                    .body(Body::empty())
+                                    .unwrap();
+                                let response = tower::ServiceExt::oneshot(router(state), request)
+                                    .await
+                                    .expect("response");
+                                assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+                                let body = axum::body::to_bytes(response.into_body(), 1024)
+                                    .await
+                                    .unwrap();
+                                assert_eq!(body.as_ref(), br#"{"detail":"MS_UNAVAILABLE"}"#);
+                            })
+                    },
+                );
+            },
+            options,
+        );
+        assert!(
+            events.is_empty(),
+            "VIES 503 must not be reported: {events:?}"
+        );
     }
 }
