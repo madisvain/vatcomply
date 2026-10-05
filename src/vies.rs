@@ -1,4 +1,4 @@
-//! VIES SOAP client: retries, a per-country circuit breaker, and a short cache.
+//! VIES SOAP client: retries, a per-country circuit breaker, and a result cache.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -118,11 +118,12 @@ impl ViesService {
             match self.once(&country, national).await {
                 Ok(body) => {
                     self.succeed(&country);
-                    if body.valid {
-                        self.cache
-                            .insert(vat_number.to_string(), body.clone())
-                            .await;
-                    }
+                    // Valid and invalid answers are cached alike: registrations
+                    // change rarely, and repeat checks must not reach the
+                    // Commission. Faults stay uncached.
+                    self.cache
+                        .insert(vat_number.to_string(), body.clone())
+                        .await;
                     return Ok(body);
                 }
                 Err(CallError::Permanent(detail)) => {

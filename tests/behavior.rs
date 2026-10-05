@@ -157,7 +157,7 @@ async fn vies_success_cache_faults_and_breaker() {
     let false_hits = world._server.received_requests().await.unwrap().len();
     let _ = call(&world.state, "GET", "/vat?vat_number=DE222222222", &[]).await;
     let false_after = world._server.received_requests().await.unwrap().len();
-    assert!(false_after > false_hits, "valid=false is not cached");
+    assert_eq!(false_after, false_hits, "valid=false is cached");
 
     let (status, _, body) = call(&world.state, "GET", "/vat?vat_number=DE333333333", &[]).await;
     assert_eq!(status, 200, "{body}");

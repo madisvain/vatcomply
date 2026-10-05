@@ -155,7 +155,7 @@ ENVIRONMENT:
     DATA_DIR                Snapshot directory (default ./data, Docker /data)
     RATES_REFRESH_SECS      ECB refresh interval (default 3600)
     VIES_TIMEOUT_SECS       Per-attempt VIES timeout (default 10)
-    VIES_CACHE_TTL_SECS     Cache TTL for valid VAT results (default 300)
+    VIES_CACHE_TTL_SECS     Cache TTL for VAT results, valid and invalid (default 300)
     RATE_LIMIT_RPS          Requests per second per client IP (default 0 = off).
                             Production sets 2.
     RATE_LIMIT_BURST        Burst size used with RATE_LIMIT_RPS (default 4)
