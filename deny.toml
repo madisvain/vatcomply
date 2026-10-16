@@ -17,6 +17,9 @@ yanked = "warn"
 ignore = [
     # utoipa-axum 0.2.0 depends on unmaintained `paste`. No fixed release exists.
     "RUSTSEC-2024-0436",
+    # my_country builds its data with serde_yaml, which depends on unmaintained
+    # `unsafe-libyaml`. It runs only at build time and has no fixed release.
+    "RUSTSEC-2024-0449",
 ]
 
 [licenses]
