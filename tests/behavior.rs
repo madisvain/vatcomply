@@ -250,6 +250,50 @@ async fn breaker_recovers_after_cooldown() {
     assert!(ok.valid);
 }
 
+/// Issue #59: a half-open probe whose request was dropped left the breaker
+/// refusing every call until restart.
+#[tokio::test]
+async fn abandoned_trial_does_not_wedge_breaker() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .respond_with(xml(500, TIMEOUT))
+        .up_to_n_times(15)
+        .mount(&server)
+        .await;
+    Mock::given(method("POST"))
+        .respond_with(xml(200, VALID_TRUE).set_delay(std::time::Duration::from_secs(5)))
+        .up_to_n_times(1)
+        .mount(&server)
+        .await;
+    Mock::given(method("POST"))
+        .respond_with(xml(200, VALID_TRUE))
+        .mount(&server)
+        .await;
+    let mut config = Config::test_default();
+    config.vies_url = server.uri();
+    config.vies_timeout = std::time::Duration::from_secs(10);
+    let clock = Arc::new(AtomicU64::new(1_000));
+    let vies = ViesService::new(&config).unwrap().with_clock({
+        let clock = clock.clone();
+        Arc::new(move || clock.load(Ordering::Relaxed))
+    });
+    for _ in 0..5 {
+        vies.check("IT123456789").await.unwrap_err();
+    }
+    clock.store(31_000, Ordering::Relaxed);
+    let dropped = tokio::time::timeout(
+        std::time::Duration::from_millis(100),
+        vies.check("IT123456780"),
+    )
+    .await;
+    assert!(dropped.is_err(), "trial must still be in flight");
+    let error = vies.check("IT123456781").await.unwrap_err();
+    assert!(matches!(error, vatcomply::vies::ViesFailure::BreakerOpen));
+    clock.store(61_001, Ordering::Relaxed);
+    let ok = vies.check("IT123456782").await.expect("new probe");
+    assert!(ok.valid);
+}
+
 #[tokio::test]
 async fn cache_headers_etag_and_cors() {
     let world = world().await;
