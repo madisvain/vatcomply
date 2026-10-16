@@ -36,7 +36,9 @@ pub struct ViesService {
 struct CountryBreaker {
     consecutive: u32,
     open_until_ms: u64,
-    trial: bool,
+    /// Start of the half-open probe, 0 when none. A probe whose request was
+    /// dropped never reports back, so its lease expires after `BREAKER_OPEN`.
+    trial_started_ms: u64,
 }
 
 #[derive(Clone, Debug)]
@@ -200,7 +202,7 @@ impl ViesService {
         let breaker = guard.entry(country.to_string()).or_insert(CountryBreaker {
             consecutive: 0,
             open_until_ms: 0,
-            trial: false,
+            trial_started_ms: 0,
         });
         if breaker.open_until_ms == 0 {
             return true;
@@ -208,10 +210,15 @@ impl ViesService {
         if now < breaker.open_until_ms {
             return false;
         }
-        if breaker.trial {
+        // ponytail: a probe slower than the lease (3 attempts at a 10 s timeout)
+        // can overlap a second probe. That costs one extra VIES call. A drop
+        // guard would close the gap.
+        if breaker.trial_started_ms != 0
+            && now < breaker.trial_started_ms.saturating_add(BREAKER_OPEN)
+        {
             return false;
         }
-        breaker.trial = true;
+        breaker.trial_started_ms = now;
         true
     }
 
@@ -227,7 +234,10 @@ impl ViesService {
         let Ok(mut guard) = self.breakers.lock() else {
             return;
         };
-        if guard.get(country).is_some_and(|breaker| breaker.trial) {
+        if guard
+            .get(country)
+            .is_some_and(|breaker| breaker.trial_started_ms != 0)
+        {
             guard.remove(country);
         }
     }
@@ -240,17 +250,17 @@ impl ViesService {
         let breaker = guard.entry(country.to_string()).or_insert(CountryBreaker {
             consecutive: 0,
             open_until_ms: 0,
-            trial: false,
+            trial_started_ms: 0,
         });
         let half_open = breaker.open_until_ms != 0 && now >= breaker.open_until_ms;
         if half_open {
             breaker.consecutive = BREAKER_THRESHOLD;
             breaker.open_until_ms = now.saturating_add(BREAKER_OPEN);
-            breaker.trial = false;
+            breaker.trial_started_ms = 0;
             return;
         }
         breaker.consecutive = breaker.consecutive.saturating_add(1);
-        breaker.trial = false;
+        breaker.trial_started_ms = 0;
         if breaker.consecutive >= BREAKER_THRESHOLD {
             breaker.open_until_ms = now.saturating_add(BREAKER_OPEN);
         }
