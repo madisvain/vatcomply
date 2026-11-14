@@ -29,10 +29,9 @@ pub fn decode(input: &str) -> String {
                 index += 1;
             }
             b'%' if index + 2 < bytes.len() => {
-                let hex = &input[index + 1..index + 3];
-                match u8::from_str_radix(hex, 16) {
-                    Ok(value) => out.push(value),
-                    Err(_) => {
+                match hex_byte(bytes[index + 1], bytes[index + 2]) {
+                    Some(value) => out.push(value),
+                    None => {
                         out.push(b'%');
                         out.push(bytes[index + 1]);
                         out.push(bytes[index + 2]);
@@ -47,6 +46,19 @@ pub fn decode(input: &str) -> String {
         }
     }
     String::from_utf8_lossy(&out).into_owned()
+}
+
+fn hex_byte(hi: u8, lo: u8) -> Option<u8> {
+    Some(hex_digit(hi)? * 16 + hex_digit(lo)?)
+}
+
+fn hex_digit(byte: u8) -> Option<u8> {
+    match byte {
+        b'0'..=b'9' => Some(byte - b'0'),
+        b'a'..=b'f' => Some(byte - b'a' + 10),
+        b'A'..=b'F' => Some(byte - b'A' + 10),
+        _ => None,
+    }
 }
 
 /// Redact `vat_number` and `iban` so request logs never carry the full value.
@@ -87,5 +99,17 @@ mod tests {
         assert!(text.contains("vat_number=DE***"));
         assert!(text.contains("iban=***"));
         assert!(text.contains("base=EUR"));
+    }
+
+    #[test]
+    fn percent_escape_may_sit_inside_a_multibyte_char() {
+        // Weekly fuzz input: `%`, a NUL, then an incomplete UTF-8 sequence.
+        // Lossy conversion makes that a multibyte replacement character.
+        let text = String::from_utf8_lossy(&[b'%', 0, 0xf0, 0xae]);
+        assert_eq!(decode(&text), text.as_ref());
+        assert_eq!(decode("%a€"), "%a€");
+        assert_eq!(decode("%C3%A9"), "é");
+        let _ = last(Some(&text));
+        let _ = redact(&text);
     }
 }
